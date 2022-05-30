@@ -1,7 +1,7 @@
 /target
 .idea
 http-cacache/
-/git_repos
+git_repos/
 settings.toml
 report.json
 .DS_Store
