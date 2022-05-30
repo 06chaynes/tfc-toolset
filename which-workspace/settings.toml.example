@@ -1,0 +1,22 @@
+token = "tfc-access-token" # Required
+org = "org-name" # Required
+output = "production.json" # Optional with default 'results.json'
+log = "info" # Optional with default 'warn'
+
+[query] # Required but can be left empty
+name = "aws-" # Optional
+
+[[query.variables]] # Optional
+key = "mode" # Required
+operator = "Contains" # Required
+value = "prod" # Required
+
+[[query.variables]] # Optional
+key = "status" # Required
+operator = "NotEqual" # Required
+value = "migrating" # Required
+
+[pagination] # Optional
+start_page = "1" # Optional with default of `1` (first page)
+max_depth = "1" # Optional with default of `1` (first page only), 0 for all
+page_size = "20" # Optional with default of `20` (20 items per page)

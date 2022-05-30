@@ -1,0 +1,32 @@
+[package]
+name = "tfc-which-workspace"
+version = "0.1.0"
+description = "Super specific tool for a super specific purpose"
+authors = ["Christian Haynes <06chaynes@gmail.com>"]
+repository = "https://github.com/06chaynes/tfc-toolset.git"
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+edition = "2021"
+
+[[bin]]
+name = "which-workspace"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1.0.57"
+async-std = { version = "1.11.0", features = ["attributes"] }
+config = "0.13.1"
+env_logger = "0.9.0"
+http-cache-surf = "0.4.6"
+log = "0.4.17"
+miette = { version = "4.7.1", features = ["fancy"] }
+serde = { version = "1.0.137", features = ["derive"] }
+serde_json = "1.0.81"
+surf = "2.3.2"
+surf-governor = "0.1.0"
+thiserror = "1.0.31"
+url = "2.2.2"
+
+[dependencies.tfc-toolset]
+path = "../tfc-toolset"
+version = "0.1.0"

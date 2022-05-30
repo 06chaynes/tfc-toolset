@@ -1,0 +1,8 @@
+[workspace]
+
+members = [
+    "tfc-toolset",
+    "clean-workspace",
+    "which-workspace"
+]
+
