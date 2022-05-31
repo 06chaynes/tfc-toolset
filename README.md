@@ -18,7 +18,7 @@ Because I like a side of automation with my automation. nom nom nom
 
 ## How do I use this?
 
-More details on each tool/library can be found on the README in each projecct directory (as long as future me actually finished them, that guy needs to step it up), links below:
+More details on each tool/library can be found on the README in each project directory (as long as future me actually finished them, that guy needs to step it up), links below:
 
 - [`tfc-toolset`](tfc-toolset/README.md)
   
