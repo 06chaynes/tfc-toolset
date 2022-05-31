@@ -38,6 +38,8 @@ pub struct Attributes {
     pub name: String,
     #[serde(rename = "vcs-repo")]
     pub vcs_repo: Option<VcsRepo>,
+    #[serde(rename = "tag-names")]
+    pub tag_names: Vec<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

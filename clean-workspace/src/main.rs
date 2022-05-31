@@ -84,8 +84,14 @@ async fn main() -> miette::Result<()> {
                 ..Default::default()
             };
             // Get list of workspaces
-            let workspaces =
+            let mut workspaces =
                 workspace::get_workspaces(&core, client.clone()).await?;
+
+            // Filter the workspaces if query tags have been provided
+            if core.query.tags.is_some() {
+                info!("Filtering workspaces with tags query.");
+                filter::tag(&mut workspaces, &core)?;
+            }
 
             // Get the variables for each workspace
             let mut workspaces_variables =

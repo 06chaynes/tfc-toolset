@@ -6,6 +6,10 @@ log = "info" # Optional with default 'warn'
 [query] # Required but can be left empty
 name = "aws-" # Optional
 
+[[query.tags]] # Optional
+operator = "NotContains" # Required
+name = "team:" # Required
+
 [[query.variables]] # Optional
 key = "mode" # Required
 operator = "Contains" # Required

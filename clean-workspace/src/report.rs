@@ -34,10 +34,11 @@ pub struct UnlistedVariables {
 pub struct Report {
     pub report_version: String,
     pub bin_version: String,
+    pub reporter: String,
     pub query: Option<Query>,
-    pub workspaces: Vec<Workspace>,
     pub missing_repositories: Vec<Workspace>,
     pub unlisted_variables: Vec<UnlistedVariables>,
+    pub workspaces: Vec<Workspace>,
 }
 
 impl Default for Report {
@@ -45,10 +46,11 @@ impl Default for Report {
         Self {
             report_version: REPORT_VERSION.to_string(),
             bin_version: env!("CARGO_PKG_VERSION").to_string(),
+            reporter: env!("CARGO_PKG_NAME").to_string(),
             query: None,
-            workspaces: vec![],
             missing_repositories: vec![],
             unlisted_variables: vec![],
+            workspaces: vec![],
         }
     }
 }

@@ -18,6 +18,12 @@ pub struct Variable {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct Tag {
+    pub operator: Operators,
+    pub name: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Pagination {
     pub start_page: String,
     pub max_depth: String,
@@ -28,6 +34,7 @@ pub struct Pagination {
 pub struct Query {
     pub name: Option<String>,
     pub variables: Option<Vec<Variable>>,
+    pub tags: Option<Vec<Tag>>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
