@@ -3,6 +3,7 @@ use crate::{
     settings::{Core, Query},
     variable, BASE_URL,
 };
+use async_scoped::AsyncScope;
 use log::*;
 use serde::{Deserialize, Serialize};
 use surf::{http::Method, Client, RequestBuilder};
@@ -162,17 +163,31 @@ pub async fn get_workspaces_variables(
     workspaces: Vec<Workspace>,
 ) -> Result<Vec<WorkspaceVariables>, ToolError> {
     // Get the variables for each workspace
-    let mut workspaces_variables: Vec<WorkspaceVariables> = vec![];
-    for workspace in workspaces {
-        info!(
-            "Retrieving variables for workspace {}",
-            workspace.attributes.name
-        );
-        let variables =
-            variable::get_variables(&workspace.id, config, client.clone())
-                .await?;
-        info!("Successfully retrieved variables!");
-        workspaces_variables.push(WorkspaceVariables { workspace, variables })
+    let (_, workspaces_variables) = AsyncScope::scope_and_block(|s| {
+        for workspace in workspaces {
+            let c = client.clone();
+            let proc = || async move {
+                info!(
+                    "Retrieving variables for workspace {}",
+                    workspace.attributes.name
+                );
+                match variable::get_variables(&workspace.id, config, c).await {
+                    Ok(variables) => {
+                        info!("Successfully retrieved variables!");
+                        Some(WorkspaceVariables { workspace, variables })
+                    }
+                    Err(e) => {
+                        error!("{:#?}", e);
+                        None
+                    }
+                }
+            };
+            s.spawn(proc());
+        }
+    });
+    let mut list: Vec<WorkspaceVariables> = vec![];
+    for ws in workspaces_variables.into_iter().flatten() {
+        list.push(ws);
     }
-    Ok(workspaces_variables)
+    Ok(list)
 }

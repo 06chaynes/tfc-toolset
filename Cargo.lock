@@ -193,6 +193,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "async-scoped"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1181d2a07303ac3e8df0b3bdaaf648b4ac968d352e61158f5c1897db70d22a09"
+dependencies = [
+ "async-std",
+ "futures",
+ "pin-project",
+ "slab",
+]
+
+[[package]]
 name = "async-std"
 version = "1.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2459,6 +2471,7 @@ name = "tfc-toolset"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-scoped",
  "config",
  "log",
  "miette",
