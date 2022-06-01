@@ -167,16 +167,19 @@ pub async fn get_workspaces_variables(
         for workspace in workspaces {
             let c = client.clone();
             let proc = || async move {
-                info!(
-                    "Retrieving variables for workspace {}",
-                    workspace.attributes.name
-                );
                 match variable::get_variables(&workspace.id, config, c).await {
                     Ok(variables) => {
-                        info!("Successfully retrieved variables!");
+                        info!(
+                            "Successfully retrieved variables for workspace {}",
+                            workspace.attributes.name
+                        );
                         Some(WorkspaceVariables { workspace, variables })
                     }
                     Err(e) => {
+                        error!(
+                            "Unable to retrieve variables for workspace {}",
+                            workspace.attributes.name
+                        );
                         error!("{:#?}", e);
                         None
                     }
