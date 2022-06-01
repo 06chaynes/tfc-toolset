@@ -57,22 +57,23 @@ async fn main() -> miette::Result<()> {
         filter::tag(&mut workspaces, &config)?;
     }
 
-    // Get the variables for each workspace
-    let mut workspaces_variables =
-        workspace::get_workspaces_variables(&config, client, workspaces)
-            .await?;
-    // Filter the workspaces if query variables have been provided
     if config.query.variables.is_some() {
+        // Get the variables for each workspace
+        let mut workspaces_variables =
+            workspace::get_workspaces_variables(&config, client, workspaces)
+                .await?;
+        // Filter the workspaces if query variables have been provided
         info!("Filtering workspaces with variable query.");
         filter::variable(&mut workspaces_variables, &config)?;
+        workspaces = workspaces_variables
+            .iter()
+            .map(|entry| entry.workspace.clone())
+            .collect();
     }
 
     let report = report::Report {
         query: Some(config.query.clone()),
-        workspaces: workspaces_variables
-            .iter()
-            .map(|entry| entry.workspace.clone())
-            .collect(),
+        workspaces,
         ..Default::default()
     };
     info!("{:#?}", &report);

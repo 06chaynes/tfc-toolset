@@ -36,8 +36,8 @@ pub struct Report {
     pub bin_version: String,
     pub reporter: String,
     pub query: Option<Query>,
-    pub missing_repositories: Vec<Workspace>,
-    pub unlisted_variables: Vec<UnlistedVariables>,
+    pub missing_repositories: Option<Vec<Workspace>>,
+    pub unlisted_variables: Option<Vec<UnlistedVariables>>,
     pub workspaces: Vec<Workspace>,
 }
 
@@ -48,8 +48,8 @@ impl Default for Report {
             bin_version: env!("CARGO_PKG_VERSION").to_string(),
             reporter: env!("CARGO_PKG_NAME").to_string(),
             query: None,
-            missing_repositories: vec![],
-            unlisted_variables: vec![],
+            missing_repositories: None,
+            unlisted_variables: None,
             workspaces: vec![],
         }
     }

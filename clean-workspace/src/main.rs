@@ -18,7 +18,7 @@ use tfc_toolset::{
     error::{ToolError, SETTINGS_ERROR},
     filter,
     settings::Core,
-    workspace,
+    workspace::{self, Workspace},
 };
 use url::Url;
 use walkdir::WalkDir;
@@ -93,57 +93,91 @@ async fn main() -> miette::Result<()> {
                 filter::tag(&mut workspaces, &core)?;
             }
 
-            // Get the variables for each workspace
-            let mut workspaces_variables =
-                workspace::get_workspaces_variables(&core, client, workspaces)
+            if core.query.variables.is_some()
+                || config.cleanup.unlisted_variables
+                || config.cleanup.missing_repositories
+            {
+                // Get the variables for each workspace
+                let mut workspaces_variables =
+                    workspace::get_workspaces_variables(
+                        &core, client, workspaces,
+                    )
                     .await?;
-            // Filter the workspaces if query variables have been provided
-            if core.query.variables.is_some() {
-                info!("Filtering workspaces with variable query.");
-                filter::variable(&mut workspaces_variables, &core)?;
-            }
+                // Filter the workspaces if query variables have been provided
+                if core.query.variables.is_some() {
+                    info!("Filtering workspaces with variable query.");
+                    filter::variable(&mut workspaces_variables, &core)?;
+                }
 
-            info!("Cloning workspace repositories.");
-            for entry in &workspaces_variables {
-                report.workspaces.push(entry.workspace.clone());
-                // Clone git repositories
-                if let Some(repo) = &entry.workspace.attributes.vcs_repo {
-                    info!(
-                        "Repo detected for workspace: {}",
-                        &entry.workspace.attributes.name
-                    );
-                    let url = Url::parse(&repo.repository_http_url)
-                        .into_diagnostic()
-                        .wrap_err("Failed to parse repository url")?;
-                    let id = match repo.identifier.clone() {
-                        Some(i) => i,
-                        None => {
-                            let segments = url.path_segments().unwrap();
-                            segments.last().unwrap().to_string()
+                if config.cleanup.unlisted_variables
+                    || config.cleanup.missing_repositories
+                {
+                    info!("Cloning workspace repositories.");
+                    for entry in &workspaces_variables {
+                        report.workspaces.push(entry.workspace.clone());
+                        // Clone git repositories
+                        if let Some(repo) = &entry.workspace.attributes.vcs_repo
+                        {
+                            info!(
+                                "Repo detected for workspace: {}",
+                                &entry.workspace.attributes.name
+                            );
+                            let url = Url::parse(&repo.repository_http_url)
+                                .into_diagnostic()
+                                .wrap_err("Failed to parse repository url")?;
+                            let id = match repo.identifier.clone() {
+                                Some(i) => i,
+                                None => {
+                                    let segments = url.path_segments().unwrap();
+                                    segments.last().unwrap().to_string()
+                                }
+                            };
+                            let mut base_dir =
+                                config.repositories.git_dir.clone();
+                            if base_dir.ends_with('/') {
+                                base_dir.pop();
+                            }
+                            let path = format!("{}/{}", base_dir, &id);
+                            let mut missing: Vec<Workspace> = vec![];
+                            match repo::clone(
+                                url.clone(),
+                                path.clone(),
+                                &entry.workspace,
+                                &mut missing,
+                            ) {
+                                Ok(_) => {}
+                                Err(_e) => {}
+                            };
+                            if config.cleanup.missing_repositories {
+                                if let Some(m) =
+                                    &mut report.missing_repositories
+                                {
+                                    m.append(&mut missing);
+                                } else {
+                                    report.missing_repositories = Some(missing);
+                                }
+                            }
+                            info!("Parsing variable data.");
+                            if config.cleanup.unlisted_variables {
+                                let walker = WalkDir::new(&path).into_iter();
+                                let unlisted =
+                                    parse::tf(&config, walker, entry)?;
+                                if let Some(u) = unlisted {
+                                    if let Some(v) =
+                                        &mut report.unlisted_variables
+                                    {
+                                        v.push(u);
+                                    } else {
+                                        report.unlisted_variables =
+                                            Some(vec![u]);
+                                    }
+                                }
+                            }
                         }
-                    };
-                    let mut base_dir = config.repositories.git_dir.clone();
-                    if base_dir.ends_with('/') {
-                        base_dir.pop();
-                    }
-                    let path = format!("{}/{}", base_dir, &id);
-                    match repo::clone(
-                        url.clone(),
-                        path.clone(),
-                        &entry.workspace,
-                        &mut report.missing_repositories,
-                    ) {
-                        Ok(_) => {}
-                        Err(_e) => {}
-                    };
-                    info!("Parsing variable data.");
-                    let walker = WalkDir::new(&path).into_iter();
-                    let unlisted = parse::tf(&config, walker, entry)?;
-                    if let Some(u) = unlisted {
-                        report.unlisted_variables.push(u);
                     }
                 }
             }
+
             info!("{:#?}", &report);
             report::save(&core, report)?;
         }
