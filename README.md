@@ -6,7 +6,7 @@ A collection of tools to help in management of your Terraform cloud organization
 
 - Wrath.
 
-- `tfc-toolset`: The core library containing common functions for working with the Terraform cloud API. Each tool extends upon this library to accomplish it's specific purpose.
+- `tfc-toolset`: The core library containing common functions for working with the Terraform cloud API. Each tool extends upon this library to accomplish its specific purpose.
   
 - `which-workspace`: A search tool for finding workspaces that match specified parameters. Sometimes you just need to know which workspaces have a specific value for a specific variable right? ... Right? Happens all the time I'm sure.
   
