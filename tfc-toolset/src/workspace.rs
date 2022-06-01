@@ -188,9 +188,5 @@ pub async fn get_workspaces_variables(
             s.spawn(proc());
         }
     });
-    let mut list: Vec<WorkspaceVariables> = vec![];
-    for ws in workspaces_variables.into_iter().flatten() {
-        list.push(ws);
-    }
-    Ok(list)
+    Ok(workspaces_variables.into_iter().flatten().collect())
 }
