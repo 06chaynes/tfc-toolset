@@ -16,6 +16,8 @@ use tfc_toolset::{
     workspace,
 };
 
+use crate::report::{Data, Meta};
+
 fn build_governor() -> Result<GovernorMiddleware, ToolError> {
     match GovernorMiddleware::per_second(30) {
         Ok(g) => Ok(g),
@@ -79,8 +81,11 @@ async fn main() -> miette::Result<()> {
     }
 
     let report = report::Report {
-        query: Some(config.query.clone()),
-        workspaces,
+        meta: Meta {
+            query: Some(config.query.clone()),
+            pagination: Some(config.pagination.clone()),
+        },
+        data: Data { workspaces },
         ..Default::default()
     };
     info!("{:#?}", &report);
