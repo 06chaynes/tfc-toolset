@@ -26,6 +26,7 @@ surf = "2.3.2"
 surf-governor = "0.1.0"
 thiserror = "1.0.31"
 url = "2.2.2"
+surf-retry = "0.1.0"
 
 [dependencies.tfc-toolset]
 path = "../tfc-toolset"

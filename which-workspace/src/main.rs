@@ -8,12 +8,15 @@ use log::*;
 use miette::{IntoDiagnostic, WrapErr};
 use surf::Client;
 use surf_governor::GovernorMiddleware;
+use surf_retry::{ExponentialBackoff, RetryMiddleware};
 use tfc_toolset::{
     error::{ToolError, SETTINGS_ERROR},
     filter,
     settings::Core,
     workspace,
 };
+
+use crate::report::{Data, Meta};
 
 fn build_governor() -> Result<GovernorMiddleware, ToolError> {
     match GovernorMiddleware::per_second(30) {
@@ -33,9 +36,16 @@ async fn main() -> miette::Result<()> {
     )
     .init();
 
-    // Build the http client with a cache and governor enabled
-    let client = Client::new().with(build_governor().into_diagnostic()?).with(
-        Cache(HttpCache {
+    // Build the http client with a cache, governor, and retry enabled
+    let retry = RetryMiddleware::new(
+        99,
+        ExponentialBackoff::builder().build_with_max_retries(10),
+        1,
+    );
+    let client = Client::new()
+        .with(retry)
+        .with(build_governor().into_diagnostic()?)
+        .with(Cache(HttpCache {
             mode: CacheMode::Default,
             manager: CACacheManager::default(),
             options: Some(CacheOptions {
@@ -44,8 +54,7 @@ async fn main() -> miette::Result<()> {
                 immutable_min_time_to_live: Default::default(),
                 ignore_cargo_cult: false,
             }),
-        }),
-    );
+        }));
 
     // Get list of workspaces
     let mut workspaces =
@@ -72,8 +81,11 @@ async fn main() -> miette::Result<()> {
     }
 
     let report = report::Report {
-        query: Some(config.query.clone()),
-        workspaces,
+        meta: Meta {
+            query: Some(config.query.clone()),
+            pagination: Some(config.pagination.clone()),
+        },
+        data: Data { workspaces },
         ..Default::default()
     };
     info!("{:#?}", &report);

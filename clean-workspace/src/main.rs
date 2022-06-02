@@ -14,6 +14,7 @@ use miette::{IntoDiagnostic, WrapErr};
 use settings::Settings;
 use surf::Client;
 use surf_governor::GovernorMiddleware;
+use surf_retry::{ExponentialBackoff, RetryMiddleware};
 use tfc_toolset::{
     error::{ToolError, SETTINGS_ERROR},
     filter,
@@ -22,6 +23,8 @@ use tfc_toolset::{
 };
 use url::Url;
 use walkdir::WalkDir;
+
+use crate::report::Meta;
 
 const ABOUT: &str =
     "Tool for rule based cleanup operations for Terraform workspaces";
@@ -62,9 +65,16 @@ async fn main() -> miette::Result<()> {
     // Initialize the logger
     env_logger::Builder::from_env(Env::default().default_filter_or(&core.log))
         .init();
-    // Build the http client with a cache and governor enabled
-    let client = Client::new().with(build_governor().into_diagnostic()?).with(
-        Cache(HttpCache {
+    // Build the http client with a cache, governor, and retry enabled
+    let retry = RetryMiddleware::new(
+        99,
+        ExponentialBackoff::builder().build_with_max_retries(10),
+        1,
+    );
+    let client = Client::new()
+        .with(retry)
+        .with(build_governor().into_diagnostic()?)
+        .with(Cache(HttpCache {
             mode: CacheMode::Default,
             manager: CACacheManager::default(),
             options: Some(CacheOptions {
@@ -73,14 +83,16 @@ async fn main() -> miette::Result<()> {
                 immutable_min_time_to_live: Default::default(),
                 ignore_cargo_cult: false,
             }),
-        }),
-    );
+        }));
     // Match on the cli subcommand
     match &cli.command {
         Commands::Plan => {
             info!("Start Plan Phase");
             let mut report = report::Report {
-                query: Some(core.query.clone()),
+                meta: Meta {
+                    query: Some(core.query.clone()),
+                    pagination: Some(core.pagination.clone()),
+                },
                 ..Default::default()
             };
             // Get list of workspaces
@@ -114,7 +126,7 @@ async fn main() -> miette::Result<()> {
                 {
                     info!("Cloning workspace repositories.");
                     for entry in &workspaces_variables {
-                        report.workspaces.push(entry.workspace.clone());
+                        report.data.workspaces.push(entry.workspace.clone());
                         // Clone git repositories
                         if let Some(repo) = &entry.workspace.attributes.vcs_repo
                         {
@@ -150,11 +162,12 @@ async fn main() -> miette::Result<()> {
                             };
                             if config.cleanup.missing_repositories {
                                 if let Some(m) =
-                                    &mut report.missing_repositories
+                                    &mut report.data.missing_repositories
                                 {
                                     m.append(&mut missing);
                                 } else {
-                                    report.missing_repositories = Some(missing);
+                                    report.data.missing_repositories =
+                                        Some(missing);
                                 }
                             }
                             info!("Parsing variable data.");
@@ -164,11 +177,11 @@ async fn main() -> miette::Result<()> {
                                     parse::tf(&config, walker, entry)?;
                                 if let Some(u) = unlisted {
                                     if let Some(v) =
-                                        &mut report.unlisted_variables
+                                        &mut report.data.unlisted_variables
                                     {
                                         v.push(u);
                                     } else {
-                                        report.unlisted_variables =
+                                        report.data.unlisted_variables =
                                             Some(vec![u]);
                                     }
                                 }

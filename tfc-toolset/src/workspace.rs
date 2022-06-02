@@ -3,6 +3,7 @@ use crate::{
     settings::{Core, Query},
     variable, BASE_URL,
 };
+use async_scoped::AsyncScope;
 use log::*;
 use serde::{Deserialize, Serialize};
 use surf::{http::Method, Client, RequestBuilder};
@@ -121,32 +122,61 @@ pub async fn get_workspaces(
                     };
 
                     // Get the next page and merge the result
-                    for n in next_page..=num_pages {
-                        info!("Retrieving workspaces page {}.", &n);
-                        url = Url::parse_with_params(
-                            url.clone().as_str(),
-                            &[("page[number]", &n.to_string())],
-                        )?;
-                        let req = RequestBuilder::new(Method::Get, url.clone())
-                            .header(
-                                "Authorization",
-                                &format!("Bearer {}", config.token),
-                            )
-                            .build();
-                        match client.recv_string(req).await {
-                            Ok(s) => {
-                                info!("Successfully retrieved workspaces!");
-                                let mut res =
-                                    serde_json::from_str::<
-                                        WorkspacesResponseOuter,
-                                    >(&s)?;
-                                workspace_list.data.append(&mut res.data);
+                    let (_, workspace_pages) = AsyncScope::scope_and_block(
+                        |s| {
+                            for n in next_page..=num_pages {
+                                let c = client.clone();
+                                let u = url.clone();
+                                let proc = || async move {
+                                    info!("Retrieving workspaces page {}.", &n);
+                                    let u = match Url::parse_with_params(
+                                        u.clone().as_str(),
+                                        &[("page[number]", &n.to_string())],
+                                    ) {
+                                        Ok(u) => u,
+                                        Err(e) => {
+                                            error!("{:#?}", e);
+                                            return None;
+                                        }
+                                    };
+                                    let req = RequestBuilder::new(
+                                        Method::Get,
+                                        u.clone(),
+                                    )
+                                    .header(
+                                        "Authorization",
+                                        &format!("Bearer {}", config.token),
+                                    )
+                                    .build();
+                                    match c.recv_string(req).await {
+                                        Ok(s) => {
+                                            info!("Successfully retrieved workspaces page {}!", &n);
+                                            let res = match serde_json::from_str::<
+                                                WorkspacesResponseOuter,
+                                            >(
+                                                &s
+                                            ) {
+                                                Ok(r) => r,
+                                                Err(e) => {
+                                                    error!("{:#?}", e);
+                                                    return None;
+                                                }
+                                            };
+                                            Some(res.data)
+                                        }
+                                        Err(e) => {
+                                            error!("Failed to retrieve workspaces page {} :(", &n);
+                                            error!("{:#?}", e);
+                                            None
+                                        }
+                                    }
+                                };
+                                s.spawn(proc());
                             }
-                            Err(e) => {
-                                error!("Failed to retrieve workspaces :(");
-                                return Err(ToolError::General(e.into_inner()));
-                            }
-                        }
+                        },
+                    );
+                    for mut ws in workspace_pages.into_iter().flatten() {
+                        workspace_list.data.append(&mut ws);
                     }
                 }
             }
@@ -162,17 +192,30 @@ pub async fn get_workspaces_variables(
     workspaces: Vec<Workspace>,
 ) -> Result<Vec<WorkspaceVariables>, ToolError> {
     // Get the variables for each workspace
-    let mut workspaces_variables: Vec<WorkspaceVariables> = vec![];
-    for workspace in workspaces {
-        info!(
-            "Retrieving variables for workspace {}",
-            workspace.attributes.name
-        );
-        let variables =
-            variable::get_variables(&workspace.id, config, client.clone())
-                .await?;
-        info!("Successfully retrieved variables!");
-        workspaces_variables.push(WorkspaceVariables { workspace, variables })
-    }
-    Ok(workspaces_variables)
+    let (_, workspaces_variables) = AsyncScope::scope_and_block(|s| {
+        for workspace in workspaces {
+            let c = client.clone();
+            let proc = || async move {
+                match variable::get_variables(&workspace.id, config, c).await {
+                    Ok(variables) => {
+                        info!(
+                            "Successfully retrieved variables for workspace {}",
+                            workspace.attributes.name
+                        );
+                        Some(WorkspaceVariables { workspace, variables })
+                    }
+                    Err(e) => {
+                        error!(
+                            "Unable to retrieve variables for workspace {}",
+                            workspace.attributes.name
+                        );
+                        error!("{:#?}", e);
+                        None
+                    }
+                }
+            };
+            s.spawn(proc());
+        }
+    });
+    Ok(workspaces_variables.into_iter().flatten().collect())
 }

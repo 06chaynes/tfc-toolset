@@ -1,7 +1,7 @@
 use std::fs::File;
 use tfc_toolset::{
     error::ToolError,
-    settings::{Core, Query},
+    settings::{Core, Pagination, Query},
     workspace::Workspace,
 };
 
@@ -12,12 +12,23 @@ use serde::{Deserialize, Serialize};
 const REPORT_VERSION: &str = "0.1.0";
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct Meta {
+    pub query: Option<Query>,
+    pub pagination: Option<Pagination>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct Data {
+    pub workspaces: Vec<Workspace>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Report {
     pub report_version: String,
     pub bin_version: String,
     pub reporter: String,
-    pub query: Option<Query>,
-    pub workspaces: Vec<Workspace>,
+    pub meta: Meta,
+    pub data: Data,
 }
 
 impl Default for Report {
@@ -26,8 +37,8 @@ impl Default for Report {
             report_version: REPORT_VERSION.to_string(),
             bin_version: env!("CARGO_PKG_VERSION").to_string(),
             reporter: env!("CARGO_PKG_NAME").to_string(),
-            query: None,
-            workspaces: vec![],
+            meta: Meta { query: None, pagination: None },
+            data: Data { workspaces: vec![] },
         }
     }
 }
