@@ -126,14 +126,19 @@ pub async fn get_workspaces(
                         |s| {
                             for n in next_page..=num_pages {
                                 let c = client.clone();
-                                let mut u = url.clone();
+                                let u = url.clone();
                                 let proc = || async move {
                                     info!("Retrieving workspaces page {}.", &n);
-                                    u = Url::parse_with_params(
+                                    let u = match Url::parse_with_params(
                                         u.clone().as_str(),
                                         &[("page[number]", &n.to_string())],
-                                    )
-                                    .unwrap();
+                                    ) {
+                                        Ok(u) => u,
+                                        Err(e) => {
+                                            error!("{:#?}", e);
+                                            return None;
+                                        }
+                                    };
                                     let req = RequestBuilder::new(
                                         Method::Get,
                                         u.clone(),
@@ -146,16 +151,21 @@ pub async fn get_workspaces(
                                     match c.recv_string(req).await {
                                         Ok(s) => {
                                             info!("Successfully retrieved workspaces page {}!", &n);
-                                            let res = serde_json::from_str::<
+                                            let res = match serde_json::from_str::<
                                                 WorkspacesResponseOuter,
                                             >(
                                                 &s
-                                            )
-                                            .unwrap();
+                                            ) {
+                                                Ok(r) => r,
+                                                Err(e) => {
+                                                    error!("{:#?}", e);
+                                                    return None;
+                                                }
+                                            };
                                             Some(res.data)
                                         }
                                         Err(e) => {
-                                            error!("Failed to retrieve workspaces :(");
+                                            error!("Failed to retrieve workspaces page {} :(", &n);
                                             error!("{:#?}", e);
                                             None
                                         }
