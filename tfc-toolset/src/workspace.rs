@@ -122,32 +122,51 @@ pub async fn get_workspaces(
                     };
 
                     // Get the next page and merge the result
-                    for n in next_page..=num_pages {
-                        info!("Retrieving workspaces page {}.", &n);
-                        url = Url::parse_with_params(
-                            url.clone().as_str(),
-                            &[("page[number]", &n.to_string())],
-                        )?;
-                        let req = RequestBuilder::new(Method::Get, url.clone())
-                            .header(
-                                "Authorization",
-                                &format!("Bearer {}", config.token),
-                            )
-                            .build();
-                        match client.recv_string(req).await {
-                            Ok(s) => {
-                                info!("Successfully retrieved workspaces!");
-                                let mut res =
-                                    serde_json::from_str::<
-                                        WorkspacesResponseOuter,
-                                    >(&s)?;
-                                workspace_list.data.append(&mut res.data);
+                    let (_, workspace_pages) = AsyncScope::scope_and_block(
+                        |s| {
+                            for n in next_page..=num_pages {
+                                let c = client.clone();
+                                let mut u = url.clone();
+                                let proc = || async move {
+                                    info!("Retrieving workspaces page {}.", &n);
+                                    u = Url::parse_with_params(
+                                        u.clone().as_str(),
+                                        &[("page[number]", &n.to_string())],
+                                    )
+                                    .unwrap();
+                                    let req = RequestBuilder::new(
+                                        Method::Get,
+                                        u.clone(),
+                                    )
+                                    .header(
+                                        "Authorization",
+                                        &format!("Bearer {}", config.token),
+                                    )
+                                    .build();
+                                    match c.recv_string(req).await {
+                                        Ok(s) => {
+                                            info!("Successfully retrieved workspaces page {}!", &n);
+                                            let res = serde_json::from_str::<
+                                                WorkspacesResponseOuter,
+                                            >(
+                                                &s
+                                            )
+                                            .unwrap();
+                                            Some(res.data)
+                                        }
+                                        Err(e) => {
+                                            error!("Failed to retrieve workspaces :(");
+                                            error!("{:#?}", e);
+                                            None
+                                        }
+                                    }
+                                };
+                                s.spawn(proc());
                             }
-                            Err(e) => {
-                                error!("Failed to retrieve workspaces :(");
-                                return Err(ToolError::General(e.into_inner()));
-                            }
-                        }
+                        },
+                    );
+                    for mut ws in workspace_pages.into_iter().flatten() {
+                        workspace_list.data.append(&mut ws);
                     }
                 }
             }

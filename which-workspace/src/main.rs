@@ -8,6 +8,7 @@ use log::*;
 use miette::{IntoDiagnostic, WrapErr};
 use surf::Client;
 use surf_governor::GovernorMiddleware;
+use surf_retry::{ExponentialBackoff, RetryMiddleware};
 use tfc_toolset::{
     error::{ToolError, SETTINGS_ERROR},
     filter,
@@ -33,9 +34,16 @@ async fn main() -> miette::Result<()> {
     )
     .init();
 
-    // Build the http client with a cache and governor enabled
-    let client = Client::new().with(build_governor().into_diagnostic()?).with(
-        Cache(HttpCache {
+    // Build the http client with a cache, governor, and retry enabled
+    let retry = RetryMiddleware::new(
+        99,
+        ExponentialBackoff::builder().build_with_max_retries(10),
+        1,
+    );
+    let client = Client::new()
+        .with(retry)
+        .with(build_governor().into_diagnostic()?)
+        .with(Cache(HttpCache {
             mode: CacheMode::Default,
             manager: CACacheManager::default(),
             options: Some(CacheOptions {
@@ -44,8 +52,7 @@ async fn main() -> miette::Result<()> {
                 immutable_min_time_to_live: Default::default(),
                 ignore_cargo_cult: false,
             }),
-        }),
-    );
+        }));
 
     // Get list of workspaces
     let mut workspaces =
