@@ -101,13 +101,20 @@ async fn main() -> miette::Result<()> {
                 // Get the variables for each workspace
                 let mut workspaces_variables =
                     workspace::get_workspaces_variables(
-                        &core, client, workspaces,
+                        &core,
+                        client,
+                        workspaces.clone(),
                     )
                     .await?;
                 // Filter the workspaces if query variables have been provided
                 if core.query.variables.is_some() {
                     info!("Filtering workspaces with variable query.");
                     filter::variable(&mut workspaces_variables, &core)?;
+                }
+
+                workspaces.clear();
+                for ws in &workspaces_variables {
+                    workspaces.push(ws.workspace.clone());
                 }
 
                 if config.cleanup.unlisted_variables
@@ -229,6 +236,7 @@ async fn main() -> miette::Result<()> {
                 }
             }
 
+            report.data.workspaces = workspaces;
             info!("{:#?}", &report);
             report.save(&core)?;
         }

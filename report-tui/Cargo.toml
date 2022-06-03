@@ -18,3 +18,15 @@ serde = { version = "1.0.137", features = ["derive"] }
 [dependencies.tfc-toolset]
 path = "../tfc-toolset"
 version = "0.1.0"
+
+[dependencies.tfc-toolset-extras]
+path = "../tfc-toolset-extras"
+version = "0.1.0"
+
+[dependencies.tfc-which-workspace]
+path = "../which-workspace"
+version = "0.1.0"
+
+[dependencies.tfc-clean-workspace]
+path = "../clean-workspace"
+version = "0.1.0"

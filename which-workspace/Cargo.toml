@@ -12,6 +12,10 @@ edition = "2021"
 name = "which-workspace"
 path = "src/main.rs"
 
+[lib]
+name = "tfc_which_workspace"
+path = "src/lib.rs"
+
 [dependencies]
 anyhow = "1.0.57"
 async-std = { version = "1.11.0", features = ["attributes"] }

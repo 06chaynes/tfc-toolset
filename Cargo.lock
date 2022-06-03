@@ -2583,7 +2583,10 @@ dependencies = [
  "crossterm",
  "serde",
  "serde_json",
+ "tfc-clean-workspace",
  "tfc-toolset",
+ "tfc-toolset-extras",
+ "tfc-which-workspace",
  "thiserror",
  "tui",
 ]

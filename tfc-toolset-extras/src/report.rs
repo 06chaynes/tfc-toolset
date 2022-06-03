@@ -8,9 +8,18 @@ use serde::{Deserialize, Serialize};
 pub struct Report<M, D> {
     pub report_version: String,
     pub bin_version: String,
-    pub reporter: String,
+    pub reporter: Reporter,
     pub meta: M,
     pub data: D,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[non_exhaustive]
+pub enum Reporter {
+    #[serde(rename = "tfc-clean-workspace")]
+    CleanWorkspace,
+    #[serde(rename = "tfc-which-workspace")]
+    WhichWorkspace,
 }
 
 impl<'de, M, D> Report<M, D>

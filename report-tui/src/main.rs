@@ -8,10 +8,13 @@ use std::io;
 use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
+use tfc_clean_workspace::report::CleanReport;
 use tfc_toolset::{
     settings::{Pagination, Query},
     workspace::Workspace,
 };
+use tfc_toolset_extras::report::{Report, Reporter};
+use tfc_which_workspace::report::WhichReport;
 use thiserror::Error;
 use tui::{
     backend::CrosstermBackend,
@@ -379,21 +382,23 @@ pub struct Meta {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Data {
-    pub workspaces: Vec<Workspace>,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct Report {
-    pub report_version: String,
-    pub bin_version: String,
-    pub reporter: String,
-    pub meta: Meta,
-    pub data: Data,
-}
+pub struct Empty {}
 
 fn read_db() -> Result<Vec<Workspace>, Error> {
     let db_content = fs::read_to_string(DB_PATH)?;
-    let parsed: Report = serde_json::from_str(&db_content)?;
-    Ok(parsed.data.workspaces)
+    // For now we need to do this to check the report type before we try to deserialize the data
+    let parsed: Report<Meta, Empty> = serde_json::from_str(&db_content)?;
+    match parsed.reporter {
+        Reporter::CleanWorkspace => {
+            let parsed: CleanReport = serde_json::from_str(&db_content)?;
+            Ok(parsed.data.workspaces)
+        }
+        Reporter::WhichWorkspace => {
+            let parsed: WhichReport = serde_json::from_str(&db_content)?;
+            Ok(parsed.data.workspaces)
+        }
+        _ => {
+            panic!("Unknown report type!")
+        }
+    }
 }
