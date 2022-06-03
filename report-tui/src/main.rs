@@ -1,20 +1,18 @@
+mod home;
+mod info;
+mod report;
 mod workspaces;
 
-use workspaces::*;
+use report::TfcReport;
 
 use crossterm::{
     event::{self, Event as CEvent, KeyCode},
     terminal::{disable_raw_mode, enable_raw_mode},
 };
-use serde::{Deserialize, Serialize};
-use std::fs;
 use std::io;
 use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
-use tfc_clean_workspace::report::CleanReport;
-use tfc_toolset_extras::report::{Report, Reporter};
-use tfc_which_workspace::report::WhichReport;
 use thiserror::Error;
 use tui::{
     backend::CrosstermBackend,
@@ -24,8 +22,6 @@ use tui::{
     widgets::{Block, BorderType, Borders, ListState, Paragraph, Tabs},
     Terminal,
 };
-
-const DB_PATH: &str = "./report.json";
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -43,6 +39,7 @@ enum Event<I> {
 #[derive(Copy, Clone, Debug)]
 enum MenuItem {
     Home,
+    Info,
     Workspaces,
 }
 
@@ -50,7 +47,8 @@ impl From<MenuItem> for usize {
     fn from(input: MenuItem) -> usize {
         match input {
             MenuItem::Home => 0,
-            MenuItem::Workspaces => 1,
+            MenuItem::Info => 1,
+            MenuItem::Workspaces => 2,
         }
     }
 }
@@ -87,10 +85,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut terminal = Terminal::new(backend)?;
     terminal.clear()?;
 
-    let report = read_db().expect("can't fetch workspace list");
+    let report = report::read().expect("can't read report file");
     let workspaces_count = workspace_count(&report);
 
-    let menu_titles = vec!["Home", "Workspaces", "Quit"];
+    let menu_titles = vec!["Home", "Info", "Workspaces", "Quit"];
     let mut active_menu_item = MenuItem::Home;
     let mut workspace_list_state = ListState::default();
     workspace_list_state.select(Some(0));
@@ -111,7 +109,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 )
                 .split(size);
 
-            let info = Paragraph::new("report-tui 2022")
+            let about = Paragraph::new("report-tui 2022")
                 .style(Style::default().fg(Color::LightCyan))
                 .alignment(Alignment::Center)
                 .block(
@@ -147,7 +145,39 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             rect.render_widget(tabs, chunks[0]);
             match active_menu_item {
-                MenuItem::Home => rect.render_widget(render_home(), chunks[1]),
+                MenuItem::Home => rect.render_widget(home::render(), chunks[1]),
+                MenuItem::Info => {
+                    match report.clone() {
+                        TfcReport::Clean(r) => rect.render_widget(
+                            info::render(
+                                serde_json::to_string(&r.reporter).unwrap(),
+                                r.report_version,
+                                r.bin_version,
+                                serde_json::to_string_pretty(&r.meta.query)
+                                    .unwrap(),
+                                serde_json::to_string_pretty(
+                                    &r.meta.pagination,
+                                )
+                                .unwrap(),
+                            ),
+                            chunks[1],
+                        ),
+                        TfcReport::Which(r) => rect.render_widget(
+                            info::render(
+                                serde_json::to_string(&r.reporter).unwrap(),
+                                r.report_version,
+                                r.bin_version,
+                                serde_json::to_string_pretty(&r.meta.query)
+                                    .unwrap(),
+                                serde_json::to_string_pretty(
+                                    &r.meta.pagination,
+                                )
+                                .unwrap(),
+                            ),
+                            chunks[1],
+                        ),
+                    };
+                }
                 MenuItem::Workspaces => {
                     let workspaces_chunks = Layout::default()
                         .direction(Direction::Horizontal)
@@ -176,7 +206,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         TfcReport::Which(r) => r.data.workspaces,
                     };
                     let (left, right_details, right_vcs, right_tags) =
-                        render_workspaces(
+                        workspaces::render(
                             &workspace_list_state,
                             workspace_list,
                         );
@@ -190,7 +220,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     rect.render_widget(right_tags, right_chunks[2]);
                 }
             }
-            rect.render_widget(info, chunks[2]);
+            rect.render_widget(about, chunks[2]);
         })?;
 
         match rx.recv()? {
@@ -201,6 +231,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     break;
                 }
                 KeyCode::Char('h') => active_menu_item = MenuItem::Home,
+                KeyCode::Char('i') => active_menu_item = MenuItem::Info,
                 KeyCode::Char('w') => active_menu_item = MenuItem::Workspaces,
                 KeyCode::Down => {
                     if let Some(selected) = workspace_list_state.selected() {
@@ -234,71 +265,5 @@ fn workspace_count(report: &TfcReport) -> usize {
     match report {
         TfcReport::Clean(r) => r.data.workspaces.len(),
         TfcReport::Which(r) => r.data.workspaces.len(),
-    }
-}
-
-fn render_home<'a>() -> Paragraph<'a> {
-    let home = Paragraph::new(vec![
-        Spans::from(vec![Span::raw("")]),
-        Spans::from(vec![Span::raw("Welcome")]),
-        Spans::from(vec![Span::raw("")]),
-        Spans::from(vec![Span::raw("to")]),
-        Spans::from(vec![Span::raw("")]),
-        Spans::from(vec![Span::styled(
-            "report-tui",
-            Style::default().fg(Color::Green),
-        )]),
-        Spans::from(vec![Span::raw("")]),
-        Spans::from(vec![Span::raw("Press 'w' to access workspaces.")]),
-    ])
-    .alignment(Alignment::Center)
-    .block(
-        Block::default()
-            .borders(Borders::ALL)
-            .style(Style::default().fg(Color::White))
-            .title("Home")
-            .border_type(BorderType::Plain),
-    );
-    home
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-struct Empty {}
-
-#[derive(Debug, Clone)]
-#[non_exhaustive]
-enum TfcReport {
-    Clean(CleanReport),
-    Which(WhichReport),
-}
-
-impl From<CleanReport> for TfcReport {
-    fn from(item: CleanReport) -> Self {
-        TfcReport::Clean(item)
-    }
-}
-
-impl From<WhichReport> for TfcReport {
-    fn from(item: WhichReport) -> Self {
-        TfcReport::Which(item)
-    }
-}
-
-fn read_db() -> Result<TfcReport, Error> {
-    let db_content = fs::read_to_string(DB_PATH)?;
-    // For now we need to do this to check the report type before we try to deserialize the data
-    let parsed: Report<Empty, Empty> = serde_json::from_str(&db_content)?;
-    match parsed.reporter {
-        Reporter::CleanWorkspace => {
-            let parsed: CleanReport = serde_json::from_str(&db_content)?;
-            Ok(parsed.into())
-        }
-        Reporter::WhichWorkspace => {
-            let parsed: WhichReport = serde_json::from_str(&db_content)?;
-            Ok(parsed.into())
-        }
-        _ => {
-            panic!("Unknown report type!")
-        }
     }
 }

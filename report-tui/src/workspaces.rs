@@ -8,7 +8,7 @@ use tui::{
     },
 };
 
-pub fn render_workspaces<'a>(
+pub fn render<'a>(
     workspace_list_state: &ListState,
     workspace_list: Vec<Workspace>,
 ) -> (List<'a>, Table<'a>, Table<'a>, List<'a>) {
