@@ -3,6 +3,7 @@
 members = [
     "tfc-toolset",
     "clean-workspace",
-    "which-workspace"
+    "which-workspace",
+    "report-tui"
 ]
 

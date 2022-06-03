@@ -1,10 +1,6 @@
-use crate::{report::UnlistedVariables, settings::Settings};
+use crate::settings::Settings;
 use std::fs;
-use tfc_toolset::{
-    error::ToolError,
-    variable,
-    workspace::{Workspace, WorkspaceVariables},
-};
+use tfc_toolset::{error::ToolError, workspace::VcsRepo};
 
 use log::*;
 use serde::{Deserialize, Serialize};
@@ -23,8 +19,8 @@ pub struct Variable {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct ParseResult {
-    pub workspace: Workspace,
-    pub unlisted_variables: Option<UnlistedVariables>,
+    pub vcs: VcsRepo,
+    pub detected_variables: Vec<String>,
 }
 
 fn is_hidden(entry: &DirEntry) -> bool {
@@ -35,14 +31,12 @@ fn is_tf(entry: &DirEntry) -> bool {
     entry.file_name().to_str().map(|s| s.ends_with("tf")).unwrap_or(false)
 }
 
-pub fn tf(
+pub fn tf_repo(
     _config: &Settings,
     walker: IntoIter,
-    workspace: &WorkspaceVariables,
-) -> Result<Option<UnlistedVariables>, ToolError> {
-    let mut unlisted: Option<UnlistedVariables> = None;
-    let tfc_variables: Vec<variable::Variable> = workspace.variables.clone();
-    let mut found: Vec<variable::Variable> = vec![];
+    vcs: &VcsRepo,
+) -> Result<ParseResult, ToolError> {
+    let mut detected_variables: Vec<String> = vec![];
     for file in walker
         .filter_entry(|e| !is_hidden(e))
         .filter_map(Result::ok)
@@ -58,14 +52,9 @@ pub fn tf(
                     file.path(),
                 )?) {
                     Ok(value) => {
-                        for var in &tfc_variables {
-                            for (key, _value) in
-                                value.variable.as_object().unwrap()
-                            {
-                                if var.attributes.key == *key {
-                                    found.push(var.clone());
-                                }
-                            }
+                        for (key, _value) in value.variable.as_object().unwrap()
+                        {
+                            detected_variables.push(key.clone());
                         }
                     }
                     Err(e) => {
@@ -76,22 +65,5 @@ pub fn tf(
             }
         }
     }
-    debug!("TFC Variables: {:#?}", &tfc_variables);
-    debug!("Found Variables: {:#?}", &found);
-    let difference: Vec<_> = tfc_variables
-        .into_iter()
-        .filter(|item| !found.contains(item))
-        .collect();
-    debug!("Variable Difference: {:#?}", &difference);
-    if !difference.is_empty() {
-        let mut un = UnlistedVariables {
-            workspace: workspace.clone(),
-            unlisted_variables: vec![],
-        };
-        for var in difference {
-            un.unlisted_variables.push(var.into())
-        }
-        unlisted = Some(un);
-    }
-    Ok(unlisted)
+    Ok(ParseResult { vcs: vcs.clone(), detected_variables })
 }

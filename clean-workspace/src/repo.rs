@@ -4,14 +4,14 @@ use crate::error::CleanError;
 use git2::{build::RepoBuilder, ErrorCode, Repository};
 use git2_credentials::CredentialHandler;
 use log::*;
-use tfc_toolset::workspace::Workspace;
+use tfc_toolset::workspace::VcsRepo;
 use url::Url;
 
 pub fn clone(
     url: Url,
     path: String,
-    workspace: &Workspace,
-    missing_repos: &mut Vec<Workspace>,
+    vcs: &VcsRepo,
+    missing_repos: &mut Vec<VcsRepo>,
 ) -> Result<(), CleanError> {
     let mut cb = git2::RemoteCallbacks::new();
     let git_config = git2::Config::open_default().unwrap();
@@ -42,7 +42,7 @@ pub fn clone(
                 error!("Open failed :(");
                 match e.code() {
                     ErrorCode::NotFound => {
-                        missing_repos.push(workspace.clone());
+                        missing_repos.push(vcs.clone());
                     }
                     _ => return Err(CleanError::Git(e)),
                 }

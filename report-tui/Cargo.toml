@@ -1,0 +1,20 @@
+[package]
+name = "tfc-report-tui"
+version = "0.1.0"
+authors = ["Christian Haynes <06chaynes@gmail.com>"]
+edition = "2021"
+
+[[bin]]
+name = "report-tui"
+path = "src/main.rs"
+
+[dependencies]
+crossterm = { version = "0.19", features = [ "serde" ] }
+serde_json = "1.0"
+tui = { version = "0.14", default-features = false, features = ['crossterm', 'serde'] }
+thiserror = "1.0"
+serde = { version = "1.0.137", features = ["derive"] }
+
+[dependencies.tfc-toolset]
+path = "../tfc-toolset"
+version = "0.1.0"

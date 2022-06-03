@@ -1,4 +1,4 @@
-/target
+target/
 .idea
 http-cacache/
 git_repos/
