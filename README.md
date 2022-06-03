@@ -26,4 +26,4 @@ More details on each tool/library can be found on the README in each project dir
 
 - [`clean-workspace`](clean-workspace/README.md)
 
-See [Filtering](../FILTERING.md) for more details on the specifics of workspace filtering.
+See [Filtering](FILTERING.md) for more details on the specifics of workspace filtering.
