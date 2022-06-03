@@ -7,10 +7,14 @@ A collection of tools to help in management of your Terraform cloud organization
 - Wrath.
 
 - `tfc-toolset`: The core library containing common functions for working with the Terraform cloud API. Each tool extends upon this library to accomplish its specific purpose.
+
+- `tfc-toolset-extras`: Extends the core library with more optional functionality.
   
 - `which-workspace`: A search tool for finding workspaces that match specified parameters. Sometimes you just need to know which workspaces have a specific value for a specific variable right? ... Right? Happens all the time I'm sure.
   
 - `clean-workspace`: Throw your workspaces in a tub and scrub! Generate massive overly verbose reports on your hundreds of workspaces with details of all the things you need to fix! Maybe even fix some of those things automagically (or maybe not!)!
+
+- `report-tui`: Reading large JSON payloads can be a headache, this maybe slightly less so.
 
 ## Why?
 
@@ -21,9 +25,13 @@ Because I like a side of automation with my automation. nom nom nom
 More details on each tool/library can be found on the README in each project directory (as long as future me actually finished them, that guy needs to step it up), links below:
 
 - [`tfc-toolset`](tfc-toolset/README.md)
+
+- [`tfc-toolset-extras`](tfc-toolset-extras/README.md)
   
 - [`which-workspace`](which-workspace/README.md)
 
 - [`clean-workspace`](clean-workspace/README.md)
+
+- [`report-tui`](report-tui/README.md)
 
 See [Filtering](FILTERING.md) for more details on the specifics of workspace filtering.
