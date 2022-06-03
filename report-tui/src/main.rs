@@ -1,3 +1,7 @@
+mod workspaces;
+
+use workspaces::*;
+
 use crossterm::{
     event::{self, Event as CEvent, KeyCode},
     terminal::{disable_raw_mode, enable_raw_mode},
@@ -9,10 +13,6 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
 use tfc_clean_workspace::report::CleanReport;
-use tfc_toolset::{
-    settings::{Pagination, Query},
-    workspace::Workspace,
-};
 use tfc_toolset_extras::report::{Report, Reporter};
 use tfc_which_workspace::report::WhichReport;
 use thiserror::Error;
@@ -21,10 +21,7 @@ use tui::{
     layout::{Alignment, Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
     text::{Span, Spans},
-    widgets::{
-        Block, BorderType, Borders, Cell, List, ListItem, ListState, Paragraph,
-        Row, Table, Tabs,
-    },
+    widgets::{Block, BorderType, Borders, ListState, Paragraph, Tabs},
     Terminal,
 };
 
@@ -89,6 +86,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
     terminal.clear()?;
+
+    let report = read_db().expect("can't fetch workspace list");
+    let workspaces_count = workspace_count(&report);
 
     let menu_titles = vec!["Home", "Workspaces", "Quit"];
     let mut active_menu_item = MenuItem::Home;
@@ -171,8 +171,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             .as_ref(),
                         )
                         .split(workspaces_chunks[1]);
+                    let workspace_list = match report.clone() {
+                        TfcReport::Clean(r) => r.data.workspaces,
+                        TfcReport::Which(r) => r.data.workspaces,
+                    };
                     let (left, right_details, right_vcs, right_tags) =
-                        render_workspaces(&workspace_list_state);
+                        render_workspaces(
+                            &workspace_list_state,
+                            workspace_list,
+                        );
                     rect.render_stateful_widget(
                         left,
                         workspaces_chunks[0],
@@ -197,9 +204,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 KeyCode::Char('w') => active_menu_item = MenuItem::Workspaces,
                 KeyCode::Down => {
                     if let Some(selected) = workspace_list_state.selected() {
-                        let workspaces_count = read_db()
-                            .expect("can't fetch workspace list")
-                            .len();
                         if selected >= workspaces_count - 1 {
                             workspace_list_state.select(Some(0));
                         } else {
@@ -209,9 +213,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
                 KeyCode::Up => {
                     if let Some(selected) = workspace_list_state.selected() {
-                        let workspaces_count = read_db()
-                            .expect("can't fetch workspace list")
-                            .len();
                         if selected > 0 {
                             workspace_list_state.select(Some(selected - 1));
                         } else {
@@ -229,6 +230,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+fn workspace_count(report: &TfcReport) -> usize {
+    match report {
+        TfcReport::Clean(r) => r.data.workspaces.len(),
+        TfcReport::Which(r) => r.data.workspaces.len(),
+    }
+}
+
 fn render_home<'a>() -> Paragraph<'a> {
     let home = Paragraph::new(vec![
         Spans::from(vec![Span::raw("")]),
@@ -237,8 +245,8 @@ fn render_home<'a>() -> Paragraph<'a> {
         Spans::from(vec![Span::raw("to")]),
         Spans::from(vec![Span::raw("")]),
         Spans::from(vec![Span::styled(
-            "workspace-CLI",
-            Style::default().fg(Color::LightBlue),
+            "report-tui",
+            Style::default().fg(Color::Green),
         )]),
         Spans::from(vec![Span::raw("")]),
         Spans::from(vec![Span::raw("Press 'w' to access workspaces.")]),
@@ -254,148 +262,40 @@ fn render_home<'a>() -> Paragraph<'a> {
     home
 }
 
-fn render_workspaces<'a>(
-    workspace_list_state: &ListState,
-) -> (List<'a>, Table<'a>, Table<'a>, List<'a>) {
-    let workspaces = Block::default()
-        .borders(Borders::ALL)
-        .style(Style::default().fg(Color::White))
-        .title("Workspaces")
-        .border_type(BorderType::Plain);
+#[derive(Debug, Deserialize, Serialize)]
+struct Empty {}
 
-    let workspace_list = read_db().expect("can't fetch workspace list");
-    let items: Vec<_> = workspace_list
-        .iter()
-        .map(|workspace| {
-            ListItem::new(Spans::from(vec![Span::styled(
-                workspace.attributes.name.clone(),
-                Style::default(),
-            )]))
-        })
-        .collect();
+#[derive(Debug, Clone)]
+#[non_exhaustive]
+enum TfcReport {
+    Clean(CleanReport),
+    Which(WhichReport),
+}
 
-    let selected_workspace = workspace_list
-        .get(
-            workspace_list_state
-                .selected()
-                .expect("there is always a selected workspace"),
-        )
-        .expect("exists")
-        .clone();
-
-    let list = List::new(items).block(workspaces).highlight_style(
-        Style::default()
-            .bg(Color::Green)
-            .fg(Color::Black)
-            .add_modifier(Modifier::BOLD),
-    );
-
-    let mut workspace_tags: Vec<ListItem> = vec![];
-    for tag in selected_workspace.attributes.tag_names {
-        workspace_tags.push(ListItem::new(tag));
+impl From<CleanReport> for TfcReport {
+    fn from(item: CleanReport) -> Self {
+        TfcReport::Clean(item)
     }
-    let tag_list = List::new(workspace_tags).block(
-        Block::default()
-            .borders(Borders::ALL)
-            .style(Style::default().fg(Color::White))
-            .title("Tags")
-            .border_type(BorderType::Plain),
-    );
-
-    let vcs_table = match selected_workspace.attributes.vcs_repo {
-        Some(v) => Table::new(vec![Row::new(vec![
-            Cell::from(Span::raw(v.repository_http_url)),
-            Cell::from(Span::raw(v.branch)),
-        ])])
-        .header(Row::new(vec![
-            Cell::from(Span::styled(
-                "URL",
-                Style::default().add_modifier(Modifier::BOLD),
-            )),
-            Cell::from(Span::styled(
-                "Branch",
-                Style::default().add_modifier(Modifier::BOLD),
-            )),
-        ]))
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .style(Style::default().fg(Color::White))
-                .title("VCS")
-                .border_type(BorderType::Plain),
-        )
-        .widths(&[Constraint::Percentage(70), Constraint::Percentage(20)]),
-        None => Table::new(vec![Row::new(vec![
-            Cell::from(Span::raw("No VCS Attached")),
-            Cell::from(Span::raw("")),
-        ])])
-        .header(Row::new(vec![
-            Cell::from(Span::styled(
-                "URL",
-                Style::default().add_modifier(Modifier::BOLD),
-            )),
-            Cell::from(Span::styled(
-                "Branch",
-                Style::default().add_modifier(Modifier::BOLD),
-            )),
-        ]))
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .style(Style::default().fg(Color::White))
-                .title("VCS")
-                .border_type(BorderType::Plain),
-        )
-        .widths(&[Constraint::Percentage(80), Constraint::Percentage(20)]),
-    };
-
-    let workspace_detail = Table::new(vec![Row::new(vec![
-        Cell::from(Span::raw(selected_workspace.id.to_string())),
-        Cell::from(Span::raw(selected_workspace.attributes.name)),
-    ])])
-    .header(Row::new(vec![
-        Cell::from(Span::styled(
-            "ID",
-            Style::default().add_modifier(Modifier::BOLD),
-        )),
-        Cell::from(Span::styled(
-            "Name",
-            Style::default().add_modifier(Modifier::BOLD),
-        )),
-    ]))
-    .block(
-        Block::default()
-            .borders(Borders::ALL)
-            .style(Style::default().fg(Color::White))
-            .title("Details")
-            .border_type(BorderType::Plain),
-    )
-    .widths(&[Constraint::Percentage(30), Constraint::Percentage(70)]);
-
-    (list, workspace_detail, vcs_table, tag_list)
 }
 
-#[derive(Debug, Deserialize, Serialize)]
-pub struct Meta {
-    pub query: Option<Query>,
-    pub pagination: Option<Pagination>,
+impl From<WhichReport> for TfcReport {
+    fn from(item: WhichReport) -> Self {
+        TfcReport::Which(item)
+    }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
-pub struct Empty {}
-
-fn read_db() -> Result<Vec<Workspace>, Error> {
+fn read_db() -> Result<TfcReport, Error> {
     let db_content = fs::read_to_string(DB_PATH)?;
     // For now we need to do this to check the report type before we try to deserialize the data
-    let parsed: Report<Meta, Empty> = serde_json::from_str(&db_content)?;
+    let parsed: Report<Empty, Empty> = serde_json::from_str(&db_content)?;
     match parsed.reporter {
         Reporter::CleanWorkspace => {
             let parsed: CleanReport = serde_json::from_str(&db_content)?;
-            Ok(parsed.data.workspaces)
+            Ok(parsed.into())
         }
         Reporter::WhichWorkspace => {
             let parsed: WhichReport = serde_json::from_str(&db_content)?;
-            Ok(parsed.data.workspaces)
+            Ok(parsed.into())
         }
         _ => {
             panic!("Unknown report type!")
