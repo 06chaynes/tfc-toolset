@@ -17,17 +17,18 @@ anyhow = "1.0.57"
 async-std = { version = "1.11.0", features = ["attributes"] }
 config = "0.13.1"
 env_logger = "0.9.0"
-http-cache-surf = "0.4.6"
 log = "0.4.17"
 miette = { version = "4.7.1", features = ["fancy"] }
 serde = { version = "1.0.137", features = ["derive"] }
 serde_json = "1.0.81"
 surf = "2.3.2"
-surf-governor = "0.1.0"
 thiserror = "1.0.31"
 url = "2.2.2"
-surf-retry = "0.1.0"
 
 [dependencies.tfc-toolset]
 path = "../tfc-toolset"
+version = "0.1.0"
+
+[dependencies.tfc-toolset-extras]
+path = "../tfc-toolset-extras"
 version = "0.1.0"

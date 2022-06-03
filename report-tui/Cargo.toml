@@ -9,10 +9,10 @@ name = "report-tui"
 path = "src/main.rs"
 
 [dependencies]
-crossterm = { version = "0.19", features = [ "serde" ] }
-serde_json = "1.0"
-tui = { version = "0.14", default-features = false, features = ['crossterm', 'serde'] }
-thiserror = "1.0"
+crossterm = { version = "0.23.2", features = [ "serde" ] }
+serde_json = "1.0.81"
+tui = { version = "0.18.0", default-features = false, features = ['crossterm', 'serde'] }
+thiserror = "1.0.31"
 serde = { version = "1.0.137", features = ["derive"] }
 
 [dependencies.tfc-toolset]

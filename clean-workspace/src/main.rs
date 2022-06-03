@@ -6,26 +6,21 @@ mod settings;
 
 use clap::{Parser, Subcommand};
 use env_logger::Env;
-use http_cache_surf::{
-    CACacheManager, Cache, CacheMode, CacheOptions, HttpCache,
-};
 use log::*;
 use miette::{IntoDiagnostic, WrapErr};
 use settings::Settings;
-use surf::Client;
-use surf_governor::GovernorMiddleware;
-use surf_retry::{ExponentialBackoff, RetryMiddleware};
 use tfc_toolset::{
-    error::{ToolError, SETTINGS_ERROR},
+    error::SETTINGS_ERROR,
     filter,
     settings::Core,
     variable,
     workspace::{self, VcsRepo},
 };
+use tfc_toolset_extras::default_client;
 use url::Url;
 use walkdir::WalkDir;
 
-use crate::report::{Meta, UnlistedVariables};
+use crate::report::UnlistedVariables;
 
 const ABOUT: &str =
     "Tool for rule based cleanup operations for Terraform workspaces";
@@ -47,13 +42,6 @@ enum Commands {
     Plan,
     #[clap(about = ABOUT_APPLY)]
     Apply,
-}
-
-fn build_governor() -> Result<GovernorMiddleware, ToolError> {
-    match GovernorMiddleware::per_second(30) {
-        Ok(g) => Ok(g),
-        Err(e) => Err(ToolError::General(e.into_inner())),
-    }
 }
 
 fn build_path(config: &Settings, vcs: &VcsRepo, url: Url) -> String {
@@ -87,36 +75,15 @@ async fn main() -> miette::Result<()> {
     // Initialize the logger
     env_logger::Builder::from_env(Env::default().default_filter_or(&core.log))
         .init();
-    // Build the http client with a cache, governor, and retry enabled
-    let retry = RetryMiddleware::new(
-        99,
-        ExponentialBackoff::builder().build_with_max_retries(10),
-        1,
-    );
-    let client = Client::new()
-        .with(retry)
-        .with(build_governor().into_diagnostic()?)
-        .with(Cache(HttpCache {
-            mode: CacheMode::Default,
-            manager: CACacheManager::default(),
-            options: Some(CacheOptions {
-                shared: false,
-                cache_heuristic: 0.0,
-                immutable_min_time_to_live: Default::default(),
-                ignore_cargo_cult: false,
-            }),
-        }));
+    let client = default_client()?;
     // Match on the cli subcommand
     match &cli.command {
         Commands::Plan => {
             info!("Start Plan Phase");
-            let mut report = report::Report {
-                meta: Meta {
-                    query: Some(core.query.clone()),
-                    pagination: Some(core.pagination.clone()),
-                },
-                ..Default::default()
-            };
+            let mut report = report::new();
+            report.meta.query = Some(core.query.clone());
+            report.meta.pagination = Some(core.pagination.clone());
+
             // Get list of workspaces
             let mut workspaces =
                 workspace::get_workspaces(&core, client.clone()).await?;
@@ -263,7 +230,7 @@ async fn main() -> miette::Result<()> {
             }
 
             info!("{:#?}", &report);
-            report::save(&core, report)?;
+            report.save(&core)?;
         }
         Commands::Apply => {
             dbg!("apply");

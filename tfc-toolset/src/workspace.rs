@@ -26,7 +26,7 @@ pub struct WorkspaceVariables {
     pub variables: Vec<variable::Variable>,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct VcsRepo {
     pub branch: String,
     pub identifier: Option<String>,
