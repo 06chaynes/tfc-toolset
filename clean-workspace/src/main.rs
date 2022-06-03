@@ -19,12 +19,13 @@ use tfc_toolset::{
     error::{ToolError, SETTINGS_ERROR},
     filter,
     settings::Core,
-    workspace::{self, Workspace},
+    variable,
+    workspace::{self, VcsRepo},
 };
 use url::Url;
 use walkdir::WalkDir;
 
-use crate::report::Meta;
+use crate::report::{Meta, UnlistedVariables};
 
 const ABOUT: &str =
     "Tool for rule based cleanup operations for Terraform workspaces";
@@ -53,6 +54,27 @@ fn build_governor() -> Result<GovernorMiddleware, ToolError> {
         Ok(g) => Ok(g),
         Err(e) => Err(ToolError::General(e.into_inner())),
     }
+}
+
+fn build_path(config: &Settings, vcs: &VcsRepo, url: Url) -> String {
+    let id = match vcs.identifier.clone() {
+        Some(i) => i,
+        None => {
+            let segments = url.path_segments().unwrap();
+            segments.last().unwrap().to_string()
+        }
+    };
+    let mut base_dir = config.repositories.git_dir.clone();
+    if base_dir.ends_with('/') {
+        base_dir.pop();
+    }
+    format!("{}/{}", base_dir, &id)
+}
+
+fn repo_url(vcs: &VcsRepo) -> miette::Result<Url> {
+    Url::parse(&vcs.repository_http_url)
+        .into_diagnostic()
+        .wrap_err("Failed to parse repository url")
 }
 
 #[async_std::main]
@@ -125,56 +147,105 @@ async fn main() -> miette::Result<()> {
                     || config.cleanup.missing_repositories
                 {
                     info!("Cloning workspace repositories.");
+                    // First let's clean up the job list to remove duplicates
+                    let mut repos: Vec<VcsRepo> = vec![];
+                    let mut missing: Vec<VcsRepo> = vec![];
+                    let mut detected_variables: Vec<parse::ParseResult> =
+                        vec![];
                     for entry in &workspaces_variables {
-                        report.data.workspaces.push(entry.workspace.clone());
-                        // Clone git repositories
-                        if let Some(repo) = &entry.workspace.attributes.vcs_repo
+                        if let Some(vcs) = &entry.workspace.attributes.vcs_repo
+                        {
+                            if !repos.contains(vcs) {
+                                repos.push(vcs.clone());
+                                let url = repo_url(vcs)?;
+                                let path =
+                                    build_path(&config, vcs, url.clone());
+                                match repo::clone(
+                                    url.clone(),
+                                    path.clone(),
+                                    vcs,
+                                    &mut missing,
+                                ) {
+                                    Ok(_) => {}
+                                    Err(_e) => {}
+                                };
+                                if config.cleanup.unlisted_variables {
+                                    info!("Parsing variable data.");
+                                    let url = repo_url(vcs)?;
+                                    let path =
+                                        build_path(&config, vcs, url.clone());
+                                    let walker =
+                                        WalkDir::new(&path).into_iter();
+                                    detected_variables.push(parse::tf_repo(
+                                        &config, walker, vcs,
+                                    )?);
+                                }
+                            }
+                        }
+                    }
+                    for entry in &workspaces_variables {
+                        if let Some(vcs) = &entry.workspace.attributes.vcs_repo
                         {
                             info!(
                                 "Repo detected for workspace: {}",
                                 &entry.workspace.attributes.name
                             );
-                            let url = Url::parse(&repo.repository_http_url)
-                                .into_diagnostic()
-                                .wrap_err("Failed to parse repository url")?;
-                            let id = match repo.identifier.clone() {
-                                Some(i) => i,
-                                None => {
-                                    let segments = url.path_segments().unwrap();
-                                    segments.last().unwrap().to_string()
-                                }
-                            };
-                            let mut base_dir =
-                                config.repositories.git_dir.clone();
-                            if base_dir.ends_with('/') {
-                                base_dir.pop();
-                            }
-                            let path = format!("{}/{}", base_dir, &id);
-                            let mut missing: Vec<Workspace> = vec![];
-                            match repo::clone(
-                                url.clone(),
-                                path.clone(),
-                                &entry.workspace,
-                                &mut missing,
-                            ) {
-                                Ok(_) => {}
-                                Err(_e) => {}
-                            };
-                            if config.cleanup.missing_repositories {
+                            if config.cleanup.missing_repositories
+                                && missing.contains(vcs)
+                            {
                                 if let Some(m) =
                                     &mut report.data.missing_repositories
                                 {
-                                    m.append(&mut missing);
+                                    m.push(entry.workspace.clone());
                                 } else {
                                     report.data.missing_repositories =
-                                        Some(missing);
+                                        Some(vec![entry.workspace.clone()]);
                                 }
                             }
-                            info!("Parsing variable data.");
+
                             if config.cleanup.unlisted_variables {
-                                let walker = WalkDir::new(&path).into_iter();
-                                let unlisted =
-                                    parse::tf(&config, walker, entry)?;
+                                let mut found: Vec<variable::Variable> = vec![];
+                                let mut unlisted: Option<UnlistedVariables> =
+                                    None;
+                                for var in &entry.variables {
+                                    for detected in &detected_variables {
+                                        if &detected.vcs == vcs {
+                                            for dv in
+                                                &detected.detected_variables
+                                            {
+                                                if &var.attributes.key == dv {
+                                                    found.push(var.clone());
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                debug!(
+                                    "TFC Variables: {:#?}",
+                                    &entry.variables
+                                );
+                                debug!("Found Variables: {:#?}", &found);
+                                let difference: Vec<_> = entry
+                                    .variables
+                                    .clone()
+                                    .into_iter()
+                                    .filter(|item| !found.contains(item))
+                                    .collect();
+                                debug!(
+                                    "Variable Difference: {:#?}",
+                                    &difference
+                                );
+                                if !difference.is_empty() {
+                                    let mut un = UnlistedVariables {
+                                        workspace: entry.clone(),
+                                        unlisted_variables: vec![],
+                                    };
+                                    for var in difference {
+                                        un.unlisted_variables.push(var.into())
+                                    }
+                                    unlisted = Some(un);
+                                }
+
                                 if let Some(u) = unlisted {
                                     if let Some(v) =
                                         &mut report.data.unlisted_variables
