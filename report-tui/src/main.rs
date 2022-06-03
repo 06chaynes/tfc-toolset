@@ -233,25 +233,35 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 KeyCode::Char('h') => active_menu_item = MenuItem::Home,
                 KeyCode::Char('i') => active_menu_item = MenuItem::Info,
                 KeyCode::Char('w') => active_menu_item = MenuItem::Workspaces,
-                KeyCode::Down => {
-                    if let Some(selected) = workspace_list_state.selected() {
-                        if selected >= workspaces_count - 1 {
-                            workspace_list_state.select(Some(0));
-                        } else {
-                            workspace_list_state.select(Some(selected + 1));
+                KeyCode::Down => match active_menu_item {
+                    MenuItem::Home => {}
+                    MenuItem::Info => {}
+                    MenuItem::Workspaces => {
+                        if let Some(selected) = workspace_list_state.selected()
+                        {
+                            if selected >= workspaces_count - 1 {
+                                workspace_list_state.select(Some(0));
+                            } else {
+                                workspace_list_state.select(Some(selected + 1));
+                            }
                         }
                     }
-                }
-                KeyCode::Up => {
-                    if let Some(selected) = workspace_list_state.selected() {
-                        if selected > 0 {
-                            workspace_list_state.select(Some(selected - 1));
-                        } else {
-                            workspace_list_state
-                                .select(Some(workspaces_count - 1));
+                },
+                KeyCode::Up => match active_menu_item {
+                    MenuItem::Home => {}
+                    MenuItem::Info => {}
+                    MenuItem::Workspaces => {
+                        if let Some(selected) = workspace_list_state.selected()
+                        {
+                            if selected > 0 {
+                                workspace_list_state.select(Some(selected - 1));
+                            } else {
+                                workspace_list_state
+                                    .select(Some(workspaces_count - 1));
+                            }
                         }
                     }
-                }
+                },
                 _ => {}
             },
             Event::Tick => {}
