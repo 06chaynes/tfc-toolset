@@ -6,21 +6,25 @@ mod workspaces;
 use report::TfcReport;
 
 use crossterm::{
-    event::{self, Event as CEvent, KeyCode},
-    terminal::{disable_raw_mode, enable_raw_mode},
+    event::{
+        self, DisableMouseCapture, EnableMouseCapture, Event as CEvent,
+        KeyCode, KeyEvent, KeyModifiers,
+    },
+    execute,
+    terminal::{
+        disable_raw_mode, enable_raw_mode, EnterAlternateScreen,
+        LeaveAlternateScreen,
+    },
 };
 use std::io;
-use std::sync::mpsc;
-use std::thread;
-use std::time::{Duration, Instant};
 use thiserror::Error;
 use tui::{
-    backend::CrosstermBackend,
+    backend::{Backend, CrosstermBackend},
     layout::{Alignment, Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
     text::{Span, Spans},
     widgets::{Block, BorderType, Borders, ListState, Paragraph, Tabs},
-    Terminal,
+    Frame, Terminal,
 };
 
 #[derive(Error, Debug)]
@@ -31,9 +35,9 @@ pub enum Error {
     ParseDBError(#[from] serde_json::Error),
 }
 
-enum Event<I> {
-    Input(I),
-    Tick,
+pub enum InputMode {
+    Navigation,
+    Editing,
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -53,225 +57,278 @@ impl From<MenuItem> for usize {
     }
 }
 
+pub struct App {
+    /// Current input mode
+    input_mode: InputMode,
+    /// Current page
+    active_nav_item: MenuItem,
+    /// Loaded report
+    report: TfcReport,
+    /// Current value of the input box
+    workspace_filter: String,
+    /// Count of workspaces in report
+    workspace_count: usize,
+    /// State data for workspaces list
+    workspace_list_state: ListState,
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    enable_raw_mode().expect("can run in raw mode");
-
-    let (tx, rx) = mpsc::channel();
-    let tick_rate = Duration::from_millis(200);
-    thread::spawn(move || {
-        let mut last_tick = Instant::now();
-        loop {
-            let timeout = tick_rate
-                .checked_sub(last_tick.elapsed())
-                .unwrap_or_else(|| Duration::from_secs(0));
-
-            if event::poll(timeout).expect("poll works") {
-                if let CEvent::Key(key) =
-                    event::read().expect("can read events")
-                {
-                    tx.send(Event::Input(key)).expect("can send events");
-                }
-            }
-
-            if last_tick.elapsed() >= tick_rate && tx.send(Event::Tick).is_ok()
-            {
-                last_tick = Instant::now();
-            }
-        }
-    });
-
-    let stdout = io::stdout();
+    enable_raw_mode()?;
+    let mut stdout = io::stdout();
+    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
-    terminal.clear()?;
 
-    let report = report::read().expect("can't read report file");
-    let workspaces_count = workspace_count(&report);
-
-    let menu_titles = vec!["Home", "Info", "Workspaces", "Quit"];
-    let mut active_menu_item = MenuItem::Home;
+    // create app and run it
     let mut workspace_list_state = ListState::default();
     workspace_list_state.select(Some(0));
+    let report = report::read()?;
+    let workspace_count = count_workspaces(&report);
+    let app = App {
+        input_mode: InputMode::Navigation,
+        report,
+        workspace_filter: String::new(),
+        workspace_count,
+        workspace_list_state,
+        active_nav_item: MenuItem::Home,
+    };
+    let res = run_app(&mut terminal, app);
 
-    loop {
-        terminal.draw(|rect| {
-            let size = rect.size();
-            let chunks = Layout::default()
-                .direction(Direction::Vertical)
-                .margin(2)
-                .constraints(
-                    [
-                        Constraint::Length(3),
-                        Constraint::Min(2),
-                        Constraint::Length(3),
-                    ]
-                    .as_ref(),
-                )
-                .split(size);
+    // restore terminal
+    disable_raw_mode()?;
+    execute!(
+        terminal.backend_mut(),
+        LeaveAlternateScreen,
+        DisableMouseCapture
+    )?;
+    terminal.show_cursor()?;
 
-            let about = Paragraph::new("report-tui 2022")
-                .style(Style::default().fg(Color::LightCyan))
-                .alignment(Alignment::Center)
-                .block(
-                    Block::default()
-                        .borders(Borders::ALL)
-                        .style(Style::default().fg(Color::White))
-                        .title("Info")
-                        .border_type(BorderType::Plain),
-                );
-
-            let menu = menu_titles
-                .iter()
-                .map(|t| {
-                    let (first, rest) = t.split_at(1);
-                    Spans::from(vec![
-                        Span::styled(
-                            first,
-                            Style::default()
-                                .fg(Color::Green)
-                                .add_modifier(Modifier::UNDERLINED),
-                        ),
-                        Span::styled(rest, Style::default().fg(Color::White)),
-                    ])
-                })
-                .collect();
-
-            let tabs = Tabs::new(menu)
-                .select(active_menu_item.into())
-                .block(Block::default().title("Menu").borders(Borders::ALL))
-                .style(Style::default().fg(Color::White))
-                .highlight_style(Style::default().fg(Color::Green))
-                .divider(Span::raw("|"));
-
-            rect.render_widget(tabs, chunks[0]);
-            match active_menu_item {
-                MenuItem::Home => rect.render_widget(home::render(), chunks[1]),
-                MenuItem::Info => {
-                    match report.clone() {
-                        TfcReport::Clean(r) => rect.render_widget(
-                            info::render(
-                                serde_json::to_string(&r.reporter).unwrap(),
-                                r.report_version,
-                                r.bin_version,
-                                serde_json::to_string_pretty(&r.meta.query)
-                                    .unwrap(),
-                                serde_json::to_string_pretty(
-                                    &r.meta.pagination,
-                                )
-                                .unwrap(),
-                            ),
-                            chunks[1],
-                        ),
-                        TfcReport::Which(r) => rect.render_widget(
-                            info::render(
-                                serde_json::to_string(&r.reporter).unwrap(),
-                                r.report_version,
-                                r.bin_version,
-                                serde_json::to_string_pretty(&r.meta.query)
-                                    .unwrap(),
-                                serde_json::to_string_pretty(
-                                    &r.meta.pagination,
-                                )
-                                .unwrap(),
-                            ),
-                            chunks[1],
-                        ),
-                    };
-                }
-                MenuItem::Workspaces => {
-                    let workspaces_chunks = Layout::default()
-                        .direction(Direction::Horizontal)
-                        .constraints(
-                            [
-                                Constraint::Percentage(30),
-                                Constraint::Percentage(70),
-                            ]
-                            .as_ref(),
-                        )
-                        .split(chunks[1]);
-
-                    let right_chunks = Layout::default()
-                        .direction(Direction::Vertical)
-                        .constraints(
-                            [
-                                Constraint::Percentage(20),
-                                Constraint::Percentage(20),
-                                Constraint::Percentage(50),
-                            ]
-                            .as_ref(),
-                        )
-                        .split(workspaces_chunks[1]);
-                    let workspace_list = match report.clone() {
-                        TfcReport::Clean(r) => r.data.workspaces,
-                        TfcReport::Which(r) => r.data.workspaces,
-                    };
-                    let (left, right_details, right_vcs, right_tags) =
-                        workspaces::render(
-                            &workspace_list_state,
-                            workspace_list,
-                        );
-                    rect.render_stateful_widget(
-                        left,
-                        workspaces_chunks[0],
-                        &mut workspace_list_state,
-                    );
-                    rect.render_widget(right_details, right_chunks[0]);
-                    rect.render_widget(right_vcs, right_chunks[1]);
-                    rect.render_widget(right_tags, right_chunks[2]);
-                }
-            }
-            rect.render_widget(about, chunks[2]);
-        })?;
-
-        match rx.recv()? {
-            Event::Input(event) => match event.code {
-                KeyCode::Char('q') => {
-                    disable_raw_mode()?;
-                    terminal.show_cursor()?;
-                    break;
-                }
-                KeyCode::Char('h') => active_menu_item = MenuItem::Home,
-                KeyCode::Char('i') => active_menu_item = MenuItem::Info,
-                KeyCode::Char('w') => active_menu_item = MenuItem::Workspaces,
-                KeyCode::Down => match active_menu_item {
-                    MenuItem::Home => {}
-                    MenuItem::Info => {}
-                    MenuItem::Workspaces => {
-                        if let Some(selected) = workspace_list_state.selected()
-                        {
-                            if selected >= workspaces_count - 1 {
-                                workspace_list_state.select(Some(0));
-                            } else {
-                                workspace_list_state.select(Some(selected + 1));
-                            }
-                        }
-                    }
-                },
-                KeyCode::Up => match active_menu_item {
-                    MenuItem::Home => {}
-                    MenuItem::Info => {}
-                    MenuItem::Workspaces => {
-                        if let Some(selected) = workspace_list_state.selected()
-                        {
-                            if selected > 0 {
-                                workspace_list_state.select(Some(selected - 1));
-                            } else {
-                                workspace_list_state
-                                    .select(Some(workspaces_count - 1));
-                            }
-                        }
-                    }
-                },
-                _ => {}
-            },
-            Event::Tick => {}
-        }
+    if let Err(err) = res {
+        println!("{:?}", err)
     }
 
     Ok(())
 }
 
-fn workspace_count(report: &TfcReport) -> usize {
+fn run_app<B: Backend>(
+    terminal: &mut Terminal<B>,
+    mut app: App,
+) -> io::Result<()> {
+    loop {
+        terminal.draw(|f| ui(f, &mut app))?;
+
+        if let CEvent::Key(key) = event::read()? {
+            match app.input_mode {
+                InputMode::Navigation => match key {
+                    KeyEvent {
+                        code: KeyCode::Char('Q'),
+                        modifiers: KeyModifiers::SHIFT,
+                    } => {
+                        return Ok(());
+                    }
+                    KeyEvent {
+                        code: KeyCode::Char('f'),
+                        modifiers: KeyModifiers::CONTROL,
+                    } => app.input_mode = InputMode::Editing,
+                    KeyEvent {
+                        code: KeyCode::Char('H'),
+                        modifiers: KeyModifiers::SHIFT,
+                    } => app.active_nav_item = MenuItem::Home,
+                    KeyEvent {
+                        code: KeyCode::Char('I'),
+                        modifiers: KeyModifiers::SHIFT,
+                    } => app.active_nav_item = MenuItem::Info,
+                    KeyEvent {
+                        code: KeyCode::Char('W'),
+                        modifiers: KeyModifiers::SHIFT,
+                    } => app.active_nav_item = MenuItem::Workspaces,
+                    KeyEvent {
+                        code: KeyCode::Down,
+                        modifiers: KeyModifiers::NONE,
+                    } => match app.active_nav_item {
+                        MenuItem::Home => {}
+                        MenuItem::Info => {}
+                        MenuItem::Workspaces => {
+                            if let Some(selected) =
+                                app.workspace_list_state.selected()
+                            {
+                                if selected >= app.workspace_count - 1 {
+                                    app.workspace_list_state.select(Some(0));
+                                } else {
+                                    app.workspace_list_state
+                                        .select(Some(selected + 1));
+                                }
+                            }
+                        }
+                    },
+                    KeyEvent {
+                        code: KeyCode::Up,
+                        modifiers: KeyModifiers::NONE,
+                    } => match app.active_nav_item {
+                        MenuItem::Home => {}
+                        MenuItem::Info => {}
+                        MenuItem::Workspaces => {
+                            if let Some(selected) =
+                                app.workspace_list_state.selected()
+                            {
+                                if selected > 0 {
+                                    app.workspace_list_state
+                                        .select(Some(selected - 1));
+                                } else {
+                                    app.workspace_list_state
+                                        .select(Some(app.workspace_count - 1));
+                                }
+                            }
+                        }
+                    },
+                    _ => {}
+                },
+                InputMode::Editing => match key.code {
+                    KeyCode::Enter | KeyCode::Esc => {
+                        app.input_mode = InputMode::Navigation;
+                    }
+                    KeyCode::Char(c) => {
+                        app.workspace_filter.push(c);
+                    }
+                    KeyCode::Backspace => {
+                        app.workspace_filter.pop();
+                    }
+                    _ => {}
+                },
+            }
+        }
+    }
+}
+
+fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
+    let menu_titles = vec!["Home", "Info", "Workspaces", "Quit"];
+    let size = f.size();
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .margin(2)
+        .constraints(
+            [Constraint::Length(3), Constraint::Min(2), Constraint::Length(3)]
+                .as_ref(),
+        )
+        .split(size);
+
+    let about = Paragraph::new("report-tui 2022")
+        .style(Style::default().fg(Color::LightCyan))
+        .alignment(Alignment::Center)
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .style(Style::default().fg(Color::White))
+                .title("Info")
+                .border_type(BorderType::Plain),
+        );
+
+    let menu = menu_titles
+        .iter()
+        .map(|t| {
+            let (first, rest) = t.split_at(1);
+            Spans::from(vec![
+                Span::styled(
+                    first,
+                    Style::default()
+                        .fg(Color::Green)
+                        .add_modifier(Modifier::UNDERLINED),
+                ),
+                Span::styled(rest, Style::default().fg(Color::White)),
+            ])
+        })
+        .collect();
+
+    let tabs = Tabs::new(menu)
+        .select(app.active_nav_item.into())
+        .block(Block::default().title("Menu").borders(Borders::ALL))
+        .style(Style::default().fg(Color::White))
+        .highlight_style(Style::default().fg(Color::Green))
+        .divider(Span::raw("|"));
+
+    f.render_widget(tabs, chunks[0]);
+    match app.active_nav_item {
+        MenuItem::Home => f.render_widget(home::render(), chunks[1]),
+        MenuItem::Info => {
+            match app.report.clone() {
+                TfcReport::Clean(r) => f.render_widget(
+                    info::render(
+                        serde_json::to_string(&r.reporter).unwrap(),
+                        r.report_version,
+                        r.bin_version,
+                        serde_json::to_string_pretty(&r.meta.query).unwrap(),
+                        serde_json::to_string_pretty(&r.meta.pagination)
+                            .unwrap(),
+                    ),
+                    chunks[1],
+                ),
+                TfcReport::Which(r) => f.render_widget(
+                    info::render(
+                        serde_json::to_string(&r.reporter).unwrap(),
+                        r.report_version,
+                        r.bin_version,
+                        serde_json::to_string_pretty(&r.meta.query).unwrap(),
+                        serde_json::to_string_pretty(&r.meta.pagination)
+                            .unwrap(),
+                    ),
+                    chunks[1],
+                ),
+            };
+        }
+        MenuItem::Workspaces => {
+            let workspaces_chunks = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints(
+                    [Constraint::Percentage(30), Constraint::Percentage(70)]
+                        .as_ref(),
+                )
+                .split(chunks[1]);
+
+            let left_chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints(
+                    [Constraint::Percentage(10), Constraint::Percentage(90)]
+                        .as_ref(),
+                )
+                .split(workspaces_chunks[0]);
+
+            let right_chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints(
+                    [
+                        Constraint::Percentage(20),
+                        Constraint::Percentage(20),
+                        Constraint::Percentage(50),
+                    ]
+                    .as_ref(),
+                )
+                .split(workspaces_chunks[1]);
+            let workspace_list = match app.report.clone() {
+                TfcReport::Clean(r) => r.data.workspaces,
+                TfcReport::Which(r) => r.data.workspaces,
+            };
+            let (
+                left_filter,
+                left_ws_list,
+                right_details,
+                right_vcs,
+                right_tags,
+            ) = workspaces::render(workspace_list, app);
+            f.render_widget(left_filter, left_chunks[0]);
+            f.render_stateful_widget(
+                left_ws_list,
+                left_chunks[1],
+                &mut app.workspace_list_state,
+            );
+            f.render_widget(right_details, right_chunks[0]);
+            f.render_widget(right_vcs, right_chunks[1]);
+            f.render_widget(right_tags, right_chunks[2]);
+        }
+    }
+    f.render_widget(about, chunks[2]);
+}
+
+fn count_workspaces(report: &TfcReport) -> usize {
     match report {
         TfcReport::Clean(r) => r.data.workspaces.len(),
         TfcReport::Which(r) => r.data.workspaces.len(),

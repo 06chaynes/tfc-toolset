@@ -4,14 +4,22 @@ use tui::{
     style::{Color, Modifier, Style},
     text::{Span, Spans},
     widgets::{
-        Block, BorderType, Borders, Cell, List, ListItem, ListState, Row, Table,
+        Block, BorderType, Borders, Cell, List, ListItem, Paragraph, Row, Table,
     },
 };
 
+use crate::{App, InputMode};
+
 pub fn render<'a>(
-    workspace_list_state: &ListState,
     workspace_list: Vec<Workspace>,
-) -> (List<'a>, Table<'a>, Table<'a>, List<'a>) {
+    app: &App,
+) -> (Paragraph<'a>, List<'a>, Table<'a>, Table<'a>, List<'a>) {
+    let filter = Paragraph::new(app.workspace_filter.clone())
+        .style(match app.input_mode {
+            InputMode::Navigation => Style::default(),
+            InputMode::Editing => Style::default().fg(Color::Yellow),
+        })
+        .block(Block::default().borders(Borders::ALL).title("Filter"));
     let workspaces = Block::default()
         .borders(Borders::ALL)
         .style(Style::default().fg(Color::White))
@@ -19,6 +27,9 @@ pub fn render<'a>(
         .border_type(BorderType::Plain);
     let items: Vec<_> = workspace_list
         .iter()
+        .filter(|workspace| {
+            workspace.attributes.name.contains(&app.workspace_filter)
+        })
         .map(|workspace| {
             ListItem::new(Spans::from(vec![Span::styled(
                 workspace.attributes.name.clone(),
@@ -29,7 +40,7 @@ pub fn render<'a>(
 
     let selected_workspace = workspace_list
         .get(
-            workspace_list_state
+            app.workspace_list_state
                 .selected()
                 .expect("there is always a selected workspace"),
         )
@@ -125,5 +136,5 @@ pub fn render<'a>(
     )
     .widths(&[Constraint::Percentage(30), Constraint::Percentage(70)]);
 
-    (list, workspace_detail, vcs_table, tag_list)
+    (filter, list, workspace_detail, vcs_table, tag_list)
 }

@@ -17,9 +17,15 @@ pub fn render<'a>() -> Paragraph<'a> {
             Style::default().fg(Color::Green),
         )]),
         Spans::from(vec![Span::raw("")]),
-        Spans::from(vec![Span::raw("Press 'i' to access report info.")]),
+        Spans::from(vec![Span::raw(
+            "Press 'shift + i' to access report info.",
+        )]),
         Spans::from(vec![Span::raw("")]),
-        Spans::from(vec![Span::raw("Press 'w' to access workspaces.")]),
+        Spans::from(vec![Span::raw("Press 'shift + w' to access workspaces.")]),
+        Spans::from(vec![Span::raw("")]),
+        Spans::from(vec![Span::raw("Press 'shift + h' to access this page.")]),
+        Spans::from(vec![Span::raw("")]),
+        Spans::from(vec![Span::raw("Press 'shift + q' to quit.")]),
     ])
     .alignment(Alignment::Center)
     .block(
