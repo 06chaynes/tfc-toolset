@@ -1,18 +1,55 @@
 use std::path::Path;
 
-use crate::error::CleanError;
+use crate::{error::CleanError, parse, settings::Settings};
+use async_scoped::AsyncScope;
 use git2::{build::RepoBuilder, ErrorCode, Repository};
 use git2_credentials::CredentialHandler;
 use log::*;
-use tfc_toolset::workspace::VcsRepo;
+use miette::{IntoDiagnostic, WrapErr};
+use tfc_toolset::workspace::{VcsRepo, WorkspaceVariables};
 use url::Url;
+use walkdir::WalkDir;
 
-pub fn clone(
+pub struct ProcessResults {
+    pub repos: Vec<VcsRepo>,
+    pub missing: Vec<VcsRepo>,
+    pub detected_variables: Vec<parse::ParseResult>,
+}
+
+pub struct ProcessResult {
+    pub missing: Option<VcsRepo>,
+    pub detected_variables: Option<parse::ParseResult>,
+}
+
+fn build_path(config: &Settings, vcs: &VcsRepo, url: Url) -> String {
+    let mut id = match vcs.identifier.clone() {
+        Some(i) => i,
+        None => {
+            let segments = url.path_segments().unwrap();
+            segments.last().unwrap().to_string()
+        }
+    };
+    if !vcs.branch.is_empty() {
+        id = format!("{}_{}", &id, &vcs.branch);
+    }
+    let mut base_dir = config.repositories.git_dir.clone();
+    if base_dir.ends_with('/') {
+        base_dir.pop();
+    }
+    format!("{}/{}", base_dir, &id)
+}
+
+fn repo_url(vcs: &VcsRepo) -> miette::Result<Url> {
+    Url::parse(&vcs.repository_http_url)
+        .into_diagnostic()
+        .wrap_err("Failed to parse repository url")
+}
+
+pub fn fetch_remote(
     url: Url,
     path: String,
     vcs: &VcsRepo,
-    missing_repos: &mut Vec<VcsRepo>,
-) -> Result<(), CleanError> {
+) -> Result<Option<VcsRepo>, CleanError> {
     let mut cb = git2::RemoteCallbacks::new();
     let git_config = git2::Config::open_default().unwrap();
     let mut ch = CredentialHandler::new(git_config);
@@ -42,7 +79,7 @@ pub fn clone(
                 error!("Open failed :(");
                 match e.code() {
                     ErrorCode::NotFound => {
-                        missing_repos.push(vcs.clone());
+                        return Ok(Some(vcs.clone()));
                     }
                     _ => return Err(CleanError::Git(e)),
                 }
@@ -50,7 +87,11 @@ pub fn clone(
         }
     } else {
         // Clone
-        match RepoBuilder::new().fetch_options(fo).clone(url.as_str(), path) {
+        let mut builder = RepoBuilder::new();
+        if !vcs.branch.is_empty() {
+            builder.branch(vcs.branch.as_ref());
+        }
+        match builder.fetch_options(fo).clone(url.as_str(), path) {
             Ok(_repo) => info!("Clone successful!"),
             Err(e) => {
                 error!("Clone failed :(");
@@ -58,5 +99,72 @@ pub fn clone(
             }
         }
     }
-    Ok(())
+    Ok(None)
+}
+
+pub fn process(
+    config: &Settings,
+    workspaces_variables: &Vec<WorkspaceVariables>,
+) -> miette::Result<ProcessResults> {
+    let mut repos: Vec<VcsRepo> = vec![];
+    for entry in workspaces_variables {
+        if let Some(vcs) = &entry.workspace.attributes.vcs_repo {
+            if !repos.contains(vcs) {
+                repos.push(vcs.clone());
+            }
+        }
+    }
+
+    let (_, process_result_vec) = AsyncScope::scope_and_block(|s| {
+        for entry in workspaces_variables {
+            let unique_repos = repos.clone();
+            let proc = || async move {
+                let mut result =
+                    ProcessResult { missing: None, detected_variables: None };
+                if let Some(vcs) = &entry.workspace.attributes.vcs_repo {
+                    if !unique_repos.contains(vcs) {
+                        match repo_url(vcs) {
+                            Ok(url) => {
+                                let path = build_path(config, vcs, url.clone());
+                                match fetch_remote(url.clone(), path, vcs) {
+                                    Ok(r) => {
+                                        if let Some(missing) = r {
+                                            result.missing = Some(missing);
+                                        }
+                                    }
+                                    Err(_e) => {}
+                                };
+                                if config.cleanup.unlisted_variables {
+                                    info!("Parsing variable data.");
+                                    let path = build_path(config, vcs, url);
+                                    let walker =
+                                        WalkDir::new(&path).into_iter();
+                                    let detected =
+                                        parse::tf_repo(config, walker, vcs)
+                                            .ok();
+                                    result.detected_variables = detected;
+                                }
+                            }
+                            Err(_e) => {}
+                        }
+                    }
+                }
+                result
+            };
+            s.spawn(proc());
+        }
+    });
+
+    let mut results =
+        ProcessResults { repos, missing: vec![], detected_variables: vec![] };
+    for res in process_result_vec {
+        if let Some(m) = res.missing {
+            results.missing.push(m);
+        }
+        if let Some(v) = res.detected_variables {
+            results.detected_variables.push(v);
+        }
+    }
+
+    Ok(results)
 }
