@@ -7,8 +7,8 @@ use report::TfcReport;
 
 use crossterm::{
     event::{
-        self, DisableMouseCapture, EnableMouseCapture, Event as CEvent,
-        KeyCode, KeyEvent, KeyModifiers,
+        self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode,
+        KeyEvent, KeyModifiers,
     },
     execute,
     terminal::{
@@ -117,7 +117,7 @@ fn run_app<B: Backend>(
     loop {
         terminal.draw(|f| ui(f, &mut app))?;
 
-        if let CEvent::Key(key) = event::read()? {
+        if let Event::Key(key) = event::read()? {
             match app.input_mode {
                 InputMode::Navigation => match key {
                     KeyEvent {
