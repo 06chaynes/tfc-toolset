@@ -1,8 +1,8 @@
 use tfc_toolset::workspace::Workspace;
 use tui::{
-    layout::Constraint,
+    layout::{Alignment, Constraint},
     style::{Color, Modifier, Style},
-    text::{Span, Spans},
+    text::{Span, Spans, Text},
     widgets::{
         Block, BorderType, Borders, Cell, List, ListItem, Paragraph, Row, Table,
     },
@@ -14,6 +14,56 @@ pub fn render<'a>(
     workspace_list: Vec<Workspace>,
     app: &mut App,
 ) -> (Paragraph<'a>, List<'a>, Table<'a>, Table<'a>, List<'a>) {
+    let filter_style: Style;
+    match app.input_mode {
+        InputMode::Navigation => {
+            filter_style = Style::default();
+            let info_text = vec![
+                Span::raw("Press "),
+                Span::styled(
+                    "ctrl + f",
+                    Style::default().add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" to edit filter."),
+            ];
+            app.info = Paragraph::new(Text::from(Spans::from(info_text)))
+                .style(Style::default().fg(Color::LightCyan))
+                .alignment(Alignment::Center)
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .style(Style::default().fg(Color::White))
+                        .title("Info")
+                        .border_type(BorderType::Plain),
+                );
+        }
+        InputMode::Editing => {
+            filter_style = Style::default().fg(Color::Yellow);
+            let info_text = vec![
+                Span::raw("Press "),
+                Span::styled(
+                    "Esc",
+                    Style::default().add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" to cancel, "),
+                Span::styled(
+                    "Enter",
+                    Style::default().add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" to apply the filter"),
+            ];
+            app.info = Paragraph::new(Text::from(Spans::from(info_text)))
+                .style(Style::default().fg(Color::Yellow))
+                .alignment(Alignment::Center)
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .style(Style::default().fg(Color::White))
+                        .title("Info")
+                        .border_type(BorderType::Plain),
+                );
+        }
+    }
     let filtered_list = workspace_list
         .into_iter()
         .filter(|workspace| {
@@ -22,10 +72,7 @@ pub fn render<'a>(
         .collect::<Vec<_>>();
     app.workspace_count = filtered_list.len();
     let filter = Paragraph::new(app.workspace_filter.clone())
-        .style(match app.input_mode {
-            InputMode::Navigation => Style::default(),
-            InputMode::Editing => Style::default().fg(Color::Yellow),
-        })
+        .style(filter_style)
         .block(Block::default().borders(Borders::ALL).title("Filter"));
     let workspaces = Block::default()
         .borders(Borders::ALL)

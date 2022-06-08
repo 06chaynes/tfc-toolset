@@ -27,6 +27,7 @@ use tui::{
     widgets::{Block, BorderType, Borders, ListState, Paragraph, Tabs},
     Frame, Terminal,
 };
+use unicode_width::UnicodeWidthStr;
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -58,11 +59,13 @@ impl From<MenuItem> for usize {
     }
 }
 
-pub struct App {
+pub struct App<'a> {
     /// Current input mode
     input_mode: InputMode,
     /// Current page
     active_nav_item: MenuItem,
+    /// Current app info section text
+    info: Paragraph<'a>,
     /// Loaded report
     report: TfcReport,
     /// Current value of the workspace filter input box
@@ -91,6 +94,7 @@ fn main() -> miette::Result<()> {
     let app = App {
         input_mode: InputMode::Navigation,
         report,
+        info: default_info(),
         workspace_filter: String::new(),
         applied_workspace_filter: String::new(),
         workspace_count,
@@ -221,17 +225,6 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         )
         .split(size);
 
-    let about = Paragraph::new("report-tui 2022")
-        .style(Style::default().fg(Color::LightCyan))
-        .alignment(Alignment::Center)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .style(Style::default().fg(Color::White))
-                .title("Info")
-                .border_type(BorderType::Plain),
-        );
-
     let menu = menu_titles
         .iter()
         .map(|t| {
@@ -257,8 +250,12 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
 
     f.render_widget(tabs, chunks[0]);
     match app.active_nav_item {
-        MenuItem::Home => f.render_widget(home::render(), chunks[1]),
+        MenuItem::Home => {
+            app.info = default_info();
+            f.render_widget(home::render(), chunks[1]);
+        }
         MenuItem::Info => {
+            app.info = default_info();
             match app.report.clone() {
                 TfcReport::Clean(r) => f.render_widget(
                     info::render(
@@ -324,6 +321,23 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
                 right_tags,
             ) = workspaces::render(workspace_list, app);
             f.render_widget(left_filter, left_chunks[0]);
+            match app.input_mode {
+                InputMode::Navigation =>
+                    // Hide the cursor. `Frame` does this by default, so we don't need to do anything here
+                    {}
+
+                InputMode::Editing => {
+                    // Make the cursor visible and ask tui-rs to put it at the specified coordinates after rendering
+                    f.set_cursor(
+                        // Put cursor past the end of the input text
+                        left_chunks[0].x
+                            + app.workspace_filter.width() as u16
+                            + 1,
+                        // Move one line down, from the border to the input line
+                        left_chunks[0].y + 1,
+                    )
+                }
+            }
             f.render_stateful_widget(
                 left_ws_list,
                 left_chunks[1],
@@ -334,7 +348,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
             f.render_widget(right_tags, right_chunks[2]);
         }
     }
-    f.render_widget(about, chunks[2]);
+    f.render_widget(app.info.clone(), chunks[2]);
 }
 
 pub fn count_workspaces(report: &TfcReport) -> usize {
@@ -342,4 +356,17 @@ pub fn count_workspaces(report: &TfcReport) -> usize {
         TfcReport::Clean(r) => r.data.workspaces.len(),
         TfcReport::Which(r) => r.data.workspaces.len(),
     }
+}
+
+pub fn default_info<'a>() -> Paragraph<'a> {
+    Paragraph::new("report-tui 2022")
+        .style(Style::default().fg(Color::LightCyan))
+        .alignment(Alignment::Center)
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .style(Style::default().fg(Color::White))
+                .title("Info")
+                .border_type(BorderType::Plain),
+        )
 }
