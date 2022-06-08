@@ -65,8 +65,10 @@ pub struct App {
     active_nav_item: MenuItem,
     /// Loaded report
     report: TfcReport,
-    /// Current value of the input box
+    /// Current value of the workspace filter input box
     workspace_filter: String,
+    /// Applied value of the workspace filter input box
+    applied_workspace_filter: String,
     /// Count of workspaces in report
     workspace_count: usize,
     /// State data for workspaces list
@@ -90,6 +92,7 @@ fn main() -> miette::Result<()> {
         input_mode: InputMode::Navigation,
         report,
         workspace_filter: String::new(),
+        applied_workspace_filter: String::new(),
         workspace_count,
         workspace_list_state,
         active_nav_item: MenuItem::Home,
@@ -183,7 +186,14 @@ fn run_app<B: Backend>(
                     _ => {}
                 },
                 InputMode::Editing => match key.code {
-                    KeyCode::Enter | KeyCode::Esc => {
+                    KeyCode::Enter => {
+                        app.applied_workspace_filter =
+                            app.workspace_filter.clone();
+                        app.input_mode = InputMode::Navigation;
+                    }
+                    KeyCode::Esc => {
+                        app.workspace_filter =
+                            app.applied_workspace_filter.clone();
                         app.input_mode = InputMode::Navigation;
                     }
                     KeyCode::Char(c) => {

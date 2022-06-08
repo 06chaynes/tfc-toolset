@@ -17,7 +17,7 @@ pub fn render<'a>(
     let filtered_list = workspace_list
         .into_iter()
         .filter(|workspace| {
-            workspace.attributes.name.contains(&app.workspace_filter)
+            workspace.attributes.name.contains(&app.applied_workspace_filter)
         })
         .collect::<Vec<_>>();
     app.workspace_count = filtered_list.len();
