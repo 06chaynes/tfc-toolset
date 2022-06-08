@@ -21,6 +21,7 @@ pub struct Data {
     pub workspaces: Vec<Workspace>,
 }
 
+// Could probably actually put stuff here
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Errors {}
 

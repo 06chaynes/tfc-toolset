@@ -25,7 +25,7 @@ config = "0.13.1"
 env_logger = "0.9.0"
 git2 = { version = "0.14.4", features = ["vendored-libgit2", "vendored-openssl"] }
 git2_credentials = "0.8.0"
-hcl-rs = "0.3.3"
+hcl-rs = "0.5.2"
 log = "0.4.17"
 miette = { version = "4.7.1", features = ["fancy"] }
 serde = { version = "1.0.137", features = ["derive"] }

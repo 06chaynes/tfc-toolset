@@ -1082,14 +1082,17 @@ dependencies = [
 
 [[package]]
 name = "hcl-rs"
-version = "0.3.3"
+version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "00dafe227671efe33c624ab75ddd1647f876cba59d0517bda2980323c3ea258e"
+checksum = "546081d16583aaab69121cc89463d010f10efc351ba1dc6556e7ccf10ae2aabd"
 dependencies = [
  "indexmap",
+ "itoa",
  "pest",
  "pest_derive",
+ "ryu",
  "serde",
+ "unicode-ident",
 ]
 
 [[package]]
