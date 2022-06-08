@@ -146,9 +146,11 @@ pub fn render<'a>(
                 .border_type(BorderType::Plain),
         );
 
+        let blank_row = Row::new(vec![Cell::from(Span::raw("".to_string()))]);
+
         let vcs_table =
             Table::new(vec![Row::new(vec![Cell::from(Span::raw(""))])])
-                .header(Row::new(vec![Cell::from(Span::raw("".to_string()))]))
+                .header(blank_row.clone())
                 .block(
                     Block::default()
                         .borders(Borders::ALL)
@@ -164,10 +166,7 @@ pub fn render<'a>(
         let workspace_detail = Table::new(vec![Row::new(vec![Cell::from(
             Span::raw("No Workspace Selected".to_string()),
         )])])
-        .header(Row::new(vec![Cell::from(Span::styled(
-            "Message",
-            Style::default().add_modifier(Modifier::BOLD),
-        ))]))
+        .header(blank_row)
         .block(
             Block::default()
                 .borders(Borders::ALL)
