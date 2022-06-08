@@ -12,8 +12,15 @@ use crate::{App, InputMode};
 
 pub fn render<'a>(
     workspace_list: Vec<Workspace>,
-    app: &App,
+    app: &mut App,
 ) -> (Paragraph<'a>, List<'a>, Table<'a>, Table<'a>, List<'a>) {
+    let filtered_list = workspace_list
+        .into_iter()
+        .filter(|workspace| {
+            workspace.attributes.name.contains(&app.workspace_filter)
+        })
+        .collect::<Vec<_>>();
+    app.workspace_count = filtered_list.len();
     let filter = Paragraph::new(app.workspace_filter.clone())
         .style(match app.input_mode {
             InputMode::Navigation => Style::default(),
@@ -25,11 +32,8 @@ pub fn render<'a>(
         .style(Style::default().fg(Color::White))
         .title("Workspaces")
         .border_type(BorderType::Plain);
-    let items: Vec<_> = workspace_list
+    let items: Vec<_> = filtered_list
         .iter()
-        .filter(|workspace| {
-            workspace.attributes.name.contains(&app.workspace_filter)
-        })
         .map(|workspace| {
             ListItem::new(Spans::from(vec![Span::styled(
                 workspace.attributes.name.clone(),
@@ -38,7 +42,7 @@ pub fn render<'a>(
         })
         .collect();
 
-    let selected_workspace = workspace_list
+    let selected_workspace = filtered_list
         .get(
             app.workspace_list_state
                 .selected()

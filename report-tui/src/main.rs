@@ -327,7 +327,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     f.render_widget(about, chunks[2]);
 }
 
-fn count_workspaces(report: &TfcReport) -> usize {
+pub fn count_workspaces(report: &TfcReport) -> usize {
     match report {
         TfcReport::Clean(r) => r.data.workspaces.len(),
         TfcReport::Which(r) => r.data.workspaces.len(),
