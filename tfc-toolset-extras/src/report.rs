@@ -5,12 +5,13 @@ use log::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Report<M, D> {
+pub struct Report<M, D, E> {
     pub report_version: String,
     pub bin_version: String,
     pub reporter: Reporter,
     pub meta: M,
     pub data: D,
+    pub errors: E,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -22,10 +23,11 @@ pub enum Reporter {
     WhichWorkspace,
 }
 
-impl<'de, M, D> Report<M, D>
+impl<'de, M, D, E> Report<M, D, E>
 where
     M: Serialize + Deserialize<'de>,
     D: Serialize + Deserialize<'de>,
+    E: Serialize + Deserialize<'de>,
 {
     pub fn save(&self, config: &Core) -> Result<(), ToolError> {
         info!("Saving report to: {}", &config.output);

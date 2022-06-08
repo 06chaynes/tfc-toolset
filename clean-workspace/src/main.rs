@@ -10,17 +10,11 @@ use log::*;
 use miette::{IntoDiagnostic, WrapErr};
 use settings::Settings;
 use tfc_toolset::{
-    error::SETTINGS_ERROR,
-    filter,
-    settings::Core,
-    variable,
-    workspace::{self, VcsRepo},
+    error::SETTINGS_ERROR, filter, settings::Core, variable, workspace,
 };
 use tfc_toolset_extras::default_client;
-use url::Url;
-use walkdir::WalkDir;
 
-use crate::report::UnlistedVariables;
+use crate::report::{ParsingFailures, UnlistedVariables};
 
 const ABOUT: &str =
     "Tool for rule based cleanup operations for Terraform workspaces";
@@ -42,27 +36,6 @@ enum Commands {
     Plan,
     #[clap(about = ABOUT_APPLY)]
     Apply,
-}
-
-fn build_path(config: &Settings, vcs: &VcsRepo, url: Url) -> String {
-    let id = match vcs.identifier.clone() {
-        Some(i) => i,
-        None => {
-            let segments = url.path_segments().unwrap();
-            segments.last().unwrap().to_string()
-        }
-    };
-    let mut base_dir = config.repositories.git_dir.clone();
-    if base_dir.ends_with('/') {
-        base_dir.pop();
-    }
-    format!("{}/{}", base_dir, &id)
-}
-
-fn repo_url(vcs: &VcsRepo) -> miette::Result<Url> {
-    Url::parse(&vcs.repository_http_url)
-        .into_diagnostic()
-        .wrap_err("Failed to parse repository url")
 }
 
 #[async_std::main]
@@ -122,41 +95,8 @@ async fn main() -> miette::Result<()> {
                 {
                     info!("Cloning workspace repositories.");
                     // First let's clean up the job list to remove duplicates
-                    let mut repos: Vec<VcsRepo> = vec![];
-                    let mut missing: Vec<VcsRepo> = vec![];
-                    let mut detected_variables: Vec<parse::ParseResult> =
-                        vec![];
-                    for entry in &workspaces_variables {
-                        if let Some(vcs) = &entry.workspace.attributes.vcs_repo
-                        {
-                            if !repos.contains(vcs) {
-                                repos.push(vcs.clone());
-                                let url = repo_url(vcs)?;
-                                let path =
-                                    build_path(&config, vcs, url.clone());
-                                match repo::clone(
-                                    url.clone(),
-                                    path.clone(),
-                                    vcs,
-                                    &mut missing,
-                                ) {
-                                    Ok(_) => {}
-                                    Err(_e) => {}
-                                };
-                                if config.cleanup.unlisted_variables {
-                                    info!("Parsing variable data.");
-                                    let url = repo_url(vcs)?;
-                                    let path =
-                                        build_path(&config, vcs, url.clone());
-                                    let walker =
-                                        WalkDir::new(&path).into_iter();
-                                    detected_variables.push(parse::tf_repo(
-                                        &config, walker, vcs,
-                                    )?);
-                                }
-                            }
-                        }
-                    }
+                    let process_results =
+                        repo::process(&config, &workspaces_variables)?;
                     for entry in &workspaces_variables {
                         if let Some(vcs) = &entry.workspace.attributes.vcs_repo
                         {
@@ -165,7 +105,7 @@ async fn main() -> miette::Result<()> {
                                 &entry.workspace.attributes.name
                             );
                             if config.cleanup.missing_repositories
-                                && missing.contains(vcs)
+                                && process_results.missing.contains(vcs)
                             {
                                 if let Some(m) =
                                     &mut report.data.missing_repositories
@@ -178,56 +118,85 @@ async fn main() -> miette::Result<()> {
                             }
 
                             if config.cleanup.unlisted_variables {
-                                let mut found: Vec<variable::Variable> = vec![];
-                                let mut unlisted: Option<UnlistedVariables> =
-                                    None;
-                                for var in &entry.variables {
-                                    for detected in &detected_variables {
-                                        if &detected.vcs == vcs {
-                                            for dv in
-                                                &detected.detected_variables
-                                            {
-                                                if &var.attributes.key == dv {
-                                                    found.push(var.clone());
+                                if process_results.failed.contains(vcs)
+                                    || process_results.missing.contains(vcs)
+                                {
+                                    if let Some(failed) =
+                                        &mut report.errors.parsing_failures
+                                    {
+                                        if !failed.repos.contains(vcs) {
+                                            failed.repos.push(vcs.clone());
+                                        }
+                                        failed
+                                            .workspaces
+                                            .push(entry.workspace.clone());
+                                    } else {
+                                        report.errors.parsing_failures =
+                                            Some(ParsingFailures {
+                                                repos: vec![vcs.clone()],
+                                                workspaces: vec![entry
+                                                    .workspace
+                                                    .clone()],
+                                            });
+                                    }
+                                } else {
+                                    let mut found: Vec<variable::Variable> =
+                                        vec![];
+                                    let mut unlisted: Option<
+                                        UnlistedVariables,
+                                    > = None;
+                                    for var in &entry.variables {
+                                        for detected in
+                                            &process_results.detected_variables
+                                        {
+                                            if &detected.vcs == vcs {
+                                                for dv in
+                                                    &detected.detected_variables
+                                                {
+                                                    if &var.attributes.key == dv
+                                                    {
+                                                        found.push(var.clone());
+                                                    }
                                                 }
                                             }
                                         }
                                     }
-                                }
-                                debug!(
-                                    "TFC Variables: {:#?}",
-                                    &entry.variables
-                                );
-                                debug!("Found Variables: {:#?}", &found);
-                                let difference: Vec<_> = entry
-                                    .variables
-                                    .clone()
-                                    .into_iter()
-                                    .filter(|item| !found.contains(item))
-                                    .collect();
-                                debug!(
-                                    "Variable Difference: {:#?}",
-                                    &difference
-                                );
-                                if !difference.is_empty() {
-                                    let mut un = UnlistedVariables {
-                                        workspace: entry.clone(),
-                                        unlisted_variables: vec![],
-                                    };
-                                    for var in difference {
-                                        un.unlisted_variables.push(var.into())
+                                    debug!(
+                                        "TFC Variables: {:#?}",
+                                        &entry.variables
+                                    );
+                                    debug!("Found Variables: {:#?}", &found);
+                                    let difference: Vec<_> = entry
+                                        .variables
+                                        .clone()
+                                        .into_iter()
+                                        .filter(|item| !found.contains(item))
+                                        .collect();
+                                    debug!(
+                                        "Variable Difference: {:#?}",
+                                        &difference
+                                    );
+                                    if !difference.is_empty() {
+                                        let mut un = UnlistedVariables {
+                                            workspace: entry.clone(),
+                                            unlisted_variables: vec![],
+                                        };
+                                        for var in difference {
+                                            un.unlisted_variables
+                                                .push(var.into())
+                                        }
+                                        unlisted = Some(un);
                                     }
-                                    unlisted = Some(un);
-                                }
 
-                                if let Some(u) = unlisted {
-                                    if let Some(v) =
-                                        &mut report.data.unlisted_variables
-                                    {
-                                        v.push(u);
-                                    } else {
-                                        report.data.unlisted_variables =
-                                            Some(vec![u]);
+                                    if let Some(u) = unlisted {
+                                        if let Some(v) =
+                                            &mut report.data.unlisted_variables
+                                        {
+                                            v.push(u);
+                                        } else {
+                                            report.data.unlisted_variables =
+                                                Some(vec![u]);
+                                        }
                                     }
                                 }
                             }
@@ -237,7 +206,7 @@ async fn main() -> miette::Result<()> {
             }
 
             report.data.workspaces = workspaces;
-            info!("{:#?}", &report);
+            debug!("{:#?}", &report);
             report.save(&core)?;
         }
         Commands::Apply => {

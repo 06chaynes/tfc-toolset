@@ -5,7 +5,7 @@ use tfc_toolset::{
 };
 use tfc_toolset_extras::report::{Report, Reporter};
 
-pub type WhichReport = Report<Meta, Data>;
+pub type WhichReport = Report<Meta, Data, Errors>;
 
 // For now need to keep this updated with best effort :)
 const REPORT_VERSION: &str = "0.1.0";
@@ -21,6 +21,9 @@ pub struct Data {
     pub workspaces: Vec<Workspace>,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct Errors {}
+
 pub fn new() -> WhichReport {
     Report {
         report_version: REPORT_VERSION.to_string(),
@@ -28,6 +31,7 @@ pub fn new() -> WhichReport {
         reporter: Reporter::WhichWorkspace,
         meta: Meta { query: None, pagination: None },
         data: Data { workspaces: vec![] },
+        errors: Errors {},
     }
 }
 
