@@ -16,6 +16,7 @@ use crossterm::{
         LeaveAlternateScreen,
     },
 };
+use miette::IntoDiagnostic;
 use std::io;
 use thiserror::Error;
 use tui::{
@@ -72,12 +73,13 @@ pub struct App {
     workspace_list_state: ListState,
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    enable_raw_mode()?;
+fn main() -> miette::Result<()> {
+    enable_raw_mode().into_diagnostic()?;
     let mut stdout = io::stdout();
-    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)
+        .into_diagnostic()?;
     let backend = CrosstermBackend::new(stdout);
-    let mut terminal = Terminal::new(backend)?;
+    let mut terminal = Terminal::new(backend).into_diagnostic()?;
 
     // create app and run it
     let mut workspace_list_state = ListState::default();
@@ -95,13 +97,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let res = run_app(&mut terminal, app);
 
     // restore terminal
-    disable_raw_mode()?;
-    execute!(
-        terminal.backend_mut(),
-        LeaveAlternateScreen,
-        DisableMouseCapture
-    )?;
-    terminal.show_cursor()?;
+    disable_raw_mode().into_diagnostic()?;
+    execute!(terminal.backend_mut(), LeaveAlternateScreen, DisableMouseCapture)
+        .into_diagnostic()?;
+    terminal.show_cursor().into_diagnostic()?;
 
     if let Err(err) = res {
         println!("{:?}", err)

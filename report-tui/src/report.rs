@@ -1,7 +1,7 @@
-use crate::Error;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use tfc_clean_workspace::report::CleanReport;
+use tfc_toolset::error::ToolError;
 use tfc_toolset_extras::report::{Report, Reporter};
 use tfc_which_workspace::report::WhichReport;
 
@@ -29,7 +29,7 @@ impl From<WhichReport> for TfcReport {
     }
 }
 
-pub fn read() -> Result<TfcReport, Error> {
+pub fn read() -> Result<TfcReport, ToolError> {
     let db_content = fs::read_to_string(REPORT_PATH)?;
     // For now we need to do this to check the report type before we try to deserialize the data
     let parsed: Report<Empty, Empty, Empty> =
@@ -43,8 +43,6 @@ pub fn read() -> Result<TfcReport, Error> {
             let parsed: WhichReport = serde_json::from_str(&db_content)?;
             Ok(parsed.into())
         }
-        _ => {
-            panic!("Unknown report type!")
-        }
+        _ => unreachable!(),
     }
 }

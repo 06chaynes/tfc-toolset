@@ -2585,6 +2585,7 @@ name = "tfc-report-tui"
 version = "0.1.0"
 dependencies = [
  "crossterm",
+ "miette",
  "serde",
  "serde_json",
  "tfc-clean-workspace",
