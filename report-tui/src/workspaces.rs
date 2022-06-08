@@ -42,14 +42,9 @@ pub fn render<'a>(
         })
         .collect();
 
-    let selected_workspace = filtered_list
-        .get(
-            app.workspace_list_state
-                .selected()
-                .expect("there is always a selected workspace"),
-        )
-        .expect("exists")
-        .clone();
+    let selected_workspace: Option<Workspace> = filtered_list
+        .get(app.workspace_list_state.selected().unwrap_or(0))
+        .cloned();
 
     let list = List::new(items).block(workspaces).highlight_style(
         Style::default()
@@ -59,86 +54,128 @@ pub fn render<'a>(
     );
 
     let mut workspace_tags: Vec<ListItem> = vec![];
-    for tag in selected_workspace.attributes.tag_names {
-        workspace_tags.push(ListItem::new(tag));
+
+    if let Some(workspace) = selected_workspace {
+        for tag in workspace.attributes.tag_names {
+            workspace_tags.push(ListItem::new(tag));
+        }
+        let tag_list = List::new(workspace_tags).block(
+            Block::default()
+                .borders(Borders::ALL)
+                .style(Style::default().fg(Color::White))
+                .title("Tags")
+                .border_type(BorderType::Plain),
+        );
+
+        let vcs_table = match workspace.attributes.vcs_repo {
+            Some(v) => Table::new(vec![Row::new(vec![
+                Cell::from(Span::raw(v.repository_http_url)),
+                Cell::from(Span::raw(v.branch)),
+            ])])
+            .header(Row::new(vec![
+                Cell::from(Span::styled(
+                    "URL",
+                    Style::default().add_modifier(Modifier::BOLD),
+                )),
+                Cell::from(Span::styled(
+                    "Branch",
+                    Style::default().add_modifier(Modifier::BOLD),
+                )),
+            ]))
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .style(Style::default().fg(Color::White))
+                    .title("VCS")
+                    .border_type(BorderType::Plain),
+            )
+            .widths(&[Constraint::Percentage(70), Constraint::Percentage(20)]),
+            None => Table::new(vec![Row::new(vec![
+                Cell::from(Span::raw("No VCS Attached")),
+                Cell::from(Span::raw("")),
+            ])])
+            .header(Row::new(vec![
+                Cell::from(Span::styled(
+                    "URL",
+                    Style::default().add_modifier(Modifier::BOLD),
+                )),
+                Cell::from(Span::styled(
+                    "Branch",
+                    Style::default().add_modifier(Modifier::BOLD),
+                )),
+            ]))
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .style(Style::default().fg(Color::White))
+                    .title("VCS")
+                    .border_type(BorderType::Plain),
+            )
+            .widths(&[Constraint::Percentage(80), Constraint::Percentage(20)]),
+        };
+
+        let workspace_detail = Table::new(vec![Row::new(vec![
+            Cell::from(Span::raw(workspace.id.to_string())),
+            Cell::from(Span::raw(workspace.attributes.name)),
+        ])])
+        .header(Row::new(vec![
+            Cell::from(Span::styled(
+                "ID",
+                Style::default().add_modifier(Modifier::BOLD),
+            )),
+            Cell::from(Span::styled(
+                "Name",
+                Style::default().add_modifier(Modifier::BOLD),
+            )),
+        ]))
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .style(Style::default().fg(Color::White))
+                .title("Details")
+                .border_type(BorderType::Plain),
+        )
+        .widths(&[Constraint::Percentage(30), Constraint::Percentage(70)]);
+        (filter, list, workspace_detail, vcs_table, tag_list)
+    } else {
+        let tag_list = List::new(vec![]).block(
+            Block::default()
+                .borders(Borders::ALL)
+                .style(Style::default().fg(Color::White))
+                .title("Tags")
+                .border_type(BorderType::Plain),
+        );
+
+        let vcs_table =
+            Table::new(vec![Row::new(vec![Cell::from(Span::raw(""))])])
+                .header(Row::new(vec![Cell::from(Span::raw("".to_string()))]))
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .style(Style::default().fg(Color::White))
+                        .title("VCS")
+                        .border_type(BorderType::Plain),
+                )
+                .widths(&[
+                    Constraint::Percentage(80),
+                    Constraint::Percentage(20),
+                ]);
+
+        let workspace_detail = Table::new(vec![Row::new(vec![Cell::from(
+            Span::raw("No Workspace Selected".to_string()),
+        )])])
+        .header(Row::new(vec![Cell::from(Span::styled(
+            "Message",
+            Style::default().add_modifier(Modifier::BOLD),
+        ))]))
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .style(Style::default().fg(Color::White))
+                .title("Details")
+                .border_type(BorderType::Plain),
+        )
+        .widths(&[Constraint::Percentage(30), Constraint::Percentage(70)]);
+        (filter, list, workspace_detail, vcs_table, tag_list)
     }
-    let tag_list = List::new(workspace_tags).block(
-        Block::default()
-            .borders(Borders::ALL)
-            .style(Style::default().fg(Color::White))
-            .title("Tags")
-            .border_type(BorderType::Plain),
-    );
-
-    let vcs_table = match selected_workspace.attributes.vcs_repo {
-        Some(v) => Table::new(vec![Row::new(vec![
-            Cell::from(Span::raw(v.repository_http_url)),
-            Cell::from(Span::raw(v.branch)),
-        ])])
-        .header(Row::new(vec![
-            Cell::from(Span::styled(
-                "URL",
-                Style::default().add_modifier(Modifier::BOLD),
-            )),
-            Cell::from(Span::styled(
-                "Branch",
-                Style::default().add_modifier(Modifier::BOLD),
-            )),
-        ]))
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .style(Style::default().fg(Color::White))
-                .title("VCS")
-                .border_type(BorderType::Plain),
-        )
-        .widths(&[Constraint::Percentage(70), Constraint::Percentage(20)]),
-        None => Table::new(vec![Row::new(vec![
-            Cell::from(Span::raw("No VCS Attached")),
-            Cell::from(Span::raw("")),
-        ])])
-        .header(Row::new(vec![
-            Cell::from(Span::styled(
-                "URL",
-                Style::default().add_modifier(Modifier::BOLD),
-            )),
-            Cell::from(Span::styled(
-                "Branch",
-                Style::default().add_modifier(Modifier::BOLD),
-            )),
-        ]))
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .style(Style::default().fg(Color::White))
-                .title("VCS")
-                .border_type(BorderType::Plain),
-        )
-        .widths(&[Constraint::Percentage(80), Constraint::Percentage(20)]),
-    };
-
-    let workspace_detail = Table::new(vec![Row::new(vec![
-        Cell::from(Span::raw(selected_workspace.id.to_string())),
-        Cell::from(Span::raw(selected_workspace.attributes.name)),
-    ])])
-    .header(Row::new(vec![
-        Cell::from(Span::styled(
-            "ID",
-            Style::default().add_modifier(Modifier::BOLD),
-        )),
-        Cell::from(Span::styled(
-            "Name",
-            Style::default().add_modifier(Modifier::BOLD),
-        )),
-    ]))
-    .block(
-        Block::default()
-            .borders(Borders::ALL)
-            .style(Style::default().fg(Color::White))
-            .title("Details")
-            .border_type(BorderType::Plain),
-    )
-    .widths(&[Constraint::Percentage(30), Constraint::Percentage(70)]);
-
-    (filter, list, workspace_detail, vcs_table, tag_list)
 }
