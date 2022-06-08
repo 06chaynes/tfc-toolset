@@ -13,11 +13,13 @@ use walkdir::WalkDir;
 pub struct ProcessResults {
     pub repos: Vec<VcsRepo>,
     pub missing: Vec<VcsRepo>,
+    pub failed: Vec<VcsRepo>,
     pub detected_variables: Vec<parse::ParseResult>,
 }
 
 pub struct ProcessResult {
     pub missing: Option<VcsRepo>,
+    pub failed: Option<VcsRepo>,
     pub detected_variables: Option<parse::ParseResult>,
 }
 
@@ -77,12 +79,8 @@ pub fn fetch_remote(
             }
             Err(e) => {
                 error!("Open failed :(");
-                match e.code() {
-                    ErrorCode::NotFound => {
-                        return Ok(Some(vcs.clone()));
-                    }
-                    _ => return Err(CleanError::Git(e)),
-                }
+                error!("{:#?}", &e);
+                return Err(CleanError::Git(e));
             }
         }
     } else {
@@ -95,7 +93,18 @@ pub fn fetch_remote(
             Ok(_repo) => info!("Clone successful!"),
             Err(e) => {
                 error!("Clone failed :(");
-                return Err(CleanError::Git(e));
+                error!("{:#?}", &e);
+                match e.code() {
+                    ErrorCode::NotFound => {
+                        return Ok(Some(vcs.clone()));
+                    }
+                    ErrorCode::GenericError => {
+                        if e.message() == "unexpected http status code: 404" {
+                            return Ok(Some(vcs.clone()));
+                        }
+                    }
+                    _ => return Err(CleanError::Git(e)),
+                }
             }
         }
     }
@@ -114,40 +123,38 @@ pub fn process(
             }
         }
     }
-
+    // This doesn't actually need to be async but it's easier to just have it match
     let (_, process_result_vec) = AsyncScope::scope_and_block(|s| {
-        for entry in workspaces_variables {
-            let unique_repos = repos.clone();
+        for vcs in &repos {
             let proc = || async move {
-                let mut result =
-                    ProcessResult { missing: None, detected_variables: None };
-                if let Some(vcs) = &entry.workspace.attributes.vcs_repo {
-                    if !unique_repos.contains(vcs) {
-                        match repo_url(vcs) {
-                            Ok(url) => {
-                                let path = build_path(config, vcs, url.clone());
-                                match fetch_remote(url.clone(), path, vcs) {
-                                    Ok(r) => {
-                                        if let Some(missing) = r {
-                                            result.missing = Some(missing);
-                                        }
-                                    }
-                                    Err(_e) => {}
-                                };
-                                if config.cleanup.unlisted_variables {
-                                    info!("Parsing variable data.");
-                                    let path = build_path(config, vcs, url);
-                                    let walker =
-                                        WalkDir::new(&path).into_iter();
-                                    let detected =
-                                        parse::tf_repo(config, walker, vcs)
-                                            .ok();
-                                    result.detected_variables = detected;
+                let mut result = ProcessResult {
+                    missing: None,
+                    failed: None,
+                    detected_variables: None,
+                };
+                match repo_url(vcs) {
+                    Ok(url) => {
+                        let path = build_path(config, vcs, url.clone());
+                        match fetch_remote(url.clone(), path, vcs) {
+                            Ok(r) => {
+                                if let Some(missing) = r {
+                                    result.missing = Some(missing);
                                 }
                             }
-                            Err(_e) => {}
+                            Err(_e) => {
+                                result.failed = Some(vcs.clone());
+                            }
+                        };
+                        if config.cleanup.unlisted_variables {
+                            info!("Parsing variable data.");
+                            let path = build_path(config, vcs, url);
+                            let walker = WalkDir::new(&path).into_iter();
+                            let detected =
+                                parse::tf_repo(config, walker, vcs).ok();
+                            result.detected_variables = detected;
                         }
                     }
+                    Err(_e) => {}
                 }
                 result
             };
@@ -155,11 +162,18 @@ pub fn process(
         }
     });
 
-    let mut results =
-        ProcessResults { repos, missing: vec![], detected_variables: vec![] };
+    let mut results = ProcessResults {
+        repos,
+        missing: vec![],
+        failed: vec![],
+        detected_variables: vec![],
+    };
     for res in process_result_vec {
         if let Some(m) = res.missing {
             results.missing.push(m);
+        }
+        if let Some(f) = res.failed {
+            results.failed.push(f);
         }
         if let Some(v) = res.detected_variables {
             results.detected_variables.push(v);

@@ -2,11 +2,11 @@ use serde::{Deserialize, Serialize};
 use tfc_toolset::{
     settings::{Pagination, Query},
     variable,
-    workspace::{Workspace, WorkspaceVariables},
+    workspace::{VcsRepo, Workspace, WorkspaceVariables},
 };
 use tfc_toolset_extras::report::{Report, Reporter};
 
-pub type CleanReport = Report<Meta, Data>;
+pub type CleanReport = Report<Meta, Data, Errors>;
 
 // For now need to keep this updated with best effort :)
 const REPORT_VERSION: &str = "0.1.0";
@@ -42,6 +42,17 @@ pub struct Data {
     pub workspaces: Vec<Workspace>,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ParsingFailures {
+    pub repos: Vec<VcsRepo>,
+    pub workspaces: Vec<Workspace>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct Errors {
+    pub parsing_failures: Option<ParsingFailures>,
+}
+
 pub fn new() -> CleanReport {
     Report {
         report_version: REPORT_VERSION.to_string(),
@@ -53,5 +64,6 @@ pub fn new() -> CleanReport {
             unlisted_variables: None,
             workspaces: vec![],
         },
+        errors: Errors { parsing_failures: None },
     }
 }
