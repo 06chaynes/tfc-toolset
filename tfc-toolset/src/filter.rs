@@ -13,7 +13,7 @@ pub fn variable(
     // if you return false, it is removed.
     workspace_variables.retain(|workspace| {
         let mut keep = false;
-        for variable in config.clone().query.variables.unwrap() {
+        for variable in config.clone().workspaces.query.variables.unwrap() {
             match variable.operator {
                 Operators::Equals => {
                     // Should be equal.
@@ -99,7 +99,7 @@ pub fn tag(
     // if you return false, it is removed.
     workspaces.retain(|workspace| {
         let mut keep = false;
-        for q_tag in config.clone().query.tags.unwrap() {
+        for q_tag in config.clone().workspaces.query.tags.unwrap() {
             match q_tag.operator {
                 Operators::Equals => {
                     // Should be equal.

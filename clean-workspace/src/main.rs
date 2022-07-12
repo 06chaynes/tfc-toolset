@@ -54,20 +54,20 @@ async fn main() -> miette::Result<()> {
         Commands::Plan => {
             info!("Start Plan Phase");
             let mut report = report::new();
-            report.meta.query = Some(core.query.clone());
-            report.meta.pagination = Some(core.pagination.clone());
+            report.meta.query = Some(core.workspaces.query.clone());
+            report.meta.pagination = Some(core.workspaces.pagination.clone());
 
             // Get list of workspaces
             let mut workspaces =
                 workspace::get_workspaces(&core, client.clone()).await?;
 
             // Filter the workspaces if query tags have been provided
-            if core.query.tags.is_some() {
+            if core.workspaces.query.tags.is_some() {
                 info!("Filtering workspaces with tags query.");
                 filter::tag(&mut workspaces, &core)?;
             }
 
-            if core.query.variables.is_some()
+            if core.workspaces.query.variables.is_some()
                 || config.cleanup.unlisted_variables
                 || config.cleanup.missing_repositories
             {
@@ -80,7 +80,7 @@ async fn main() -> miette::Result<()> {
                     )
                     .await?;
                 // Filter the workspaces if query variables have been provided
-                if core.query.variables.is_some() {
+                if core.workspaces.query.variables.is_some() {
                     info!("Filtering workspaces with variable query.");
                     filter::variable(&mut workspaces_variables, &core)?;
                 }

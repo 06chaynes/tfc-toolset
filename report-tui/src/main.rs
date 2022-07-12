@@ -273,9 +273,12 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
                         serde_json::to_string(&r.reporter).unwrap(),
                         r.report_version,
                         r.bin_version,
-                        serde_json::to_string_pretty(&r.meta.query).unwrap(),
-                        serde_json::to_string_pretty(&r.meta.pagination)
+                        serde_json::to_string_pretty(&r.meta.workspaces.query)
                             .unwrap(),
+                        serde_json::to_string_pretty(
+                            &r.meta.workspaces.pagination,
+                        )
+                        .unwrap(),
                     ),
                     chunks[1],
                 ),

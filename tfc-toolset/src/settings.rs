@@ -37,14 +37,19 @@ pub struct Query {
     pub tags: Option<Vec<Tag>>,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct Workspaces {
+    pub query: Query,
+    pub pagination: Pagination,
+}
+
 #[derive(Clone, Debug, Deserialize)]
 pub struct Core {
     pub log: String,
     pub token: String,
     pub org: String,
     pub output: String,
-    pub query: Query,
-    pub pagination: Pagination,
+    pub workspaces: Workspaces,
 }
 
 impl Core {
@@ -53,9 +58,9 @@ impl Core {
             // Set defaults
             .set_default("log", "warn".to_string())?
             .set_default("output", "report.json".to_string())?
-            .set_default("pagination.start_page", "1".to_string())?
-            .set_default("pagination.max_depth", "1".to_string())?
-            .set_default("pagination.page_size", "20".to_string())?
+            .set_default("workspaces.pagination.start_page", "1".to_string())?
+            .set_default("workspaces.pagination.max_depth", "1".to_string())?
+            .set_default("workspaces.pagination.page_size", "20".to_string())?
             // Start off by merging in the "default" configuration file
             .add_source(File::with_name("settings.toml").required(false))
             // Add in settings from the environment

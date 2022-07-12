@@ -1,7 +1,7 @@
 use crate::{
     error::ToolError,
     settings::{Core, Query},
-    variable, BASE_URL,
+    variable, Meta, BASE_URL,
 };
 use async_scoped::AsyncScope;
 use log::*;
@@ -49,27 +49,6 @@ pub struct Workspace {
     pub attributes: Attributes,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Pagination {
-    #[serde(rename = "current-page")]
-    pub current_page: u32,
-    #[serde(rename = "page-size")]
-    pub page_size: u32,
-    #[serde(rename = "prev-page")]
-    pub prev_page: Option<u32>,
-    #[serde(rename = "next-page")]
-    pub next_page: Option<u32>,
-    #[serde(rename = "total-pages")]
-    pub total_pages: u32,
-    #[serde(rename = "total-count")]
-    pub total_count: u32,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Meta {
-    pub pagination: Pagination,
-}
-
 #[derive(Clone, Debug, Deserialize)]
 struct WorkspacesResponseOuter {
     pub data: Vec<Workspace>,
@@ -84,11 +63,11 @@ pub async fn get_workspaces(
     let mut url = Url::parse_with_params(
         &format!("{}/organizations/{}/workspaces/", BASE_URL, config.org),
         &[
-            ("page[number]", config.pagination.start_page.clone()),
-            ("page[size]", config.pagination.page_size.clone()),
+            ("page[number]", config.workspaces.pagination.start_page.clone()),
+            ("page[size]", config.workspaces.pagination.page_size.clone()),
         ],
     )?;
-    if let Some(name) = config.query.name.clone() {
+    if let Some(name) = config.workspaces.query.name.clone() {
         url = Url::parse_with_params(url.as_str(), &[("search[name]", name)])?
     }
     let req = RequestBuilder::new(Method::Get, url.clone())
@@ -107,7 +86,8 @@ pub async fn get_workspaces(
         };
     // Need to check pagination
     if let Some(meta) = workspace_list.meta {
-        let max_depth = config.pagination.max_depth.parse::<u32>()?;
+        let max_depth =
+            config.workspaces.pagination.max_depth.parse::<u32>()?;
         if max_depth > 1 || max_depth == 0 {
             let current_depth: u32 = 1;
             if let Some(next_page) = meta.pagination.next_page {

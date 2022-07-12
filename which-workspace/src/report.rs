@@ -12,6 +12,11 @@ const REPORT_VERSION: &str = "0.1.0";
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Meta {
+    pub workspaces: Workspaces,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct Workspaces {
     pub query: Option<Query>,
     pub pagination: Option<Pagination>,
 }
@@ -30,7 +35,7 @@ pub fn new() -> WhichReport {
         report_version: REPORT_VERSION.to_string(),
         bin_version: env!("CARGO_PKG_VERSION").to_string(),
         reporter: Reporter::WhichWorkspace,
-        meta: Meta { query: None, pagination: None },
+        meta: Meta { workspaces: Workspaces { query: None, pagination: None } },
         data: Data { workspaces: vec![] },
         errors: Errors {},
     }
@@ -38,8 +43,9 @@ pub fn new() -> WhichReport {
 
 pub fn build(config: &Core, workspaces: Vec<Workspace>) -> WhichReport {
     let mut report = new();
-    report.meta.query = Some(config.query.clone());
-    report.meta.pagination = Some(config.pagination.clone());
+    report.meta.workspaces.query = Some(config.workspaces.query.clone());
+    report.meta.workspaces.pagination =
+        Some(config.workspaces.pagination.clone());
     report.data.workspaces = workspaces;
     report
 }
