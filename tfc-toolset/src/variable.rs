@@ -3,13 +3,14 @@ use serde::{Deserialize, Serialize};
 use surf::{http::Method, Client, RequestBuilder};
 use url::Url;
 
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Attributes {
     pub key: String,
     pub value: Option<String>,
+    pub category: String,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Variable {
     pub id: String,
     pub attributes: Attributes,

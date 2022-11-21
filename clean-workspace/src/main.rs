@@ -145,6 +145,11 @@ async fn main() -> miette::Result<()> {
                                     let mut unlisted: Option<
                                         UnlistedVariables,
                                     > = None;
+                                    let mut variables = entry.variables.clone();
+                                    // Only keep terraform variables
+                                    variables.retain(|var| {
+                                        var.attributes.category == "terraform"
+                                    });
                                     for var in &entry.variables {
                                         for detected in
                                             &process_results.detected_variables
@@ -166,9 +171,7 @@ async fn main() -> miette::Result<()> {
                                         &entry.variables
                                     );
                                     debug!("Found Variables: {:#?}", &found);
-                                    let difference: Vec<_> = entry
-                                        .variables
-                                        .clone()
+                                    let difference: Vec<_> = variables
                                         .into_iter()
                                         .filter(|item| !found.contains(item))
                                         .collect();
