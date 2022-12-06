@@ -8,7 +8,7 @@ use report::TfcReport;
 use crossterm::{
     event::{
         self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode,
-        KeyEvent, KeyModifiers,
+        KeyEvent, KeyEventKind, KeyEventState, KeyModifiers,
     },
     execute,
     terminal::{
@@ -129,28 +129,40 @@ fn run_app<B: Backend>(
                     KeyEvent {
                         code: KeyCode::Char('Q'),
                         modifiers: KeyModifiers::SHIFT,
+                        kind: KeyEventKind::Press,
+                        state: KeyEventState::NONE,
                     } => {
                         return Ok(());
                     }
                     KeyEvent {
                         code: KeyCode::Char('f'),
                         modifiers: KeyModifiers::CONTROL,
+                        kind: KeyEventKind::Press,
+                        state: KeyEventState::NONE,
                     } => app.input_mode = InputMode::Editing,
                     KeyEvent {
                         code: KeyCode::Char('H'),
                         modifiers: KeyModifiers::SHIFT,
+                        kind: KeyEventKind::Press,
+                        state: KeyEventState::NONE,
                     } => app.active_nav_item = MenuItem::Home,
                     KeyEvent {
                         code: KeyCode::Char('I'),
                         modifiers: KeyModifiers::SHIFT,
+                        kind: KeyEventKind::Press,
+                        state: KeyEventState::NONE,
                     } => app.active_nav_item = MenuItem::Info,
                     KeyEvent {
                         code: KeyCode::Char('W'),
                         modifiers: KeyModifiers::SHIFT,
+                        kind: KeyEventKind::Press,
+                        state: KeyEventState::NONE,
                     } => app.active_nav_item = MenuItem::Workspaces,
                     KeyEvent {
                         code: KeyCode::Down,
                         modifiers: KeyModifiers::NONE,
+                        kind: KeyEventKind::Press,
+                        state: KeyEventState::NONE,
                     } => match app.active_nav_item {
                         MenuItem::Home => {}
                         MenuItem::Info => {}
@@ -170,6 +182,8 @@ fn run_app<B: Backend>(
                     KeyEvent {
                         code: KeyCode::Up,
                         modifiers: KeyModifiers::NONE,
+                        kind: KeyEventKind::Press,
+                        state: KeyEventState::NONE,
                     } => match app.active_nav_item {
                         MenuItem::Home => {}
                         MenuItem::Info => {}

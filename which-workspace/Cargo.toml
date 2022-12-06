@@ -17,17 +17,17 @@ name = "tfc_which_workspace"
 path = "src/lib.rs"
 
 [dependencies]
-anyhow = "1.0.57"
-async-std = { version = "1.11.0", features = ["attributes"] }
-config = "0.13.1"
-env_logger = "0.9.0"
+anyhow = "1.0.66"
+async-std = { version = "1.12.0", features = ["attributes"] }
+config = "0.13.3"
+env_logger = "0.10.0"
 log = "0.4.17"
-miette = { version = "4.7.1", features = ["fancy"] }
-serde = { version = "1.0.137", features = ["derive"] }
-serde_json = "1.0.81"
+miette = { version = "5.5.0", features = ["fancy"] }
+serde = { version = "1.0.149", features = ["derive"] }
+serde_json = "1.0.89"
 surf = "2.3.2"
-thiserror = "1.0.31"
-url = "2.2.2"
+thiserror = "1.0.37"
+url = "2.3.1"
 
 [dependencies.tfc-toolset]
 path = "../tfc-toolset"

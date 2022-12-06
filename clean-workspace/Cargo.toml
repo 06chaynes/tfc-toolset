@@ -17,22 +17,22 @@ name = "tfc_clean_workspace"
 path = "src/lib.rs"
 
 [dependencies]
-anyhow = "1.0.57"
-async-std = { version = "1.11.0", features = ["attributes"] }
-async-scoped = { version = "0.7.0", features = ["use-async-std"] }
-clap = { version = "3.1.18", features = ["derive"] }
-config = "0.13.1"
-env_logger = "0.9.0"
-git2 = { version = "0.14.4", features = ["vendored-libgit2", "vendored-openssl"] }
-git2_credentials = "0.8.0"
-hcl-rs = "0.5.2"
+anyhow = "1.0.66"
+async-std = { version = "1.12.0", features = ["attributes"] }
+async-scoped = { version = "0.7.1", features = ["use-async-std"] }
+clap = { version = "4.0.29", features = ["derive"] }
+config = "0.13.3"
+env_logger = "0.10.0"
+git2 = { version = "0.15.0", features = ["vendored-libgit2", "vendored-openssl"] }
+git2_credentials = "0.9.1"
+hcl-rs = "0.10.0"
 log = "0.4.17"
-miette = { version = "4.7.1", features = ["fancy"] }
-serde = { version = "1.0.137", features = ["derive"] }
-serde_json = "1.0.81"
+miette = { version = "5.5.0", features = ["fancy"] }
+serde = { version = "1.0.149", features = ["derive"] }
+serde_json = "1.0.89"
 surf = "2.3.2"
-thiserror = "1.0.31"
-url = "2.2.2"
+thiserror = "1.0.37"
+url = "2.3.1"
 walkdir = "2.3.2"
 
 [dependencies.tfc-toolset]
