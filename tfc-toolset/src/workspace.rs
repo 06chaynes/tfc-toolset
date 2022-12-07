@@ -55,7 +55,7 @@ struct WorkspacesResponseOuter {
     pub meta: Option<Meta>,
 }
 
-pub async fn get_workspaces(
+pub async fn list(
     config: &Core,
     client: Client,
 ) -> Result<Vec<Workspace>, ToolError> {
@@ -166,7 +166,7 @@ pub async fn get_workspaces(
     Ok(workspace_list.data)
 }
 
-pub async fn get_workspaces_variables(
+pub async fn variables(
     config: &Core,
     client: Client,
     workspaces: Vec<Workspace>,

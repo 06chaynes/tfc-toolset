@@ -20,8 +20,7 @@ async fn main() -> miette::Result<()> {
     let client = default_client()?;
 
     // Get list of workspaces
-    let mut workspaces =
-        workspace::get_workspaces(&config, client.clone()).await?;
+    let mut workspaces = workspace::list(&config, client.clone()).await?;
 
     // Filter the workspaces if query tags have been provided
     if config.workspaces.query.tags.is_some() {
@@ -32,8 +31,7 @@ async fn main() -> miette::Result<()> {
     if config.workspaces.query.variables.is_some() {
         // Get the variables for each workspace
         let mut workspaces_variables =
-            workspace::get_workspaces_variables(&config, client, workspaces)
-                .await?;
+            workspace::variables(&config, client, workspaces).await?;
         // Filter the workspaces if query variables have been provided
         info!("Filtering workspaces with variable query.");
         filter::variable(&mut workspaces_variables, &config)?;

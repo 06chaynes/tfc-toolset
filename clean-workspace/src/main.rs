@@ -58,8 +58,7 @@ async fn main() -> miette::Result<()> {
             report.meta.pagination = Some(core.workspaces.pagination.clone());
 
             // Get list of workspaces
-            let mut workspaces =
-                workspace::get_workspaces(&core, client.clone()).await?;
+            let mut workspaces = workspace::list(&core, client.clone()).await?;
 
             // Filter the workspaces if query tags have been provided
             if core.workspaces.query.tags.is_some() {
@@ -73,12 +72,8 @@ async fn main() -> miette::Result<()> {
             {
                 // Get the variables for each workspace
                 let mut workspaces_variables =
-                    workspace::get_workspaces_variables(
-                        &core,
-                        client,
-                        workspaces.clone(),
-                    )
-                    .await?;
+                    workspace::variables(&core, client, workspaces.clone())
+                        .await?;
                 // Filter the workspaces if query variables have been provided
                 if core.workspaces.query.variables.is_some() {
                     info!("Filtering workspaces with variable query.");
