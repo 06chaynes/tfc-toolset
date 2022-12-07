@@ -3,6 +3,7 @@ name = "tfc-report-tui"
 version = "0.1.0"
 authors = ["Christian Haynes <06chaynes@gmail.com>"]
 edition = "2021"
+rust-version = "1.61.0"
 
 [[bin]]
 name = "report-tui"
