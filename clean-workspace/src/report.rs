@@ -1,6 +1,10 @@
+use std::fs::File;
+
+use log::{error, info};
 use serde::{Deserialize, Serialize};
 use tfc_toolset::{
-    settings::{Pagination, Query},
+    error::ToolError,
+    settings::{Core, Pagination, Query},
     variable,
     workspace::{VcsRepo, Workspace, WorkspaceVariables},
 };
@@ -65,5 +69,19 @@ pub fn new() -> CleanReport {
             workspaces: vec![],
         },
         errors: Errors { parsing_failures: None },
+    }
+}
+
+pub fn load(config: &Core) -> Result<CleanReport, ToolError> {
+    info!("Loading report from: {}", &config.output);
+    match serde_json::from_reader(&File::open(&config.output)?) {
+        Ok(report) => {
+            info!("Report Loaded!");
+            Ok(report)
+        }
+        Err(e) => {
+            error!("Failed to load report!");
+            Err(ToolError::Json(e))
+        }
     }
 }

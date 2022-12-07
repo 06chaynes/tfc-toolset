@@ -213,7 +213,31 @@ async fn main() -> miette::Result<()> {
             report.save(&core)?;
         }
         Commands::Apply => {
-            dbg!("apply");
+            info!("Start Apply");
+            let report = report::load(&core)?;
+            debug!("{:#?}", &report);
+            if config.cleanup.unlisted_variables {
+                info!("Start Unlisted Variables Cleanup Phase");
+                if let Some(unlisted) = &report.data.unlisted_variables {
+                    for entry in unlisted {
+                        info!(
+                            "Processing unlisted variables for workspace: {}",
+                            &entry.workspace.workspace.attributes.name
+                        );
+                        for var in &entry.unlisted_variables {
+                            info!("Deleting unlisted variable: {}", &var.key);
+                            variable::delete(
+                                &var.id,
+                                &entry.workspace.workspace.id,
+                                &core,
+                                client.clone(),
+                            )
+                            .await?;
+                        }
+                    }
+                }
+                info!("Finished Unlisted Variables Cleanup Phase");
+            }
         }
     }
     Ok(())
