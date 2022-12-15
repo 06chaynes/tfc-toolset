@@ -145,7 +145,7 @@ async fn main() -> miette::Result<()> {
                                     variables.retain(|var| {
                                         var.attributes.category == "terraform"
                                     });
-                                    for var in &entry.variables {
+                                    for var in &variables {
                                         for detected in
                                             &process_results.detected_variables
                                         {

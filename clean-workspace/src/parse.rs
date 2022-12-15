@@ -46,6 +46,11 @@ pub fn tf_repo(
         match hcl::from_str::<TestVariable>(&fs::read_to_string(file.path())?) {
             Ok(v) => {
                 info!("{:#?}", &v);
+                if let Some(value) = v.variable {
+                    for (key, _value) in value.as_object().unwrap() {
+                        detected_variables.push(key.clone());
+                    }
+                }
             }
             Err(_e) => {
                 match hcl::from_str::<Variable>(&fs::read_to_string(
