@@ -24,5 +24,6 @@ jobs:
         with:
           tool: cargo-binstall
       - run: cargo binstall --version 0.15.1 --no-confirm cargo-msrv
-      - name: Run cargo msrv
+      - name: Run cargo msrv tfc-toolset
+        working-directory: tfc-toolset
         run: cargo msrv verify
