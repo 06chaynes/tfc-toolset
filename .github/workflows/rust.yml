@@ -39,6 +39,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: |
           cargo test --workspace --all-targets --all-features
+          cargo build --workspace --all-targets --all-features
 
   clippy:
     name: Check clippy
