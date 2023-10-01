@@ -1,5 +1,6 @@
 token = "tfc-access-token" # Required
 org = "org-name" # Required
+project = "project-id" # Optional
 output = "production.json" # Optional with default 'results.json'
 log = "info" # Optional with default 'warn'
 

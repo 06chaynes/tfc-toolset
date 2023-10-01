@@ -60,12 +60,18 @@ pub async fn list(
     client: Client,
 ) -> Result<Vec<Workspace>, ToolError> {
     info!("Retrieving the initial list of workspaces.");
+    let mut params = Vec::new();
+    params.push((
+        "page[number]",
+        config.workspaces.pagination.start_page.clone(),
+    ));
+    params.push(("page[size]", config.workspaces.pagination.page_size.clone()));
+    if let Some(project) = config.project.clone() {
+        params.push(("filter[project][id]", project))
+    }
     let mut url = Url::parse_with_params(
         &format!("{}/organizations/{}/workspaces/", BASE_URL, config.org),
-        &[
-            ("page[number]", config.workspaces.pagination.start_page.clone()),
-            ("page[size]", config.workspaces.pagination.page_size.clone()),
-        ],
+        &params,
     )?;
     if let Some(name) = config.workspaces.query.name.clone() {
         url = Url::parse_with_params(url.as_str(), &[("search[name]", name)])?

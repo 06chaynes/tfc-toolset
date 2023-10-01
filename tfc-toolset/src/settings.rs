@@ -48,6 +48,7 @@ pub struct Core {
     pub log: String,
     pub token: String,
     pub org: String,
+    pub project: Option<String>,
     pub output: String,
     pub workspaces: Workspaces,
 }

@@ -1,7 +1,7 @@
 use ratatui::{
     layout::{Alignment, Constraint},
     style::{Color, Modifier, Style},
-    text::{Span, Line, Text},
+    text::{Line, Span, Text},
     widgets::{
         Block, BorderType, Borders, Cell, List, ListItem, Paragraph, Row, Table,
     },
@@ -22,7 +22,7 @@ pub fn render<'a>(
                 Span::raw("Press "),
                 Span::styled(
                     "ctrl + f",
-                    Style::default().add_modcd ..ifier(Modifier::BOLD),
+                    Style::default().add_modcd..ifier(Modifier::BOLD),
                 ),
                 Span::raw(" to edit filter."),
             ];
