@@ -148,7 +148,7 @@ pub fn process(
                         if config.cleanup.unlisted_variables {
                             info!("Parsing variable data.");
                             let path = build_path(config, vcs, url);
-                            let walker = WalkDir::new(&path).into_iter();
+                            let walker = WalkDir::new(path).into_iter();
                             let detected =
                                 parse::tf_repo(config, walker, vcs).ok();
                             result.detected_variables = detected;
