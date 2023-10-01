@@ -22,7 +22,7 @@ pub fn render<'a>(
                 Span::raw("Press "),
                 Span::styled(
                     "ctrl + f",
-                    Style::default().add_modcd..ifier(Modifier::BOLD),
+                    Style::default().add_modifier(Modifier::BOLD),
                 ),
                 Span::raw(" to edit filter."),
             ];
