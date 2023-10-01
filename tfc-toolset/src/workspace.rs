@@ -71,7 +71,7 @@ pub async fn list(
         url = Url::parse_with_params(url.as_str(), &[("search[name]", name)])?
     }
     let req = RequestBuilder::new(Method::Get, url.clone())
-        .header("Authorization", &format!("Bearer {}", config.token))
+        .header("Authorization", format!("Bearer {}", config.token))
         .build();
     let mut workspace_list: WorkspacesResponseOuter =
         match client.recv_string(req).await {
@@ -125,7 +125,7 @@ pub async fn list(
                                     )
                                     .header(
                                         "Authorization",
-                                        &format!("Bearer {}", config.token),
+                                        format!("Bearer {}", config.token),
                                     )
                                     .build();
                                     match c.recv_string(req).await {

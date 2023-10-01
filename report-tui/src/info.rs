@@ -1,7 +1,7 @@
-use tui::{
+use ratatui::{
     layout::Alignment,
     style::{Color, Style},
-    text::{Span, Spans},
+    text::{Span, Line},
     widgets::{Block, BorderType, Borders, Paragraph},
 };
 
@@ -13,36 +13,36 @@ pub fn render<'a>(
     pagination: String,
 ) -> Paragraph<'a> {
     Paragraph::new(vec![
-        Spans::from(vec![Span::raw("")]),
-        Spans::from(vec![
+        Line::from(vec![Span::raw("")]),
+        Line::from(vec![
             Span::raw("Reporter: "),
             Span::styled(reporter, Style::default().fg(Color::Green)),
         ]),
-        Spans::from(vec![Span::raw("")]),
-        Spans::from(vec![
+        Line::from(vec![Span::raw("")]),
+        Line::from(vec![
             Span::raw("Reporter Version: "),
             Span::styled(bin_version, Style::default().fg(Color::LightCyan)),
         ]),
-        Spans::from(vec![Span::raw("")]),
-        Spans::from(vec![
+        Line::from(vec![Span::raw("")]),
+        Line::from(vec![
             Span::raw("Report Version: "),
             Span::styled(report_version, Style::default().fg(Color::LightCyan)),
         ]),
-        Spans::from(vec![Span::raw("")]),
-        Spans::from(vec![Span::raw("Query: ")]),
-        Spans::from(vec![Span::raw("")]),
-        Spans::from(vec![Span::styled(
+        Line::from(vec![Span::raw("")]),
+        Line::from(vec![Span::raw("Query: ")]),
+        Line::from(vec![Span::raw("")]),
+        Line::from(vec![Span::styled(
             query,
             Style::default().fg(Color::LightCyan),
         )]),
-        Spans::from(vec![Span::raw("")]),
-        Spans::from(vec![Span::raw("Pagination: ")]),
-        Spans::from(vec![Span::raw("")]),
-        Spans::from(vec![Span::styled(
+        Line::from(vec![Span::raw("")]),
+        Line::from(vec![Span::raw("Pagination: ")]),
+        Line::from(vec![Span::raw("")]),
+        Line::from(vec![Span::styled(
             pagination,
             Style::default().fg(Color::LightCyan),
         )]),
-        Spans::from(vec![Span::raw("")]),
+        Line::from(vec![Span::raw("")]),
     ])
     .alignment(Alignment::Center)
     .block(

@@ -7,7 +7,7 @@ repository = "https://github.com/06chaynes/tfc-toolset.git"
 license = "MIT OR Apache-2.0"
 readme = "README.md"
 edition = "2021"
-rust-version = "1.61.0"
+rust-version = "1.67.1"
 
 [[bin]]
 name = "which-workspace"
@@ -18,17 +18,17 @@ name = "tfc_which_workspace"
 path = "src/lib.rs"
 
 [dependencies]
-anyhow = "1.0.66"
+anyhow = "1.0.75"
 async-std = { version = "1.12.0", features = ["attributes"] }
 config = "0.13.3"
 env_logger = "0.10.0"
-log = "0.4.17"
-miette = { version = "5.5.0", features = ["fancy"] }
-serde = { version = "1.0.149", features = ["derive"] }
-serde_json = "1.0.89"
+log = "0.4.20"
+miette = { version = "5.10.0", features = ["fancy"] }
+serde = { version = "1.0.188", features = ["derive"] }
+serde_json = "1.0.107"
 surf = "2.3.2"
-thiserror = "1.0.37"
-url = "2.3.1"
+thiserror = "1.0.49"
+url = "2.4.1"
 
 [dependencies.tfc-toolset]
 path = "../tfc-toolset"

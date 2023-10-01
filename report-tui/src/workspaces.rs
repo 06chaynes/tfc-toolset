@@ -1,12 +1,12 @@
-use tfc_toolset::workspace::Workspace;
-use tui::{
+use ratatui::{
     layout::{Alignment, Constraint},
     style::{Color, Modifier, Style},
-    text::{Span, Spans, Text},
+    text::{Span, Line, Text},
     widgets::{
         Block, BorderType, Borders, Cell, List, ListItem, Paragraph, Row, Table,
     },
 };
+use tfc_toolset::workspace::Workspace;
 
 use crate::{App, InputMode};
 
@@ -22,11 +22,11 @@ pub fn render<'a>(
                 Span::raw("Press "),
                 Span::styled(
                     "ctrl + f",
-                    Style::default().add_modifier(Modifier::BOLD),
+                    Style::default().add_modcd ..ifier(Modifier::BOLD),
                 ),
                 Span::raw(" to edit filter."),
             ];
-            app.info = Paragraph::new(Text::from(Spans::from(info_text)))
+            app.info = Paragraph::new(Text::from(Line::from(info_text)))
                 .style(Style::default().fg(Color::LightCyan))
                 .alignment(Alignment::Center)
                 .block(
@@ -52,7 +52,7 @@ pub fn render<'a>(
                 ),
                 Span::raw(" to apply the filter"),
             ];
-            app.info = Paragraph::new(Text::from(Spans::from(info_text)))
+            app.info = Paragraph::new(Text::from(Line::from(info_text)))
                 .style(Style::default().fg(Color::Yellow))
                 .alignment(Alignment::Center)
                 .block(
@@ -82,7 +82,7 @@ pub fn render<'a>(
     let items: Vec<_> = filtered_list
         .iter()
         .map(|workspace| {
-            ListItem::new(Spans::from(vec![Span::styled(
+            ListItem::new(Line::from(vec![Span::styled(
                 workspace.attributes.name.clone(),
                 Style::default(),
             )]))

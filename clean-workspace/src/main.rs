@@ -48,7 +48,7 @@ async fn main() -> miette::Result<()> {
     // Initialize the logger
     env_logger::Builder::from_env(Env::default().default_filter_or(&core.log))
         .init();
-    let client = default_client()?;
+    let client = default_client().into_diagnostic()?;
     // Match on the cli subcommand
     match &cli.command {
         Commands::Plan => {
@@ -58,12 +58,14 @@ async fn main() -> miette::Result<()> {
             report.meta.pagination = Some(core.workspaces.pagination.clone());
 
             // Get list of workspaces
-            let mut workspaces = workspace::list(&core, client.clone()).await?;
+            let mut workspaces = workspace::list(&core, client.clone())
+                .await
+                .into_diagnostic()?;
 
             // Filter the workspaces if query tags have been provided
             if core.workspaces.query.tags.is_some() {
                 info!("Filtering workspaces with tags query.");
-                filter::tag(&mut workspaces, &core)?;
+                filter::tag(&mut workspaces, &core).into_diagnostic()?;
             }
 
             if core.workspaces.query.variables.is_some()
@@ -73,11 +75,13 @@ async fn main() -> miette::Result<()> {
                 // Get the variables for each workspace
                 let mut workspaces_variables =
                     workspace::variables(&core, client, workspaces.clone())
-                        .await?;
+                        .await
+                        .into_diagnostic()?;
                 // Filter the workspaces if query variables have been provided
                 if core.workspaces.query.variables.is_some() {
                     info!("Filtering workspaces with variable query.");
-                    filter::variable(&mut workspaces_variables, &core)?;
+                    filter::variable(&mut workspaces_variables, &core)
+                        .into_diagnostic()?;
                 }
 
                 workspaces.clear();
@@ -205,11 +209,11 @@ async fn main() -> miette::Result<()> {
 
             report.data.workspaces = workspaces;
             debug!("{:#?}", &report);
-            report.save(&core)?;
+            report.save(&core).into_diagnostic()?;
         }
         Commands::Apply => {
             info!("Start Apply");
-            let report = report::load(&core)?;
+            let report = report::load(&core).into_diagnostic()?;
             debug!("{:#?}", &report);
             if config.cleanup.unlisted_variables {
                 info!("Start Unlisted Variables Cleanup Phase");
@@ -227,7 +231,8 @@ async fn main() -> miette::Result<()> {
                                 &core,
                                 client.clone(),
                             )
-                            .await?;
+                            .await
+                            .into_diagnostic()?;
                         }
                     }
                 }

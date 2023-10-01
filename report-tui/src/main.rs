@@ -17,16 +17,16 @@ use crossterm::{
     },
 };
 use miette::IntoDiagnostic;
-use std::io;
-use thiserror::Error;
-use tui::{
+use ratatui::{
     backend::{Backend, CrosstermBackend},
     layout::{Alignment, Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
-    text::{Span, Spans},
+    text::{Span, Line},
     widgets::{Block, BorderType, Borders, ListState, Paragraph, Tabs},
     Frame, Terminal,
 };
+use std::io;
+use thiserror::Error;
 use unicode_width::UnicodeWidthStr;
 
 #[derive(Error, Debug)]
@@ -89,7 +89,7 @@ fn main() -> miette::Result<()> {
     // create app and run it
     let mut workspace_list_state = ListState::default();
     workspace_list_state.select(Some(0));
-    let report = report::read()?;
+    let report = report::read().into_diagnostic()?;
     let workspace_count = count_workspaces(&report);
     let app = App {
         input_mode: InputMode::Navigation,
@@ -243,7 +243,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         .iter()
         .map(|t| {
             let (first, rest) = t.split_at(1);
-            Spans::from(vec![
+            Line::from(vec![
                 Span::styled(
                     first,
                     Style::default()

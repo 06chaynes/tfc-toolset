@@ -29,7 +29,7 @@ pub async fn list(
     let url =
         Url::parse(&format!("{}/workspaces/{}/vars/", BASE_URL, workspace_id))?;
     let req = RequestBuilder::new(Method::Get, url)
-        .header("Authorization", &format!("Bearer {}", config.token))
+        .header("Authorization", format!("Bearer {}", config.token))
         .build();
     match client.recv_string(req).await {
         Ok(s) => Ok(serde_json::from_str::<VariablesResponseOuter>(&s)?.data),
@@ -48,7 +48,7 @@ pub async fn delete(
         BASE_URL, workspace_id, variable_id
     ))?;
     let req = RequestBuilder::new(Method::Delete, url)
-        .header("Authorization", &format!("Bearer {}", config.token))
+        .header("Authorization", format!("Bearer {}", config.token))
         .build();
     client
         .recv_string(req)
