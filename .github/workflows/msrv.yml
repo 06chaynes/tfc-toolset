@@ -1,0 +1,28 @@
+name: msrv
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+concurrency:
+  group: ${{ github.ref }}-msrv
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Verify MSRV
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-binstall
+      - run: cargo binstall --version 0.15.1 --no-confirm cargo-msrv
+      - name: Run cargo msrv
+        run: cargo msrv verify
