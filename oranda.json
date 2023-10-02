@@ -1,0 +1,24 @@
+{
+  "project": {
+    "name": "tfc-toolset",
+    "description": "A toolset to help manage a toolset that helps manage your deployments",
+    "repository": "https://github.com/06chaynes/tfc-toolset",
+    "license": "MIT OR Apache-2.0",
+    "readme_path": "./README.md"
+  },
+  "build": {
+    "additional_pages": {}
+  },
+  "components": {
+    "changelog": false,
+    "artifacts": {
+      "cargo_dist": true
+    },
+    "mdbook": {
+      "path": "./docs"
+    }
+  },
+  "styles": {
+    "theme": "axodark"
+  }
+}
