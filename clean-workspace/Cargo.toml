@@ -10,7 +10,7 @@ edition = "2021"
 rust-version = "1.67.1"
 
 [[bin]]
-name = "clean-workspace"
+name = "tfc-clean-workspace"
 path = "src/main.rs"
 
 [lib]
