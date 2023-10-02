@@ -1,0 +1,27 @@
+{
+  "workspace": {
+    "name": "tfc-toolset",
+    "members": [
+      {
+        "slug": "tfc-toolset",
+        "path": "./tfc-toolset"
+      },
+      {
+        "slug": "tfc-toolset-extras",
+        "path": "./tfc-toolset-extras"
+      },
+      {
+        "slug": "which-workspace",
+        "path": "./which-workspace"
+      },
+      {
+        "slug": "clean-workspace",
+        "path": "./clean-workspace"
+      },
+      {
+        "slug": "report-tui",
+        "path": "./report-tui"
+      }
+    ]
+  }
+}
