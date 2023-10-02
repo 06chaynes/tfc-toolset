@@ -11,16 +11,16 @@
         "path": "./tfc-toolset-extras"
       },
       {
-        "slug": "which-workspace",
-        "path": "./which-workspace"
+        "slug": "tfc-which-workspace",
+        "path": "./tfc-which-workspace"
       },
       {
-        "slug": "clean-workspace",
-        "path": "./clean-workspace"
+        "slug": "tfc-clean-workspace",
+        "path": "./tfc-clean-workspace"
       },
       {
-        "slug": "report-tui",
-        "path": "./report-tui"
+        "slug": "tfc-report-tui",
+        "path": "./tfc-report-tui"
       }
     ]
   }

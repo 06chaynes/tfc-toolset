@@ -10,11 +10,11 @@ A collection of tools to help in management of your Terraform cloud organization
 
 - `tfc-toolset-extras`: Extends the core library with more optional functionality.
   
-- `which-workspace`: A search tool for finding workspaces that match specified parameters. Sometimes you just need to know which workspaces have a specific value for a specific variable right? ... Right? Happens all the time I'm sure.
+- `tfc-which-workspace`: A search tool for finding workspaces that match specified parameters. Sometimes you just need to know which workspaces have a specific value for a specific variable right? ... Right? Happens all the time I'm sure.
   
-- `clean-workspace`: Throw your workspaces in a tub and scrub! Generate massive overly verbose reports on your hundreds of workspaces with details of all the things you need to fix! Maybe even fix some of those things automagically (or maybe not!)!
+- `tfc-clean-workspace`: Throw your workspaces in a tub and scrub! Generate massive overly verbose reports on your hundreds of workspaces with details of all the things you need to fix! Maybe even fix some of those things automagically (or maybe not!)!
 
-- `report-tui`: Reading large JSON payloads can be a headache, this maybe slightly less so.
+- `tfc-report-tui`: Reading large JSON payloads can be a headache, this maybe slightly less so.
 
 ## Why?
 
@@ -28,10 +28,10 @@ More details on each tool/library can be found on the README in each project dir
 
 - [`tfc-toolset-extras`](tfc-toolset-extras/README.md)
   
-- [`which-workspace`](which-workspace/README.md)
+- [`tfc-which-workspace`](tfc-which-workspace/README.md)
 
-- [`clean-workspace`](clean-workspace/README.md)
+- [`tfc-clean-workspace`](tfc-clean-workspace/README.md)
 
-- [`report-tui`](report-tui/README.md)
+- [`tfc-report-tui`](tfc-report-tui/README.md)
 
 See [Filtering](FILTERING.md) for more details on the specifics of workspace filtering.

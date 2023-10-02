@@ -27,9 +27,9 @@ path = "../tfc-toolset-extras"
 version = "0.1.0"
 
 [dependencies.tfc-which-workspace]
-path = "../which-workspace"
+path = "../tfc-which-workspace"
 version = "0.1.0"
 
 [dependencies.tfc-clean-workspace]
-path = "../clean-workspace"
+path = "../tfc-clean-workspace"
 version = "0.1.0"
