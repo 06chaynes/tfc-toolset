@@ -6,7 +6,7 @@ edition = "2021"
 rust-version = "1.67.1"
 
 [[bin]]
-name = "report-tui"
+name = "tfc-report-tui"
 path = "src/main.rs"
 
 [dependencies]
