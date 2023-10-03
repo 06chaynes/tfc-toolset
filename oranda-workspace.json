@@ -23,5 +23,13 @@
         "path": "./tfc-report-tui"
       }
     ]
+  },
+  "components": {
+    "mdbook": {
+      "path": "./docs"
+    }
+  },
+  "styles": {
+    "theme": "axodark"
   }
 }

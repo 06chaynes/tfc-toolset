@@ -6,19 +6,10 @@
     "license": "MIT OR Apache-2.0",
     "readme_path": "./README.md"
   },
-  "build": {
-    "additional_pages": {}
-  },
   "components": {
     "changelog": false,
     "artifacts": {
-      "cargo_dist": true
-    },
-    "mdbook": {
-      "path": "./docs"
+      "cargo_dist": false
     }
-  },
-  "styles": {
-    "theme": "axodark"
   }
 }

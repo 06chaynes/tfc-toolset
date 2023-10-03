@@ -1,0 +1,15 @@
+{
+  "project": {
+    "name": "tfc-toolset-extras",
+    "description": "Extra stuff for tfc-toolset you may or may not want to use",
+    "repository": "https://github.com/06chaynes/tfc-toolset",
+    "license": "MIT OR Apache-2.0",
+    "readme_path": "./README.md"
+  },
+  "components": {
+    "changelog": false,
+    "artifacts": {
+      "cargo_dist": false
+    }
+  }
+}
