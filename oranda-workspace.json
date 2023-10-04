@@ -30,6 +30,7 @@
     }
   },
   "styles": {
-    "theme": "axodark"
+    "theme": "axodark",
+    "additional_css": ["./.assets/styles/oranda.css"]
   }
 }
