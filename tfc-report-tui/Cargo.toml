@@ -37,3 +37,7 @@ version = "0.1.0"
 [dependencies.tfc-clean-workspace]
 path = "../tfc-clean-workspace"
 version = "0.1.0"
+
+[dependencies.tfc-run-workspace]
+path = "../tfc-run-workspace"
+version = "0.1.0"
