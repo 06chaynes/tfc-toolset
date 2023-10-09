@@ -95,8 +95,7 @@ async fn work_queue(
             info!("Creating run for workspace: {}", &ws.id);
             let client = client.clone();
             let attributes = attributes.clone();
-            let will_auto_apply =
-                attributes.auto_apply.clone().unwrap_or(false);
+            let will_auto_apply = attributes.auto_apply.unwrap_or(false);
             let core = core.clone();
             let ws_id = ws.id.clone();
             let mut iterations = 0;
@@ -139,15 +138,13 @@ async fn work_queue(
                                 .clone()
                                 .unwrap_or("unknown".to_string())
                                 .as_str(),
-                        ) {
-                            break;
-                        } else if !will_auto_apply
+                        ) || !will_auto_apply
                             && run
                                 .attributes
                                 .status
                                 .clone()
                                 .unwrap_or("unknown".to_string())
-                                == "planned".to_string()
+                                == *"planned"
                         {
                             // If auto_apply is false, then we can break out of the loop
                             // because the run will require confirmation before applying
@@ -160,7 +157,7 @@ async fn work_queue(
                                 .status
                                 .clone()
                                 .unwrap_or("unknown".to_string());
-                            if status == "pending".to_string() {
+                            if status == *"pending" {
                                 error!(
                                     "Run {} for workspace {} has been in status {} too long. \
                                     There is likely previous run pending. Please check the workspace in the UI.",
@@ -212,6 +209,15 @@ async fn main() -> miette::Result<()> {
     // Initialize the logger
     env_logger::Builder::from_env(Env::default().default_filter_or(&core.log))
         .init();
+    let max_concurrent = config
+        .max_concurrent
+        .unwrap_or(settings::MAX_CONCURRENT_DEFAULT.into());
+    let max_iterations = config
+        .max_iterations
+        .unwrap_or(settings::MAX_ITERATIONS_DEFAULT.into());
+    let status_check_sleep_seconds = config
+        .status_check_sleep_seconds
+        .unwrap_or(settings::STATUS_CHECK_SLEEP_SECONDS_DEFAULT);
     let client = default_client().into_diagnostic()?;
     // Match on the cli subcommand
     match &cli.command {
@@ -225,15 +231,6 @@ async fn main() -> miette::Result<()> {
             let workspaces = get_workspaces(&core, client.clone()).await?;
 
             // Queue up plan runs for each workspace respecting the max_concurrent setting
-            let max_concurrent = config
-                .max_concurrent
-                .unwrap_or(settings::MAX_CONCURRENT_DEFAULT.into());
-            let max_iterations = config
-                .max_iterations
-                .unwrap_or(settings::MAX_ITERATIONS_DEFAULT.into());
-            let status_check_sleep_seconds = config
-                .status_check_sleep_seconds
-                .unwrap_or(settings::STATUS_CHECK_SLEEP_SECONDS_DEFAULT.into());
             let attributes = run::Attributes {
                 plan_only: Some(true),
                 terraform_version: Some(core.terraform_version.clone()),
@@ -273,15 +270,6 @@ async fn main() -> miette::Result<()> {
             let workspaces = get_workspaces(&core, client.clone()).await?;
 
             // Queue up plan runs for each workspace respecting the max_concurrent setting
-            let max_concurrent = config
-                .max_concurrent
-                .unwrap_or(settings::MAX_CONCURRENT_DEFAULT.into());
-            let max_iterations = config
-                .max_iterations
-                .unwrap_or(settings::MAX_ITERATIONS_DEFAULT.into());
-            let status_check_sleep_seconds = config
-                .status_check_sleep_seconds
-                .unwrap_or(settings::STATUS_CHECK_SLEEP_SECONDS_DEFAULT.into());
             let attributes = run::Attributes::default();
 
             let mut queue = BTreeMap::new();
