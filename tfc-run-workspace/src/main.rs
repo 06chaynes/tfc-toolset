@@ -1,6 +1,7 @@
 mod report;
 mod settings;
 
+use crate::report::RunResult;
 use async_std::task::JoinHandle;
 use clap::{Parser, Subcommand};
 use dashmap::DashMap;
@@ -76,6 +77,131 @@ async fn get_workspaces(
     Ok(workspaces)
 }
 
+async fn work_queue(
+    queue: &mut BTreeMap<String, workspace::Workspace>,
+    max_concurrent: usize,
+    max_iterations: usize,
+    status_check_sleep_seconds: u64,
+    attributes: run::Attributes,
+    client: Client,
+    core: &Core,
+) -> Result<Vec<report::RunResult>, ToolError> {
+    let running = DashMap::with_capacity(max_concurrent);
+    let mut results = Vec::with_capacity(queue.len());
+    while !queue.is_empty() {
+        let mut handles = Vec::with_capacity(max_concurrent);
+        while running.len() < max_concurrent && !queue.is_empty() {
+            let (id, ws) = queue.pop_first().unwrap();
+            info!("Creating run for workspace: {}", &ws.id);
+            let client = client.clone();
+            let attributes = attributes.clone();
+            let will_auto_apply =
+                attributes.auto_apply.clone().unwrap_or(false);
+            let core = core.clone();
+            let ws_id = ws.id.clone();
+            let mut iterations = 0;
+            let handle: JoinHandle<Result<RunResult, ToolError>> =
+                async_std::task::spawn(async move {
+                    let run = run::create(
+                        &id.clone(),
+                        Some(attributes),
+                        &core,
+                        client.clone(),
+                    )
+                    .await?;
+                    let mut run =
+                        run::status(&run.id, &core, client.clone()).await?;
+                    info!(
+                        "Run {} created for workspace {}",
+                        &run.id,
+                        &id.clone()
+                    );
+                    while !run::COMPLETED_STATUSES.contains(
+                        &run.attributes
+                            .status
+                            .clone()
+                            .unwrap_or("unknown".to_string())
+                            .as_str(),
+                    ) {
+                        run =
+                            run::status(&run.id, &core, client.clone()).await?;
+                        debug!(
+                            "Run {} status: {}",
+                            &run.id,
+                            &run.attributes
+                                .status
+                                .clone()
+                                .unwrap_or("unknown".to_string())
+                        );
+                        if run::COMPLETED_STATUSES.contains(
+                            &run.attributes
+                                .status
+                                .clone()
+                                .unwrap_or("unknown".to_string())
+                                .as_str(),
+                        ) {
+                            break;
+                        } else if !will_auto_apply
+                            && run
+                                .attributes
+                                .status
+                                .clone()
+                                .unwrap_or("unknown".to_string())
+                                == "planned".to_string()
+                        {
+                            // If auto_apply is false, then we can break out of the loop
+                            // because the run will require confirmation before applying
+                            break;
+                        }
+                        iterations += 1;
+                        if iterations >= max_iterations {
+                            let status = run
+                                .attributes
+                                .status
+                                .clone()
+                                .unwrap_or("unknown".to_string());
+                            if status == "pending".to_string() {
+                                error!(
+                                    "Run {} for workspace {} has been in status {} too long. \
+                                    There is likely previous run pending. Please check the workspace in the UI.",
+                                    &run.id, &id.clone(), &status.clone()
+                                );
+                            } else {
+                                error!(
+                                    "Run {} for workspace {} has been in status {} too long. \
+                                    This is likely some error. Please check the run in the UI.",
+                                    &run.id, &id.clone(), &status.clone()
+                                );
+                            }
+                            break;
+                        }
+                        async_std::task::sleep(Duration::from_secs(
+                            status_check_sleep_seconds,
+                        ))
+                        .await;
+                    }
+                    Ok(RunResult {
+                        id: run.id,
+                        status: run
+                            .attributes
+                            .status
+                            .unwrap_or("unknown".to_string()),
+                        workspace_id: id,
+                    })
+                });
+            running.insert(ws_id, ws);
+            handles.push(handle);
+        }
+        for handle in handles {
+            let result = handle.await?;
+            let run = result.clone();
+            running.remove(run.id.clone().as_str());
+            results.push(result);
+        }
+    }
+    Ok(results)
+}
+
 #[async_std::main]
 async fn main() -> miette::Result<()> {
     // Parse cli subcommands and arguments
@@ -102,6 +228,12 @@ async fn main() -> miette::Result<()> {
             let max_concurrent = config
                 .max_concurrent
                 .unwrap_or(settings::MAX_CONCURRENT_DEFAULT.into());
+            let max_iterations = config
+                .max_iterations
+                .unwrap_or(settings::MAX_ITERATIONS_DEFAULT.into());
+            let status_check_sleep_seconds = config
+                .status_check_sleep_seconds
+                .unwrap_or(settings::STATUS_CHECK_SLEEP_SECONDS_DEFAULT.into());
             let attributes = run::Attributes {
                 plan_only: Some(true),
                 terraform_version: Some(core.terraform_version.clone()),
@@ -109,85 +241,26 @@ async fn main() -> miette::Result<()> {
             };
 
             let mut queue = BTreeMap::new();
-            let running = DashMap::with_capacity(max_concurrent);
-            let mut results = Vec::with_capacity(workspaces.len());
 
             for ws in workspaces.iter() {
                 queue.insert(ws.id.clone(), ws.clone());
             }
 
-            while !queue.is_empty() {
-                let mut handles = Vec::with_capacity(max_concurrent);
-                while running.len() < max_concurrent && !queue.is_empty() {
-                    let (id, ws) = queue.pop_first().unwrap();
-                    info!("Creating run for workspace: {}", &ws.id);
-                    let client = client.clone();
-                    let attributes = attributes.clone();
-                    let core = core.clone();
-                    let ws_id = ws.id.clone();
-                    let handle: JoinHandle<
-                        Result<(String, String), ToolError>,
-                    > = async_std::task::spawn(async move {
-                        let run = run::create(
-                            &id.clone(),
-                            Some(attributes),
-                            &core,
-                            client.clone(),
-                        )
-                        .await?;
-                        let mut run =
-                            run::status(&run.id, &core, client.clone()).await?;
-                        info!("Run {} created for workspace {}", &run.id, &id);
-                        while !run::COMPLETED_STATUSES.contains(
-                            &run.attributes
-                                .status
-                                .clone()
-                                .unwrap_or("unknown".to_string())
-                                .as_str(),
-                        ) {
-                            run = run::status(&run.id, &core, client.clone())
-                                .await?;
-                            debug!(
-                                "Run {} status: {}",
-                                &run.id,
-                                &run.attributes
-                                    .status
-                                    .clone()
-                                    .unwrap_or("unknown".to_string())
-                            );
-                            if run::COMPLETED_STATUSES.contains(
-                                &run.attributes
-                                    .status
-                                    .clone()
-                                    .unwrap_or("unknown".to_string())
-                                    .as_str(),
-                            ) {
-                                break;
-                            }
-                            async_std::task::sleep(Duration::from_secs(5))
-                                .await;
-                        }
-                        Ok((
-                            run.id.clone(),
-                            run.attributes
-                                .clone()
-                                .status
-                                .unwrap_or("unknown".to_string()),
-                        ))
-                    });
-                    running.insert(ws_id, ws);
-                    handles.push(handle);
-                }
-                for handle in handles {
-                    let result = handle.await.into_diagnostic()?;
-                    let run = result.clone();
-                    running.remove(run.0.clone().as_str());
-                    results.push(result);
-                }
-            }
+            let results = work_queue(
+                &mut queue,
+                max_concurrent,
+                max_iterations,
+                status_check_sleep_seconds,
+                attributes,
+                client.clone(),
+                &core,
+            )
+            .await
+            .into_diagnostic()?;
 
             report.data.workspaces = workspaces;
-            //debug!("{:#?}", &report);
+            report.data.runs = results;
+            debug!("{:#?}", &report);
             report.save(&core).into_diagnostic()?;
         }
         Commands::Apply => {
@@ -200,8 +273,37 @@ async fn main() -> miette::Result<()> {
             let workspaces = get_workspaces(&core, client.clone()).await?;
 
             // Queue up plan runs for each workspace respecting the max_concurrent setting
+            let max_concurrent = config
+                .max_concurrent
+                .unwrap_or(settings::MAX_CONCURRENT_DEFAULT.into());
+            let max_iterations = config
+                .max_iterations
+                .unwrap_or(settings::MAX_ITERATIONS_DEFAULT.into());
+            let status_check_sleep_seconds = config
+                .status_check_sleep_seconds
+                .unwrap_or(settings::STATUS_CHECK_SLEEP_SECONDS_DEFAULT.into());
+            let attributes = run::Attributes::default();
+
+            let mut queue = BTreeMap::new();
+
+            for ws in workspaces.iter() {
+                queue.insert(ws.id.clone(), ws.clone());
+            }
+
+            let results = work_queue(
+                &mut queue,
+                max_concurrent,
+                max_iterations,
+                status_check_sleep_seconds,
+                attributes,
+                client.clone(),
+                &core,
+            )
+            .await
+            .into_diagnostic()?;
 
             report.data.workspaces = workspaces;
+            report.data.runs = results;
             debug!("{:#?}", &report);
             report.save(&core).into_diagnostic()?;
         }

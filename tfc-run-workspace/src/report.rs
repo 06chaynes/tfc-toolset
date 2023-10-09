@@ -10,10 +10,20 @@ use tfc_toolset::{
 };
 use tfc_toolset_extras::report::{Report, Reporter};
 
+pub type RunId = String;
+pub type RunStatus = String;
+
 pub type RunReport = Report<Meta, Data, Errors>;
 
 // For now need to keep this updated with best effort :)
 const REPORT_VERSION: &str = "0.1.0";
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct RunResult {
+    pub id: RunId,
+    pub status: RunStatus,
+    pub workspace_id: String,
+}
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Variable {
@@ -36,17 +46,11 @@ pub struct Meta {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Data {
     pub workspaces: Vec<Workspace>,
+    pub runs: Vec<RunResult>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct ParsingFailures {
-    pub workspaces: Vec<Workspace>,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Errors {
-    pub parsing_failures: Option<ParsingFailures>,
-}
+pub struct Errors {}
 
 pub fn new() -> RunReport {
     Report {
@@ -54,8 +58,8 @@ pub fn new() -> RunReport {
         bin_version: env!("CARGO_PKG_VERSION").to_string(),
         reporter: Reporter::RunWorkspace,
         meta: Meta { query: None, pagination: None },
-        data: Data { workspaces: vec![] },
-        errors: Errors { parsing_failures: None },
+        data: Data { workspaces: vec![], runs: vec![] },
+        errors: Errors {},
     }
 }
 
