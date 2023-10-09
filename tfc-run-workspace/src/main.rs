@@ -12,6 +12,7 @@ use settings::Settings;
 use std::collections::BTreeMap;
 use std::time::Duration;
 use surf::Client;
+use tfc_toolset::run::Status;
 use tfc_toolset::{
     error::{ToolError, SETTINGS_ERROR},
     filter, run,
@@ -101,15 +102,13 @@ async fn work_queue(
             let mut iterations = 0;
             let handle: JoinHandle<Result<RunResult, ToolError>> =
                 async_std::task::spawn(async move {
-                    let run = run::create(
+                    let mut run = run::create(
                         &id.clone(),
                         Some(attributes),
                         &core,
                         client.clone(),
                     )
                     .await?;
-                    let mut run =
-                        run::status(&run.id, &core, client.clone()).await?;
                     info!(
                         "Run {} created for workspace {}",
                         &run.id,
@@ -119,55 +118,37 @@ async fn work_queue(
                         &run.attributes
                             .status
                             .clone()
-                            .unwrap_or("unknown".to_string())
-                            .as_str(),
+                            .unwrap_or(run::Status::Unknown),
                     ) {
                         run =
                             run::status(&run.id, &core, client.clone()).await?;
-                        debug!(
-                            "Run {} status: {}",
-                            &run.id,
-                            &run.attributes
-                                .status
-                                .clone()
-                                .unwrap_or("unknown".to_string())
-                        );
-                        if run::COMPLETED_STATUSES.contains(
-                            &run.attributes
-                                .status
-                                .clone()
-                                .unwrap_or("unknown".to_string())
-                                .as_str(),
-                        ) || !will_auto_apply
-                            && run
-                                .attributes
-                                .status
-                                .clone()
-                                .unwrap_or("unknown".to_string())
-                                == *"planned"
+                        let status = run
+                            .attributes
+                            .status
+                            .clone()
+                            .unwrap_or(run::Status::Unknown);
+                        debug!("Run {} status: {}", &run.id, &status);
+                        if run::COMPLETED_STATUSES.contains(&status)
+                            || !will_auto_apply && status == Status::Planned
                         {
-                            // If auto_apply is false, then we can break out of the loop
+                            // If auto_apply is false and status is planned, then we can break out of the loop
                             // because the run will require confirmation before applying
+                            // If completed, then we can also break out of the loop
                             break;
                         }
                         iterations += 1;
                         if iterations >= max_iterations {
-                            let status = run
-                                .attributes
-                                .status
-                                .clone()
-                                .unwrap_or("unknown".to_string());
-                            if status == *"pending" {
-                                error!(
-                                    "Run {} for workspace {} has been in status {} too long. \
-                                    There is likely previous run pending. Please check the workspace in the UI.",
+                            error!(
+                                    "Run {} for workspace {} has been in status {} too long.",
                                     &run.id, &id.clone(), &status.clone()
+                                );
+                            if status == Status::Pending {
+                                error!(
+                                    "There is likely previous run pending. Please check the workspace in the UI."
                                 );
                             } else {
                                 error!(
-                                    "Run {} for workspace {} has been in status {} too long. \
-                                    This is likely some error. Please check the run in the UI.",
-                                    &run.id, &id.clone(), &status.clone()
+                                    "This is likely some error. Please check the run in the UI."
                                 );
                             }
                             break;
@@ -182,7 +163,8 @@ async fn work_queue(
                         status: run
                             .attributes
                             .status
-                            .unwrap_or("unknown".to_string()),
+                            .unwrap_or(run::Status::Unknown)
+                            .to_string(),
                         workspace_id: id,
                     })
                 });

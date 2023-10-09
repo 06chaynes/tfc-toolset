@@ -1,12 +1,69 @@
 use crate::{error::ToolError, settings::Core, BASE_URL};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use std::fmt::{Display, Formatter};
 use surf::{http::Method, Client, RequestBuilder};
 use url::Url;
 
 // Statuses in Terraform Cloud that indicate a run is in a completed state
-pub const COMPLETED_STATUSES: [&str; 5] =
-    ["applied", "canceled", "errored", "discarded", "planned_and_finished"];
+pub const COMPLETED_STATUSES: [Status; 5] = [
+    Status::Applied,
+    Status::Canceled,
+    Status::Errored,
+    Status::Discarded,
+    Status::PlannedAndFinished,
+];
+
+// Statuses in Terraform Cloud
+#[derive(Clone, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+#[non_exhaustive]
+pub enum Status {
+    Pending,
+    PlanQueued,
+    Queued,
+    ManagedQueued,
+    Running,
+    Passed,
+    Failed,
+    Applying,
+    Planning,
+    Planned,
+    Applied,
+    Canceled,
+    Errored,
+    Discarded,
+    PlannedAndFinished,
+    Unreachable,
+    #[default]
+    Unknown,
+    Finished,
+}
+
+impl Display for Status {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Status::Pending => write!(f, "pending"),
+            Status::PlanQueued => write!(f, "plan_queued"),
+            Status::Queued => write!(f, "queued"),
+            Status::ManagedQueued => write!(f, "managed_queued"),
+            Status::Running => write!(f, "running"),
+            Status::Passed => write!(f, "passed"),
+            Status::Failed => write!(f, "failed"),
+            Status::Applying => write!(f, "applying"),
+            Status::Planning => write!(f, "planning"),
+            Status::Planned => write!(f, "planned"),
+            Status::Applied => write!(f, "applied"),
+            Status::Canceled => write!(f, "canceled"),
+            Status::Errored => write!(f, "errored"),
+            Status::Discarded => write!(f, "discarded"),
+            Status::PlannedAndFinished => write!(f, "planned_and_finished"),
+            Status::Unreachable => write!(f, "unreachable"),
+            Status::Unknown => write!(f, "unknown"),
+            Status::Finished => write!(f, "finished"),
+        }
+    }
+}
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Attributes {
@@ -38,7 +95,7 @@ pub struct Attributes {
     #[serde(rename = "created-at")]
     pub created_at: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub status: Option<String>,
+    pub status: Option<Status>,
 }
 
 impl Default for Attributes {

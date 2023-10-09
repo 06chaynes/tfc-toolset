@@ -11,7 +11,6 @@ use tfc_toolset::{
 use tfc_toolset_extras::report::{Report, Reporter};
 
 pub type RunId = String;
-pub type RunStatus = String;
 
 pub type RunReport = Report<Meta, Data, Errors>;
 
@@ -21,7 +20,7 @@ const REPORT_VERSION: &str = "0.1.0";
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct RunResult {
     pub id: RunId,
-    pub status: RunStatus,
+    pub status: String,
     pub workspace_id: String,
 }
 
