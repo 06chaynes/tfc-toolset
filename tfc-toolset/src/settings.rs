@@ -1,6 +1,8 @@
 use config::{Config, ConfigError, Environment, File};
 use serde::{Deserialize, Serialize};
 
+pub const DEFAULT_TERRAFORM_VERSION: &str = "1.5.7";
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[non_exhaustive]
 pub enum Operators {
@@ -51,6 +53,7 @@ pub struct Core {
     pub project: Option<String>,
     pub output: String,
     pub workspaces: Workspaces,
+    pub terraform_version: String,
 }
 
 impl Core {
@@ -62,6 +65,10 @@ impl Core {
             .set_default("workspaces.pagination.start_page", "1".to_string())?
             .set_default("workspaces.pagination.max_depth", "1".to_string())?
             .set_default("workspaces.pagination.page_size", "20".to_string())?
+            .set_default(
+                "terraform_version",
+                DEFAULT_TERRAFORM_VERSION.to_string(),
+            )?
             // Start off by merging in the "default" configuration file
             .add_source(File::with_name("settings.toml").required(false))
             // Add in settings from the environment

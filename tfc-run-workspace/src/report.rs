@@ -59,6 +59,7 @@ pub fn new() -> RunReport {
     }
 }
 
+#[allow(dead_code)]
 pub fn load(config: &Core) -> Result<RunReport, ToolError> {
     info!("Loading report from: {}", &config.output);
     match serde_json::from_reader(&File::open(&config.output)?) {

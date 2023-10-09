@@ -3,6 +3,7 @@ org = "org-name" # Required
 project = "project-id" # Optional
 output = "production.json" # Optional with default 'results.json'
 log = "info" # Optional with default 'warn'
+terr
 
 [workspaces.query] # Required but can be left empty
 name = "aws-" # Optional
