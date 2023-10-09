@@ -100,7 +100,7 @@ async fn work_queue(
                             .status
                             .clone()
                             .unwrap_or(run::Status::Unknown);
-                        debug!("Run {} status: {}", &run.id, &status);
+                        info!("Run {} status: {}", &run.id, &status);
                         if run::COMPLETED_STATUSES.contains(&status)
                             || !will_auto_apply
                                 && status == run::Status::Planned
