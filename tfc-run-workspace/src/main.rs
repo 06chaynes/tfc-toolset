@@ -1,13 +1,13 @@
 mod report;
 mod settings;
 
-use crate::report::RunResult;
 use async_std::task::JoinHandle;
 use clap::{Parser, Subcommand};
 use dashmap::DashMap;
 use env_logger::Env;
 use log::*;
 use miette::{IntoDiagnostic, WrapErr};
+use report::RunResult;
 use settings::Settings;
 use std::collections::BTreeMap;
 use std::time::Duration;
@@ -28,6 +28,9 @@ const ABOUT_PLAN: &str =
 const ABOUT_APPLY: &str =
     "Queues up plan and apply runs for the workspaces determined by filters";
 
+const ABOUT_AUTO_APPLY: &str =
+    "Automatically apply the run if the plan is successful";
+
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = Some(ABOUT))]
 #[clap(propagate_version = true)]
@@ -41,7 +44,13 @@ enum Commands {
     #[clap(about = ABOUT_PLAN)]
     Plan,
     #[clap(about = ABOUT_APPLY)]
-    Apply,
+    Apply(ApplyArgs),
+}
+
+#[derive(clap::Args, Debug)]
+pub struct ApplyArgs {
+    #[arg(long, help = ABOUT_AUTO_APPLY, default_value = "false")]
+    pub auto_apply: Option<bool>,
 }
 
 async fn get_workspaces(
@@ -242,7 +251,7 @@ async fn main() -> miette::Result<()> {
             debug!("{:#?}", &report);
             report.save(&core).into_diagnostic()?;
         }
-        Commands::Apply => {
+        Commands::Apply(args) => {
             info!("Start Plan and Apply Runs");
             let mut report = report::new();
             report.meta.query = Some(core.workspaces.query.clone());
@@ -252,7 +261,11 @@ async fn main() -> miette::Result<()> {
             let workspaces = get_workspaces(&core, client.clone()).await?;
 
             // Queue up plan runs for each workspace respecting the max_concurrent setting
-            let attributes = run::Attributes::default();
+            let auto_apply = args.auto_apply.unwrap_or_default();
+            let attributes = run::Attributes {
+                auto_apply: Some(auto_apply),
+                ..Default::default()
+            };
 
             let mut queue = BTreeMap::new();
 
