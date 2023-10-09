@@ -12,10 +12,9 @@ use settings::Settings;
 use std::collections::BTreeMap;
 use std::time::Duration;
 use surf::Client;
-use tfc_toolset::run::Status;
 use tfc_toolset::{
     error::{ToolError, SETTINGS_ERROR},
-    filter, run,
+    run,
     settings::Core,
     workspace,
 };
@@ -27,7 +26,6 @@ const ABOUT_PLAN: &str =
     "Queues up plan only runs for the workspaces determined by filters";
 const ABOUT_APPLY: &str =
     "Queues up plan and apply runs for the workspaces determined by filters";
-
 const ABOUT_AUTO_APPLY: &str =
     "Automatically apply the run if the plan is successful";
 
@@ -51,40 +49,6 @@ enum Commands {
 pub struct ApplyArgs {
     #[arg(long, help = ABOUT_AUTO_APPLY, default_value = "false")]
     pub auto_apply: Option<bool>,
-}
-
-async fn get_workspaces(
-    core: &Core,
-    client: Client,
-) -> miette::Result<Vec<workspace::Workspace>> {
-    let mut workspaces =
-        workspace::list(core, client.clone()).await.into_diagnostic()?;
-
-    // Filter the workspaces if query tags have been provided
-    if core.workspaces.query.tags.is_some() {
-        info!("Filtering workspaces with tags query.");
-        filter::tag(&mut workspaces, core).into_diagnostic()?;
-    }
-
-    if core.workspaces.query.variables.is_some() {
-        // Get the variables for each workspace
-        let mut workspaces_variables =
-            workspace::variables(core, client, workspaces.clone())
-                .await
-                .into_diagnostic()?;
-        // Filter the workspaces if query variables have been provided
-        if core.workspaces.query.variables.is_some() {
-            info!("Filtering workspaces with variable query.");
-            filter::variable(&mut workspaces_variables, core)
-                .into_diagnostic()?;
-        }
-
-        workspaces.clear();
-        for ws in &workspaces_variables {
-            workspaces.push(ws.workspace.clone());
-        }
-    }
-    Ok(workspaces)
 }
 
 async fn work_queue(
@@ -138,7 +102,8 @@ async fn work_queue(
                             .unwrap_or(run::Status::Unknown);
                         debug!("Run {} status: {}", &run.id, &status);
                         if run::COMPLETED_STATUSES.contains(&status)
-                            || !will_auto_apply && status == Status::Planned
+                            || !will_auto_apply
+                                && status == run::Status::Planned
                         {
                             // If auto_apply is false and status is planned, then we can break out of the loop
                             // because the run will require confirmation before applying
@@ -151,7 +116,7 @@ async fn work_queue(
                                     "Run {} for workspace {} has been in status {} too long.",
                                     &run.id, &id.clone(), &status.clone()
                                 );
-                            if status == Status::Pending {
+                            if status == run::Status::Pending {
                                 error!(
                                     "There is likely previous run pending. Please check the workspace in the UI."
                                 );
@@ -218,8 +183,10 @@ async fn main() -> miette::Result<()> {
             report.meta.query = Some(core.workspaces.query.clone());
             report.meta.pagination = Some(core.workspaces.pagination.clone());
 
-            // Get list of workspaces
-            let workspaces = get_workspaces(&core, client.clone()).await?;
+            // Get filtered list of workspaces
+            let workspaces = workspace::list_filtered(&core, client.clone())
+                .await
+                .into_diagnostic()?;
 
             // Queue up plan runs for each workspace respecting the max_concurrent setting
             let attributes = run::Attributes {
@@ -257,8 +224,10 @@ async fn main() -> miette::Result<()> {
             report.meta.query = Some(core.workspaces.query.clone());
             report.meta.pagination = Some(core.workspaces.pagination.clone());
 
-            // Get list of workspaces
-            let workspaces = get_workspaces(&core, client.clone()).await?;
+            // Get filtered list of workspaces
+            let workspaces = workspace::list_filtered(&core, client.clone())
+                .await
+                .into_diagnostic()?;
 
             // Queue up plan runs for each workspace respecting the max_concurrent setting
             let auto_apply = args.auto_apply.unwrap_or_default();
