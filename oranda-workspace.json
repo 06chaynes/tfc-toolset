@@ -19,6 +19,10 @@
         "path": "./tfc-clean-workspace"
       },
       {
+        "slug": "tfc-run-workspace",
+        "path": "./tfc-run-workspace"
+      },
+      {
         "slug": "tfc-report-tui",
         "path": "./tfc-report-tui"
       }
