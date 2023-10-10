@@ -6,22 +6,25 @@ use surf::{http::Method, Client, RequestBuilder};
 use url::Url;
 
 // Statuses in Terraform Cloud that indicate a run is in a completed state
-pub const COMPLETED_STATUSES: [Status; 5] = [
+pub const COMPLETED_STATUSES: [Status; 6] = [
     Status::Applied,
     Status::Canceled,
+    Status::ForceCanceled,
     Status::Errored,
     Status::Discarded,
     Status::PlannedAndFinished,
 ];
 
 // Statuses in Terraform Cloud that indicate a run is in an error state
-pub const ERROR_STATUSES: [Status; 6] = [
+pub const ERROR_STATUSES: [Status; 8] = [
     Status::Canceled,
+    Status::ForceCanceled,
     Status::Errored,
     Status::Discarded,
     Status::Failed,
     Status::Unreachable,
     Status::Unknown,
+    Status::PolicySoftFailed,
 ];
 
 // Statuses in Terraform Cloud
@@ -29,9 +32,17 @@ pub const ERROR_STATUSES: [Status; 6] = [
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
 pub enum Status {
+    ApplyQueued,
     Pending,
     PlanQueued,
+    Queuing,
     Queued,
+    Fetching,
+    CostEstimating,
+    CostEstimated,
+    FetchingCompleted,
+    PrePlanRunning,
+    PrePlanCompleted,
     ManagedQueued,
     Running,
     Passed,
@@ -44,7 +55,12 @@ pub enum Status {
     Errored,
     Discarded,
     PlannedAndFinished,
+    PlannedAndSaved,
+    PolicyChecking,
+    PolicyOverride,
+    PolicySoftFailed,
     Unreachable,
+    ForceCanceled,
     #[default]
     Unknown,
     Finished,
@@ -53,9 +69,17 @@ pub enum Status {
 impl Display for Status {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
+            Status::ApplyQueued => write!(f, "apply_queued"),
             Status::Pending => write!(f, "pending"),
             Status::PlanQueued => write!(f, "plan_queued"),
+            Status::Queuing => write!(f, "queuing"),
             Status::Queued => write!(f, "queued"),
+            Status::Fetching => write!(f, "fetching"),
+            Status::CostEstimating => write!(f, "cost_estimating"),
+            Status::CostEstimated => write!(f, "cost_estimated"),
+            Status::FetchingCompleted => write!(f, "fetching_completed"),
+            Status::PrePlanRunning => write!(f, "pre_plan_running"),
+            Status::PrePlanCompleted => write!(f, "pre_plan_completed"),
             Status::ManagedQueued => write!(f, "managed_queued"),
             Status::Running => write!(f, "running"),
             Status::Passed => write!(f, "passed"),
@@ -68,7 +92,12 @@ impl Display for Status {
             Status::Errored => write!(f, "errored"),
             Status::Discarded => write!(f, "discarded"),
             Status::PlannedAndFinished => write!(f, "planned_and_finished"),
+            Status::PlannedAndSaved => write!(f, "planned_and_saved"),
+            Status::PolicyChecking => write!(f, "policy_checking"),
+            Status::PolicyOverride => write!(f, "policy_override"),
+            Status::PolicySoftFailed => write!(f, "policy_soft_failed"),
             Status::Unreachable => write!(f, "unreachable"),
+            Status::ForceCanceled => write!(f, "force_canceled"),
             Status::Unknown => write!(f, "unknown"),
             Status::Finished => write!(f, "finished"),
         }
@@ -78,9 +107,17 @@ impl Display for Status {
 impl From<String> for Status {
     fn from(item: String) -> Self {
         match item.as_str() {
+            "apply_queued" => Status::ApplyQueued,
             "pending" => Status::Pending,
             "plan_queued" => Status::PlanQueued,
+            "queuing" => Status::Queuing,
             "queued" => Status::Queued,
+            "fetching" => Status::Fetching,
+            "cost_estimating" => Status::CostEstimating,
+            "cost_estimated" => Status::CostEstimated,
+            "fetching_completed" => Status::FetchingCompleted,
+            "pre_plan_running" => Status::PrePlanRunning,
+            "pre_plan_completed" => Status::PrePlanCompleted,
             "managed_queued" => Status::ManagedQueued,
             "running" => Status::Running,
             "passed" => Status::Passed,
@@ -93,7 +130,12 @@ impl From<String> for Status {
             "errored" => Status::Errored,
             "discarded" => Status::Discarded,
             "planned_and_finished" => Status::PlannedAndFinished,
+            "planned_and_saved" => Status::PlannedAndSaved,
+            "policy_checking" => Status::PolicyChecking,
+            "policy_override" => Status::PolicyOverride,
+            "policy_soft_failed" => Status::PolicySoftFailed,
             "unreachable" => Status::Unreachable,
+            "force_canceled" => Status::ForceCanceled,
             "unknown" => Status::Unknown,
             "finished" => Status::Finished,
             _ => Status::Unknown,

@@ -28,6 +28,7 @@ const ABOUT_APPLY: &str =
     "Queues up plan and apply runs for the workspaces determined by filters";
 const ABOUT_AUTO_APPLY: &str =
     "Automatically apply the run if the plan is successful";
+const ABOUT_MESSAGE: &str = "A message to include with the run";
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = Some(ABOUT))]
@@ -40,13 +41,21 @@ struct Cli {
 #[derive(Subcommand, Debug)]
 enum Commands {
     #[clap(about = ABOUT_PLAN)]
-    Plan,
+    Plan(DefaultArgs),
     #[clap(about = ABOUT_APPLY)]
     Apply(ApplyArgs),
 }
 
 #[derive(clap::Args, Debug)]
+struct DefaultArgs {
+    #[arg(long, help = ABOUT_MESSAGE, default_value = "Run created by tfc-toolset")]
+    pub message: Option<String>,
+}
+
+#[derive(clap::Args, Debug)]
 struct ApplyArgs {
+    #[clap(flatten)]
+    pub default: DefaultArgs,
     #[arg(long, help = ABOUT_AUTO_APPLY, default_value = "false")]
     pub auto_apply: Option<bool>,
 }
@@ -191,7 +200,7 @@ async fn main() -> miette::Result<()> {
     let client = default_client().into_diagnostic()?;
     // Match on the cli subcommand
     match &cli.command {
-        Commands::Plan => {
+        Commands::Plan(args) => {
             info!("Start Plan Only Runs");
             let mut report = report::new();
             report.meta.query = Some(core.workspaces.query.clone());
@@ -203,11 +212,14 @@ async fn main() -> miette::Result<()> {
                 .into_diagnostic()?;
 
             // Queue up plan runs for each workspace respecting the max_concurrent setting
-            let attributes = run::Attributes {
+            let mut attributes = run::Attributes {
                 plan_only: Some(true),
                 terraform_version: Some(core.terraform_version.clone()),
                 ..Default::default()
             };
+            if let Some(message) = args.message.clone() {
+                attributes.message = message;
+            }
 
             let mut queue = BTreeMap::new();
 
@@ -248,10 +260,13 @@ async fn main() -> miette::Result<()> {
 
             // Queue up plan runs for each workspace respecting the max_concurrent setting
             let auto_apply = args.auto_apply.unwrap_or_default();
-            let attributes = run::Attributes {
+            let mut attributes = run::Attributes {
                 auto_apply: Some(auto_apply),
                 ..Default::default()
             };
+            if let Some(message) = args.default.message.clone() {
+                attributes.message = message;
+            }
 
             let mut queue = BTreeMap::new();
 
