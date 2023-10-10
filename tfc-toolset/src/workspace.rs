@@ -1,5 +1,6 @@
 use crate::{
     error::ToolError,
+    filter,
     settings::{Core, Query},
     variable, Meta, BASE_URL,
 };
@@ -53,6 +54,36 @@ pub struct Workspace {
 struct WorkspacesResponseOuter {
     pub data: Vec<Workspace>,
     pub meta: Option<Meta>,
+}
+
+pub async fn list_filtered(
+    core: &Core,
+    client: Client,
+) -> Result<Vec<Workspace>, ToolError> {
+    let mut workspaces = list(core, client.clone()).await?;
+
+    // Filter the workspaces if query tags have been provided
+    if core.workspaces.query.tags.is_some() {
+        info!("Filtering workspaces with tags query.");
+        filter::tag(&mut workspaces, core)?;
+    }
+
+    if core.workspaces.query.variables.is_some() {
+        // Get the variables for each workspace
+        let mut workspaces_variables =
+            variables(core, client, workspaces.clone()).await?;
+        // Filter the workspaces if query variables have been provided
+        if core.workspaces.query.variables.is_some() {
+            info!("Filtering workspaces with variable query.");
+            filter::variable(&mut workspaces_variables, core)?;
+        }
+
+        workspaces.clear();
+        for ws in &workspaces_variables {
+            workspaces.push(ws.workspace.clone());
+        }
+    }
+    Ok(workspaces)
 }
 
 pub async fn list(

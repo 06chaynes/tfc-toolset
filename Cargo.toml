@@ -5,6 +5,7 @@ members = [
     "tfc-toolset-extras",
     "tfc-clean-workspace",
     "tfc-which-workspace",
+    "tfc-run-workspace",
     "tfc-report-tui"
 ]
 
