@@ -51,26 +51,30 @@ struct ApplyArgs {
     pub auto_apply: Option<bool>,
 }
 
-pub struct QueueResult {
+struct QueueOptions {
+    pub max_concurrent: usize,
+    pub max_iterations: usize,
+    pub status_check_sleep_seconds: u64,
+}
+
+struct QueueResult {
     pub results: Vec<RunResult>,
     pub errors: Vec<RunResult>,
 }
 
 async fn work_queue(
     queue: &mut BTreeMap<String, workspace::Workspace>,
-    max_concurrent: usize,
-    max_iterations: usize,
-    status_check_sleep_seconds: u64,
+    options: QueueOptions,
     attributes: run::Attributes,
     client: Client,
     core: &Core,
 ) -> Result<QueueResult, ToolError> {
-    let running = DashMap::with_capacity(max_concurrent);
+    let running = DashMap::with_capacity(options.max_concurrent);
     let mut results = Vec::with_capacity(queue.len());
     let mut errors = Vec::new();
     while !queue.is_empty() {
-        let mut handles = Vec::with_capacity(max_concurrent);
-        while running.len() < max_concurrent && !queue.is_empty() {
+        let mut handles = Vec::with_capacity(options.max_concurrent);
+        while running.len() < options.max_concurrent && !queue.is_empty() {
             let (id, ws) = queue.pop_first().unwrap();
             info!("Creating run for workspace: {}", &ws.id);
             let client = client.clone();
@@ -117,7 +121,7 @@ async fn work_queue(
                             break;
                         }
                         iterations += 1;
-                        if iterations >= max_iterations {
+                        if iterations >= options.max_iterations {
                             error!(
                                     "Run {} for workspace {} has been in status {} too long.",
                                     &run.id, &id.clone(), &status.clone()
@@ -134,7 +138,7 @@ async fn work_queue(
                             break;
                         }
                         async_std::task::sleep(Duration::from_secs(
-                            status_check_sleep_seconds,
+                            options.status_check_sleep_seconds,
                         ))
                         .await;
                     }
@@ -213,9 +217,11 @@ async fn main() -> miette::Result<()> {
 
             let queue_results = work_queue(
                 &mut queue,
-                max_concurrent,
-                max_iterations,
-                status_check_sleep_seconds,
+                QueueOptions {
+                    max_concurrent,
+                    max_iterations,
+                    status_check_sleep_seconds,
+                },
                 attributes,
                 client.clone(),
                 &core,
@@ -255,9 +261,11 @@ async fn main() -> miette::Result<()> {
 
             let queue_results = work_queue(
                 &mut queue,
-                max_concurrent,
-                max_iterations,
-                status_check_sleep_seconds,
+                QueueOptions {
+                    max_concurrent,
+                    max_iterations,
+                    status_check_sleep_seconds,
+                },
                 attributes,
                 client.clone(),
                 &core,
