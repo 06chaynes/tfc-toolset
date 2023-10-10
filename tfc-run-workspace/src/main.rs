@@ -46,9 +46,14 @@ enum Commands {
 }
 
 #[derive(clap::Args, Debug)]
-pub struct ApplyArgs {
+struct ApplyArgs {
     #[arg(long, help = ABOUT_AUTO_APPLY, default_value = "false")]
     pub auto_apply: Option<bool>,
+}
+
+pub struct QueueResult {
+    pub results: Vec<RunResult>,
+    pub errors: Vec<RunResult>,
 }
 
 async fn work_queue(
@@ -59,9 +64,10 @@ async fn work_queue(
     attributes: run::Attributes,
     client: Client,
     core: &Core,
-) -> Result<Vec<report::RunResult>, ToolError> {
+) -> Result<QueueResult, ToolError> {
     let running = DashMap::with_capacity(max_concurrent);
     let mut results = Vec::with_capacity(queue.len());
+    let mut errors = Vec::new();
     while !queue.is_empty() {
         let mut handles = Vec::with_capacity(max_concurrent);
         while running.len() < max_concurrent && !queue.is_empty() {
@@ -147,12 +153,16 @@ async fn work_queue(
         }
         for handle in handles {
             let result = handle.await?;
-            let run = result.clone();
-            running.remove(run.id.clone().as_str());
+            running.remove(result.id.clone().as_str());
+            if run::ERROR_STATUSES
+                .contains(&run::Status::from(result.status.clone()))
+            {
+                errors.push(result.clone());
+            }
             results.push(result);
         }
     }
-    Ok(results)
+    Ok(QueueResult { results, errors })
 }
 
 #[async_std::main]
@@ -201,7 +211,7 @@ async fn main() -> miette::Result<()> {
                 queue.insert(ws.id.clone(), ws.clone());
             }
 
-            let results = work_queue(
+            let queue_results = work_queue(
                 &mut queue,
                 max_concurrent,
                 max_iterations,
@@ -214,7 +224,8 @@ async fn main() -> miette::Result<()> {
             .into_diagnostic()?;
 
             report.data.workspaces = workspaces;
-            report.data.runs = results;
+            report.data.runs = queue_results.results;
+            report.errors.runs = queue_results.errors;
             debug!("{:#?}", &report);
             report.save(&core).into_diagnostic()?;
         }
@@ -242,7 +253,7 @@ async fn main() -> miette::Result<()> {
                 queue.insert(ws.id.clone(), ws.clone());
             }
 
-            let results = work_queue(
+            let queue_results = work_queue(
                 &mut queue,
                 max_concurrent,
                 max_iterations,
@@ -255,7 +266,8 @@ async fn main() -> miette::Result<()> {
             .into_diagnostic()?;
 
             report.data.workspaces = workspaces;
-            report.data.runs = results;
+            report.data.runs = queue_results.results;
+            report.errors.runs = queue_results.errors;
             debug!("{:#?}", &report);
             report.save(&core).into_diagnostic()?;
         }

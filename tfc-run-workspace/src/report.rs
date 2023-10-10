@@ -49,7 +49,9 @@ pub struct Data {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Errors {}
+pub struct Errors {
+    pub runs: Vec<RunResult>,
+}
 
 pub fn new() -> RunReport {
     Report {
@@ -58,7 +60,7 @@ pub fn new() -> RunReport {
         reporter: Reporter::RunWorkspace,
         meta: Meta { query: None, pagination: None },
         data: Data { workspaces: vec![], runs: vec![] },
-        errors: Errors {},
+        errors: Errors { runs: vec![] },
     }
 }
 

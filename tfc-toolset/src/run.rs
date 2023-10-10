@@ -14,6 +14,16 @@ pub const COMPLETED_STATUSES: [Status; 5] = [
     Status::PlannedAndFinished,
 ];
 
+// Statuses in Terraform Cloud that indicate a run is in an error state
+pub const ERROR_STATUSES: [Status; 6] = [
+    Status::Canceled,
+    Status::Errored,
+    Status::Discarded,
+    Status::Failed,
+    Status::Unreachable,
+    Status::Unknown,
+];
+
 // Statuses in Terraform Cloud
 #[derive(Clone, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
@@ -61,6 +71,32 @@ impl Display for Status {
             Status::Unreachable => write!(f, "unreachable"),
             Status::Unknown => write!(f, "unknown"),
             Status::Finished => write!(f, "finished"),
+        }
+    }
+}
+
+impl From<String> for Status {
+    fn from(item: String) -> Self {
+        match item.as_str() {
+            "pending" => Status::Pending,
+            "plan_queued" => Status::PlanQueued,
+            "queued" => Status::Queued,
+            "managed_queued" => Status::ManagedQueued,
+            "running" => Status::Running,
+            "passed" => Status::Passed,
+            "failed" => Status::Failed,
+            "applying" => Status::Applying,
+            "planning" => Status::Planning,
+            "planned" => Status::Planned,
+            "applied" => Status::Applied,
+            "canceled" => Status::Canceled,
+            "errored" => Status::Errored,
+            "discarded" => Status::Discarded,
+            "planned_and_finished" => Status::PlannedAndFinished,
+            "unreachable" => Status::Unreachable,
+            "unknown" => Status::Unknown,
+            "finished" => Status::Finished,
+            _ => Status::Unknown,
         }
     }
 }
