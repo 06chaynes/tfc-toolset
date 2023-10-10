@@ -26,9 +26,23 @@ const ABOUT_PLAN: &str =
     "Queues up plan only runs for the workspaces determined by filters";
 const ABOUT_APPLY: &str =
     "Queues up plan and apply runs for the workspaces determined by filters";
+const ABOUT_MESSAGE: &str = "A message to include with the run";
+const ABOUT_TARGET_ADDRS: &str =
+    "A list of resource addresses to target for the run";
+const ABOUT_REPLACE_ADDRS: &str =
+    "A list of resource addresses to replace for the run";
 const ABOUT_AUTO_APPLY: &str =
     "Automatically apply the run if the plan is successful";
-const ABOUT_MESSAGE: &str = "A message to include with the run";
+const ABOUT_ALLOW_EMPTY_APPLY: &str =
+    "Apply the run even when the plan contains no changes";
+const ABOUT_IS_DESTROY: &str =
+    "Whether this plan is a destroy plan that will destroy all provisioned resources";
+const ABOUT_REFRESH_ONLY: &str =
+    "Whether this run should refresh the state without modifying any resources";
+const ABOUT_SAVE_PLAN: &str =
+    "Specifies if this should be a saved plan run which can be applied later";
+const ABOUT_TERRAFORM_VERSION: &str =
+    "The version of Terraform to use for this run, overriding the value from settings";
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = Some(ABOUT))]
@@ -50,6 +64,14 @@ enum Commands {
 struct DefaultArgs {
     #[arg(long, help = ABOUT_MESSAGE, default_value = "Run created by tfc-toolset")]
     pub message: Option<String>,
+    #[arg(long, help = ABOUT_TARGET_ADDRS)]
+    pub target_addrs: Option<Vec<String>>,
+    #[arg(long, help = ABOUT_REPLACE_ADDRS)]
+    pub replace_addrs: Option<Vec<String>>,
+    #[arg(long, help = ABOUT_TERRAFORM_VERSION)]
+    pub terraform_version: Option<String>,
+    #[arg(long, help = ABOUT_SAVE_PLAN, default_value = "false")]
+    pub save_plan: Option<bool>,
 }
 
 #[derive(clap::Args, Debug)]
@@ -58,6 +80,16 @@ struct ApplyArgs {
     pub default: DefaultArgs,
     #[arg(long, help = ABOUT_AUTO_APPLY, default_value = "false")]
     pub auto_apply: Option<bool>,
+    #[arg(
+        long,
+        help = ABOUT_ALLOW_EMPTY_APPLY,
+        default_value = "false"
+    )]
+    pub allow_empty_apply: Option<bool>,
+    #[arg(long, help = ABOUT_IS_DESTROY, default_value = "false")]
+    pub is_destroy: Option<bool>,
+    #[arg(long, help = ABOUT_REFRESH_ONLY, default_value = "false")]
+    pub refresh_only: Option<bool>,
 }
 
 struct QueueOptions {
@@ -89,6 +121,7 @@ async fn work_queue(
             let client = client.clone();
             let attributes = attributes.clone();
             let will_auto_apply = attributes.auto_apply.unwrap_or(false);
+            let will_save_plan = attributes.save_plan.unwrap_or(false);
             let core = core.clone();
             let ws_id = ws.id.clone();
             let mut iterations = 0;
@@ -123,9 +156,12 @@ async fn work_queue(
                         if run::COMPLETED_STATUSES.contains(&status)
                             || !will_auto_apply
                                 && status == run::Status::Planned
+                            || will_save_plan
+                                && status == run::Status::PlannedAndSaved
                         {
                             // If auto_apply is false and status is planned, then we can break out of the loop
                             // because the run will require confirmation before applying
+                            // If save_plan is true and status is planned_and_saved, then we can break out of the loop
                             // If completed, then we can also break out of the loop
                             break;
                         }
@@ -178,6 +214,39 @@ async fn work_queue(
     Ok(QueueResult { results, errors })
 }
 
+fn set_default_args(args: &mut run::Attributes, default: &DefaultArgs) {
+    if let Some(message) = default.message.clone() {
+        args.message = message;
+    }
+    if let Some(target_addrs) = default.target_addrs.clone() {
+        args.target_addrs = target_addrs;
+    }
+    if let Some(replace_addrs) = default.replace_addrs.clone() {
+        args.replace_addrs = replace_addrs;
+    }
+    if let Some(terraform_version) = default.terraform_version.clone() {
+        args.terraform_version = Some(terraform_version);
+    }
+    if let Some(save_plan) = default.save_plan {
+        args.save_plan = Some(save_plan);
+    }
+}
+
+fn set_apply_args(args: &mut run::Attributes, apply: &ApplyArgs) {
+    if let Some(auto_apply) = apply.auto_apply {
+        args.auto_apply = Some(auto_apply);
+    }
+    if let Some(allow_empty_apply) = apply.allow_empty_apply {
+        args.allow_empty_apply = allow_empty_apply;
+    }
+    if let Some(is_destroy) = apply.is_destroy {
+        args.is_destroy = Some(is_destroy);
+    }
+    if let Some(refresh_only) = apply.refresh_only {
+        args.refresh_only = Some(refresh_only);
+    }
+}
+
 #[async_std::main]
 async fn main() -> miette::Result<()> {
     // Parse cli subcommands and arguments
@@ -217,9 +286,13 @@ async fn main() -> miette::Result<()> {
                 terraform_version: Some(core.terraform_version.clone()),
                 ..Default::default()
             };
-            if let Some(message) = args.message.clone() {
-                attributes.message = message;
+            if let Some(save_plan) = args.save_plan {
+                if save_plan {
+                    attributes.plan_only = None;
+                    attributes.terraform_version = None;
+                }
             }
+            set_default_args(&mut attributes, args);
 
             let mut queue = BTreeMap::new();
 
@@ -259,14 +332,9 @@ async fn main() -> miette::Result<()> {
                 .into_diagnostic()?;
 
             // Queue up plan runs for each workspace respecting the max_concurrent setting
-            let auto_apply = args.auto_apply.unwrap_or_default();
-            let mut attributes = run::Attributes {
-                auto_apply: Some(auto_apply),
-                ..Default::default()
-            };
-            if let Some(message) = args.default.message.clone() {
-                attributes.message = message;
-            }
+            let mut attributes = run::Attributes::default();
+            set_default_args(&mut attributes, &args.default);
+            set_apply_args(&mut attributes, args);
 
             let mut queue = BTreeMap::new();
 

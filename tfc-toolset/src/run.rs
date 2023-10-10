@@ -152,6 +152,9 @@ pub struct Attributes {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "plan-only")]
     pub plan_only: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "save-plan")]
+    pub save_plan: Option<bool>,
     #[serde(rename = "target-addrs")]
     pub target_addrs: Vec<String>,
     #[serde(rename = "replace-addrs")]
@@ -182,6 +185,7 @@ impl Default for Attributes {
             message: "Run created by tfc-toolset".to_string(),
             terraform_version: None,
             plan_only: None,
+            save_plan: None,
             target_addrs: Vec::new(),
             replace_addrs: Vec::new(),
             refresh: None,
