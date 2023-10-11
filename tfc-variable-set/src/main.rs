@@ -133,10 +133,9 @@ async fn main() -> miette::Result<()> {
             report.meta.pagination = Some(core.workspaces.pagination.clone());
 
             let skip_workspace_logic = args.skip_workspace_logic;
-            let workspaces: Vec<workspace::Workspace>;
-            if !skip_workspace_logic {
+            let workspaces = if !skip_workspace_logic {
                 // check for workspaces in args first
-                workspaces = match args.workspaces.clone() {
+                match args.workspaces.clone() {
                     Some(workspaces) => {
                         // Get filtered list of workspaces and filter again by args
                         workspace::list_filtered(&core, client.clone())
@@ -154,10 +153,11 @@ async fn main() -> miette::Result<()> {
                             .await
                             .into_diagnostic()?
                     }
-                };
+                }
             } else {
-                workspaces = vec![];
-            }
+                vec![]
+            };
+
             // the vars are in the format of key=value:description:category:hcl:sensitive
             // we need to parse each one into a variable::Vars
             // description, category, hcl, sensitive are all optional and will be None if not provided
