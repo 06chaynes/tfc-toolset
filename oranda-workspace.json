@@ -24,6 +24,10 @@
         "path": "./tfc-run-workspace"
       },
       {
+        "slug": "tfc-variable-set",
+        "path": "./tfc-variable-set"
+      },
+      {
         "slug": "tfc-report-tui",
         "path": "./tfc-report-tui"
       }
