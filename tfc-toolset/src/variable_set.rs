@@ -31,6 +31,20 @@ pub struct WorkspacesOuter {
     pub data: Vec<Workspaces>,
 }
 
+impl From<Vec<Workspace>> for WorkspacesOuter {
+    fn from(workspaces: Vec<Workspace>) -> Self {
+        Self {
+            data: workspaces
+                .into_iter()
+                .map(|ws| Workspaces {
+                    relationship_type: "workspaces".to_string(),
+                    id: ws.id,
+                })
+                .collect(),
+        }
+    }
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Projects {
     #[serde(rename = "type")]
@@ -188,6 +202,32 @@ pub async fn apply_workspace(
         info!("Successfully applied workspaces to variable set");
     } else {
         error!("Failed to apply workspaces to variable set");
+        let error = res.body_string().await.map_err(surf_to_tool_error)?;
+        return Err(ToolError::General(anyhow::anyhow!(error)));
+    }
+    Ok(())
+}
+
+pub async fn remove_workspace(
+    variable_set_id: &str,
+    workspaces: Vec<Workspace>,
+    config: &Core,
+    client: Client,
+) -> Result<(), ToolError> {
+    let url = Url::parse(&format!(
+        "{}/varsets/{}/relationships/workspaces",
+        BASE_URL, variable_set_id
+    ))?;
+    let req = RequestBuilder::new(Method::Delete, url)
+        .header("Authorization", format!("Bearer {}", config.token))
+        .header("Content-Type", "application/vnd.api+json")
+        .body(json!(WorkspacesOuter::from(workspaces)))
+        .build();
+    let mut res = client.send(req).await.map_err(surf_to_tool_error)?;
+    if res.status().is_success() {
+        info!("Successfully removed workspace from variable set");
+    } else {
+        error!("Failed to remove workspace from variable set");
         let error = res.body_string().await.map_err(surf_to_tool_error)?;
         return Err(ToolError::General(anyhow::anyhow!(error)));
     }

@@ -13,6 +13,7 @@ const ABOUT: &str =
     "Tool for managing Terraform Cloud variable sets across multiple workspaces";
 const ABOUT_CREATE: &str = "Create a new variable set";
 const ABOUT_APPLY: &str = "Apply workspaces to variable set";
+const ABOUT_REMOVE: &str = "Remove workspaces from variable set";
 const ABOUT_VARSET_ID: &str = "The ID for the Variable Set to be manipulated";
 const ABOUT_WORKSPACES: &str = "The workspaces to apply to the variable set";
 const ABOUT_VARS: &str = "The variables to apply to the variable set, \
@@ -29,13 +30,15 @@ struct Cli {
 #[derive(Subcommand, Debug)]
 enum Commands {
     #[clap(about = ABOUT_APPLY)]
-    Apply(ApplyArgs),
+    Apply(ApplyRemoveArgs),
     #[clap(about = ABOUT_CREATE)]
     Create(CreateArgs),
+    #[clap(about = ABOUT_REMOVE)]
+    Remove(ApplyRemoveArgs),
 }
 
 #[derive(clap::Args, Debug)]
-struct ApplyArgs {
+struct ApplyRemoveArgs {
     #[arg(short, long, help = ABOUT_VARSET_ID)]
     pub variable_set_id: String,
     #[arg(short, long, help = ABOUT_WORKSPACES)]
@@ -114,6 +117,48 @@ async fn main() -> miette::Result<()> {
 
             // Apply workspaces to variable set
             variable_set::apply_workspace(
+                &variable_set_id,
+                workspaces.clone(),
+                &core,
+                client.clone(),
+            )
+            .await
+            .into_diagnostic()?;
+
+            report.data.workspaces = workspaces;
+            debug!("{:#?}", &report);
+            report.save(&core).into_diagnostic()?;
+        }
+        Commands::Remove(args) => {
+            info!("Removing workspaces from variable set");
+            let mut report = report::new();
+            report.meta.query = Some(core.workspaces.query.clone());
+            report.meta.pagination = Some(core.workspaces.pagination.clone());
+
+            // check for workspaces in args first
+            let workspaces = match args.workspaces.clone() {
+                Some(workspaces) => {
+                    // Get filtered list of workspaces and filter again by args
+                    workspace::list_filtered(&core, client.clone())
+                        .await
+                        .into_diagnostic()?
+                        .into_iter()
+                        .filter(|ws| workspaces.contains(&ws.attributes.name))
+                        .collect()
+                }
+                None => {
+                    // Get filtered list of workspaces
+                    workspace::list_filtered(&core, client.clone())
+                        .await
+                        .into_diagnostic()?
+                }
+            };
+
+            // Get variable set id
+            let variable_set_id = args.variable_set_id.clone();
+
+            // Remove workspaces from variable set
+            variable_set::remove_workspace(
                 &variable_set_id,
                 workspaces.clone(),
                 &core,
