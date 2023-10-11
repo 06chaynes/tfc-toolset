@@ -79,10 +79,14 @@ struct CreateArgs {
 }
 
 async fn determine_workspaces(
+    skip_workspace_logic: bool,
     workspaces: Option<Vec<String>>,
     core: &Core,
     client: Client,
 ) -> Result<Vec<Workspace>, ToolError> {
+    if skip_workspace_logic {
+        return Ok(vec![]);
+    }
     match workspaces {
         Some(workspaces) => {
             // Get filtered list of workspaces and filter again by args
@@ -119,6 +123,7 @@ async fn main() -> miette::Result<()> {
 
             // check for workspaces in args first
             let workspaces = determine_workspaces(
+                false,
                 args.workspaces.clone(),
                 &core,
                 client.clone(),
@@ -151,6 +156,7 @@ async fn main() -> miette::Result<()> {
 
             // check for workspaces in args first
             let workspaces = determine_workspaces(
+                false,
                 args.workspaces.clone(),
                 &core,
                 client.clone(),
@@ -181,31 +187,14 @@ async fn main() -> miette::Result<()> {
             report.meta.query = Some(core.workspaces.query.clone());
             report.meta.pagination = Some(core.workspaces.pagination.clone());
 
-            let skip_workspace_logic = args.skip_workspace_logic;
-            let workspaces = if !skip_workspace_logic {
-                // check for workspaces in args first
-                match args.workspaces.clone() {
-                    Some(workspaces) => {
-                        // Get filtered list of workspaces and filter again by args
-                        workspace::list_filtered(&core, client.clone())
-                            .await
-                            .into_diagnostic()?
-                            .into_iter()
-                            .filter(|ws| {
-                                workspaces.contains(&ws.attributes.name)
-                            })
-                            .collect()
-                    }
-                    None => {
-                        // Get filtered list of workspaces
-                        workspace::list_filtered(&core, client.clone())
-                            .await
-                            .into_diagnostic()?
-                    }
-                }
-            } else {
-                vec![]
-            };
+            let workspaces = determine_workspaces(
+                args.skip_workspace_logic,
+                args.workspaces.clone(),
+                &core,
+                client.clone(),
+            )
+            .await
+            .into_diagnostic()?;
 
             // the vars are in the format of key=value:description:category:hcl:sensitive
             // we need to parse each one into a variable::Vars
