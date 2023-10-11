@@ -143,7 +143,9 @@ async fn main() -> miette::Result<()> {
                             .await
                             .into_diagnostic()?
                             .into_iter()
-                            .filter(|ws| workspaces.contains(&ws.attributes.name))
+                            .filter(|ws| {
+                                workspaces.contains(&ws.attributes.name)
+                            })
                             .collect()
                     }
                     None => {
