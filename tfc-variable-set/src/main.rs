@@ -61,6 +61,15 @@ struct CreateArgs {
     pub projects: Option<Vec<String>>,
     #[arg(short, long, help = ABOUT_VARS)]
     pub vars: Option<Vec<String>>,
+    #[arg(
+        short,
+        long,
+        action,
+        help = "Skip the logic for discovering and filtering workspaces",
+        default_value = "false",
+        required = false
+    )]
+    pub skip_workspace_logic: bool,
 }
 
 #[async_std::main]
@@ -123,25 +132,30 @@ async fn main() -> miette::Result<()> {
             report.meta.query = Some(core.workspaces.query.clone());
             report.meta.pagination = Some(core.workspaces.pagination.clone());
 
-            // check for workspaces in args first
-            let workspaces = match args.workspaces.clone() {
-                Some(workspaces) => {
-                    // Get filtered list of workspaces and filter again by args
-                    workspace::list_filtered(&core, client.clone())
-                        .await
-                        .into_diagnostic()?
-                        .into_iter()
-                        .filter(|ws| workspaces.contains(&ws.attributes.name))
-                        .collect()
-                }
-                None => {
-                    // Get filtered list of workspaces
-                    workspace::list_filtered(&core, client.clone())
-                        .await
-                        .into_diagnostic()?
-                }
-            };
-
+            let skip_workspace_logic = args.skip_workspace_logic;
+            let workspaces: Vec<workspace::Workspace>;
+            if !skip_workspace_logic {
+                // check for workspaces in args first
+                workspaces = match args.workspaces.clone() {
+                    Some(workspaces) => {
+                        // Get filtered list of workspaces and filter again by args
+                        workspace::list_filtered(&core, client.clone())
+                            .await
+                            .into_diagnostic()?
+                            .into_iter()
+                            .filter(|ws| workspaces.contains(&ws.attributes.name))
+                            .collect()
+                    }
+                    None => {
+                        // Get filtered list of workspaces
+                        workspace::list_filtered(&core, client.clone())
+                            .await
+                            .into_diagnostic()?
+                    }
+                };
+            } else {
+                workspaces = vec![];
+            }
             // the vars are in the format of key=value:description:category:hcl:sensitive
             // we need to parse each one into a variable::Vars
             // description, category, hcl, sensitive are all optional and will be None if not provided
