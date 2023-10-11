@@ -4,6 +4,9 @@ use clap::{Parser, Subcommand};
 use env_logger::Env;
 use log::*;
 use miette::{IntoDiagnostic, WrapErr};
+use surf::Client;
+use tfc_toolset::error::ToolError;
+use tfc_toolset::workspace::Workspace;
 use tfc_toolset::{
     error::SETTINGS_ERROR, settings::Core, variable, variable_set, workspace,
 };
@@ -75,6 +78,27 @@ struct CreateArgs {
     pub skip_workspace_logic: bool,
 }
 
+async fn determine_workspaces(
+    workspaces: Option<Vec<String>>,
+    core: &Core,
+    client: Client,
+) -> Result<Vec<Workspace>, ToolError> {
+    match workspaces {
+        Some(workspaces) => {
+            // Get filtered list of workspaces and filter again by args
+            Ok(workspace::list_filtered(core, client)
+                .await?
+                .into_iter()
+                .filter(|ws| workspaces.contains(&ws.attributes.name))
+                .collect())
+        }
+        None => {
+            // Get filtered list of workspaces
+            Ok(workspace::list_filtered(core, client).await?)
+        }
+    }
+}
+
 #[async_std::main]
 async fn main() -> miette::Result<()> {
     // Parse cli subcommands and arguments
@@ -94,23 +118,13 @@ async fn main() -> miette::Result<()> {
             report.meta.pagination = Some(core.workspaces.pagination.clone());
 
             // check for workspaces in args first
-            let workspaces = match args.workspaces.clone() {
-                Some(workspaces) => {
-                    // Get filtered list of workspaces and filter again by args
-                    workspace::list_filtered(&core, client.clone())
-                        .await
-                        .into_diagnostic()?
-                        .into_iter()
-                        .filter(|ws| workspaces.contains(&ws.attributes.name))
-                        .collect()
-                }
-                None => {
-                    // Get filtered list of workspaces
-                    workspace::list_filtered(&core, client.clone())
-                        .await
-                        .into_diagnostic()?
-                }
-            };
+            let workspaces = determine_workspaces(
+                args.workspaces.clone(),
+                &core,
+                client.clone(),
+            )
+            .await
+            .into_diagnostic()?;
 
             // Get variable set id
             let variable_set_id = args.variable_set_id.clone();
@@ -136,23 +150,13 @@ async fn main() -> miette::Result<()> {
             report.meta.pagination = Some(core.workspaces.pagination.clone());
 
             // check for workspaces in args first
-            let workspaces = match args.workspaces.clone() {
-                Some(workspaces) => {
-                    // Get filtered list of workspaces and filter again by args
-                    workspace::list_filtered(&core, client.clone())
-                        .await
-                        .into_diagnostic()?
-                        .into_iter()
-                        .filter(|ws| workspaces.contains(&ws.attributes.name))
-                        .collect()
-                }
-                None => {
-                    // Get filtered list of workspaces
-                    workspace::list_filtered(&core, client.clone())
-                        .await
-                        .into_diagnostic()?
-                }
-            };
+            let workspaces = determine_workspaces(
+                args.workspaces.clone(),
+                &core,
+                client.clone(),
+            )
+            .await
+            .into_diagnostic()?;
 
             // Get variable set id
             let variable_set_id = args.variable_set_id.clone();
