@@ -2997,6 +2997,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "tfc-variable-set"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-std",
+ "clap",
+ "config 0.13.3",
+ "env_logger",
+ "log",
+ "miette",
+ "serde",
+ "serde_json",
+ "surf",
+ "tfc-toolset",
+ "tfc-toolset-extras",
+ "thiserror",
+ "url",
+]
+
+[[package]]
 name = "tfc-which-workspace"
 version = "0.1.0"
 dependencies = [

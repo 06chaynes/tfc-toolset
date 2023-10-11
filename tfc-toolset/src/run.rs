@@ -1,4 +1,8 @@
-use crate::{error::ToolError, settings::Core, BASE_URL};
+use crate::{
+    error::{surf_to_tool_error, ToolError},
+    settings::Core,
+    BASE_URL,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::fmt::{Display, Formatter};
@@ -265,10 +269,6 @@ struct RunResponseOuter {
     pub data: Run,
 }
 
-fn to_tool_error(e: surf::Error) -> ToolError {
-    ToolError::General(e.into_inner())
-}
-
 pub async fn create(
     workspace_id: &str,
     attributes: Option<Attributes>,
@@ -281,7 +281,7 @@ pub async fn create(
         .header("Content-Type", "application/vnd.api+json")
         .body(json!(RunRequestOuter::new(workspace_id, attributes)))
         .build();
-    let res = client.recv_string(req).await.map_err(to_tool_error)?;
+    let res = client.recv_string(req).await.map_err(surf_to_tool_error)?;
     let run: RunResponseOuter = serde_json::from_str(&res)?;
     Ok(run.data)
 }
@@ -295,7 +295,7 @@ pub async fn status(
     let req = RequestBuilder::new(Method::Get, url)
         .header("Authorization", format!("Bearer {}", config.token))
         .build();
-    let res = client.recv_string(req).await.map_err(to_tool_error)?;
+    let res = client.recv_string(req).await.map_err(surf_to_tool_error)?;
     let run: RunResponseOuter = serde_json::from_str(&res)?;
     Ok(run.data)
 }

@@ -147,7 +147,10 @@ async fn main() -> miette::Result<()> {
                                     let mut variables = entry.variables.clone();
                                     // Only keep terraform variables
                                     variables.retain(|var| {
-                                        var.attributes.category == "terraform"
+                                        var.attributes.category
+                                            == Some(
+                                                variable::Category::Terraform,
+                                            )
                                     });
                                     for var in &variables {
                                         for detected in

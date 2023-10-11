@@ -1,13 +1,50 @@
 use crate::{error::ToolError, settings::Core, BASE_URL};
 use serde::{Deserialize, Serialize};
+use std::fmt::{Display, Formatter};
 use surf::{http::Method, Client, RequestBuilder};
 use url::Url;
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct Vars {
+    #[serde(rename = "type")]
+    pub relationship_type: String,
+    pub attributes: Attributes,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum Category {
+    Terraform,
+    Env,
+}
+
+impl Display for Category {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Category::Terraform => write!(f, "terraform"),
+            Category::Env => write!(f, "env"),
+        }
+    }
+}
+
+impl From<String> for Category {
+    fn from(s: String) -> Self {
+        match s.as_str() {
+            "terraform" => Category::Terraform,
+            "env" => Category::Env,
+            _ => Category::Terraform,
+        }
+    }
+}
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Attributes {
     pub key: String,
     pub value: Option<String>,
-    pub category: String,
+    pub description: Option<String>,
+    pub category: Option<Category>,
+    pub hcl: Option<bool>,
+    pub sensitive: Option<bool>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]

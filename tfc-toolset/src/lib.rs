@@ -3,6 +3,7 @@ pub mod filter;
 pub mod run;
 pub mod settings;
 pub mod variable;
+pub mod variable_set;
 pub mod workspace;
 
 use serde::{Deserialize, Serialize};

@@ -6,6 +6,7 @@ members = [
     "tfc-clean-workspace",
     "tfc-which-workspace",
     "tfc-run-workspace",
+    "tfc-variable-set",
     "tfc-report-tui"
 ]
 

@@ -2,6 +2,10 @@ use thiserror::Error;
 
 pub const SETTINGS_ERROR: &str = "Uh Oh, looks like a settings issue! By default I look for a settings.toml file and override with env variables.";
 
+pub(crate) fn surf_to_tool_error(e: surf::Error) -> ToolError {
+    ToolError::General(e.into_inner())
+}
+
 /// A generic “error” type
 #[derive(Error, Debug)]
 pub enum ToolError {
