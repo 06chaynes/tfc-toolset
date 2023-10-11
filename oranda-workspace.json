@@ -1,6 +1,7 @@
 {
   "workspace": {
     "name": "tfc-toolset",
+    "docs_path": "./.assets/index.md",
     "members": [
       {
         "slug": "tfc-toolset",
