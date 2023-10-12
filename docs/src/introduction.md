@@ -1,6 +1,6 @@
-# Terraform Cloud Toolset
+# Introduction
 
-A collection of tools to help in management of your Terraform cloud organization.
+tfc-toolset is a collection of tools to help in management of your Terraform cloud organization.
 
 ## What's in the box?
 
@@ -19,19 +19,3 @@ A collection of tools to help in management of your Terraform cloud organization
 ## Why?
 
 Because I like a side of automation with my automation. nom nom nom
-
-## How do I use this?
-
-More details on each tool/library can be found on the README in each project directory (as long as future me actually finished them, that guy needs to step it up), links below:
-
-- [`tfc-toolset`](tfc-toolset/README.md)
-
-- [`tfc-toolset-extras`](tfc-toolset-extras/README.md)
-  
-- [`tfc-which-workspace`](tfc-which-workspace/README.md)
-
-- [`tfc-clean-workspace`](tfc-clean-workspace/README.md)
-
-- [`tfc-report-tui`](tfc-report-tui/README.md)
-
-See [Filtering](FILTERING.md) for more details on the specifics of workspace filtering.

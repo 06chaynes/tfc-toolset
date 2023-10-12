@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
 use tfc_clean_workspace::report::CleanReport;
+use tfc_run_workspace::report::RunReport;
 use tfc_toolset::error::ToolError;
 use tfc_toolset_extras::report::{Report, Reporter};
 use tfc_which_workspace::report::WhichReport;
@@ -15,6 +16,7 @@ struct Empty {}
 pub enum TfcReport {
     Clean(CleanReport),
     Which(WhichReport),
+    Run(RunReport),
 }
 
 impl From<CleanReport> for TfcReport {
@@ -26,6 +28,12 @@ impl From<CleanReport> for TfcReport {
 impl From<WhichReport> for TfcReport {
     fn from(item: WhichReport) -> Self {
         TfcReport::Which(item)
+    }
+}
+
+impl From<RunReport> for TfcReport {
+    fn from(item: RunReport) -> Self {
+        TfcReport::Run(item)
     }
 }
 
@@ -41,6 +49,10 @@ pub fn read() -> Result<TfcReport, ToolError> {
         }
         Reporter::WhichWorkspace => {
             let parsed: WhichReport = serde_json::from_str(&db_content)?;
+            Ok(parsed.into())
+        }
+        Reporter::RunWorkspace => {
+            let parsed: RunReport = serde_json::from_str(&db_content)?;
             Ok(parsed.into())
         }
         _ => unreachable!(),

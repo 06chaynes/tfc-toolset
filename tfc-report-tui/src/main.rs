@@ -296,6 +296,17 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
                     ),
                     chunks[1],
                 ),
+                TfcReport::Run(r) => f.render_widget(
+                    info::render(
+                        serde_json::to_string(&r.reporter).unwrap(),
+                        r.report_version,
+                        r.bin_version,
+                        serde_json::to_string_pretty(&r.meta.query).unwrap(),
+                        serde_json::to_string_pretty(&r.meta.pagination)
+                            .unwrap(),
+                    ),
+                    chunks[1],
+                ),
             };
         }
         MenuItem::Workspaces => {
@@ -329,6 +340,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
             let workspace_list = match app.report.clone() {
                 TfcReport::Clean(r) => r.data.workspaces,
                 TfcReport::Which(r) => r.data.workspaces,
+                TfcReport::Run(r) => r.data.workspaces,
             };
             let (
                 left_filter,
@@ -372,6 +384,7 @@ pub fn count_workspaces(report: &TfcReport) -> usize {
     match report {
         TfcReport::Clean(r) => r.data.workspaces.len(),
         TfcReport::Which(r) => r.data.workspaces.len(),
+        TfcReport::Run(r) => r.data.workspaces.len(),
     }
 }
 

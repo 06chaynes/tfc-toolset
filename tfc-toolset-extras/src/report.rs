@@ -21,6 +21,10 @@ pub enum Reporter {
     CleanWorkspace,
     #[serde(rename = "tfc-which-workspace")]
     WhichWorkspace,
+    #[serde(rename = "tfc-run-workspace")]
+    RunWorkspace,
+    #[serde(rename = "tfc-variable-set")]
+    VariableSet,
 }
 
 impl<'de, M, D, E> Report<M, D, E>
