@@ -1,11 +1,16 @@
 use crate::{
     error::{surf_to_tool_error, ToolError},
     settings::Core,
-    BASE_URL,
+    workspace, BASE_URL,
 };
+use async_std::task::{self, JoinHandle};
+use dashmap::DashMap;
+use log::{error, info};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter};
+use std::time::Duration;
 use surf::{http::Method, Client, RequestBuilder};
 use url::Url;
 
@@ -269,6 +274,26 @@ struct RunResponseOuter {
     pub data: Run,
 }
 
+pub struct QueueOptions {
+    pub max_concurrent: usize,
+    pub max_iterations: usize,
+    pub status_check_sleep_seconds: u64,
+}
+
+pub struct QueueResult {
+    pub results: Vec<RunResult>,
+    pub errors: Vec<RunResult>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct RunResult {
+    pub id: RunId,
+    pub status: String,
+    pub workspace_id: String,
+}
+
+pub type RunId = String;
+
 pub async fn create(
     workspace_id: &str,
     attributes: Option<Attributes>,
@@ -298,4 +323,112 @@ pub async fn status(
     let res = client.recv_string(req).await.map_err(surf_to_tool_error)?;
     let run: RunResponseOuter = serde_json::from_str(&res)?;
     Ok(run.data)
+}
+
+pub async fn work_queue(
+    queue: &mut BTreeMap<String, workspace::Workspace>,
+    options: QueueOptions,
+    attributes: Attributes,
+    client: Client,
+    core: &Core,
+) -> Result<QueueResult, ToolError> {
+    let running = DashMap::with_capacity(options.max_concurrent);
+    let mut results = Vec::with_capacity(queue.len());
+    let mut errors = Vec::new();
+    while !queue.is_empty() {
+        let mut handles = Vec::with_capacity(options.max_concurrent);
+        while running.len() < options.max_concurrent && !queue.is_empty() {
+            let (id, ws) = queue.pop_first().unwrap();
+            info!("Creating run for workspace: {}", &ws.id);
+            let client = client.clone();
+            let attributes = attributes.clone();
+            let will_auto_apply = attributes.auto_apply.unwrap_or(false);
+            let will_save_plan = attributes.save_plan.unwrap_or(false);
+            let core = core.clone();
+            let ws_id = ws.id.clone();
+            let mut iterations = 0;
+            let handle: JoinHandle<Result<RunResult, ToolError>> = task::spawn(
+                async move {
+                    let mut run = create(
+                        &id.clone(),
+                        Some(attributes),
+                        &core,
+                        client.clone(),
+                    )
+                    .await?;
+                    info!(
+                        "Run {} created for workspace {}",
+                        &run.id,
+                        &id.clone()
+                    );
+                    while !COMPLETED_STATUSES.contains(
+                        &run.attributes
+                            .status
+                            .clone()
+                            .unwrap_or(Status::Unknown),
+                    ) {
+                        run = status(&run.id, &core, client.clone()).await?;
+                        let status = run
+                            .attributes
+                            .status
+                            .clone()
+                            .unwrap_or(Status::Unknown);
+                        info!("Run {} status: {}", &run.id, &status);
+                        if COMPLETED_STATUSES.contains(&status)
+                            || !will_auto_apply && status == Status::Planned
+                            || will_save_plan
+                                && status == Status::PlannedAndSaved
+                        {
+                            // If auto_apply is false and status is planned, then we can break out of the loop
+                            // because the run will require confirmation before applying
+                            // If save_plan is true and status is planned_and_saved, then we can break out of the loop
+                            // If completed, then we can also break out of the loop
+                            break;
+                        }
+                        iterations += 1;
+                        if iterations >= options.max_iterations {
+                            error!(
+                                    "Run {} for workspace {} has been in status {} too long.",
+                                    &run.id, &id.clone(), &status.clone()
+                                );
+                            if status == Status::Pending {
+                                error!(
+                                    "There is likely previous run pending. Please check the workspace in the UI."
+                                );
+                            } else {
+                                error!(
+                                    "This is likely some error. Please check the run in the UI."
+                                );
+                            }
+                            break;
+                        }
+                        async_std::task::sleep(Duration::from_secs(
+                            options.status_check_sleep_seconds,
+                        ))
+                        .await;
+                    }
+                    Ok(RunResult {
+                        id: run.id,
+                        status: run
+                            .attributes
+                            .status
+                            .unwrap_or(Status::Unknown)
+                            .to_string(),
+                        workspace_id: id,
+                    })
+                },
+            );
+            running.insert(ws_id, ws);
+            handles.push(handle);
+        }
+        for handle in handles {
+            let result = handle.await?;
+            running.remove(result.id.clone().as_str());
+            if ERROR_STATUSES.contains(&Status::from(result.status.clone())) {
+                errors.push(result.clone());
+            }
+            results.push(result);
+        }
+    }
+    Ok(QueueResult { results, errors })
 }

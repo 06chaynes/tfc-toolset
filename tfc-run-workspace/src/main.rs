@@ -1,23 +1,13 @@
 mod report;
 mod settings;
 
-use async_std::task::JoinHandle;
 use clap::{Parser, Subcommand};
-use dashmap::DashMap;
 use env_logger::Env;
 use log::*;
 use miette::{IntoDiagnostic, WrapErr};
-use report::RunResult;
 use settings::Settings;
 use std::collections::BTreeMap;
-use std::time::Duration;
-use surf::Client;
-use tfc_toolset::{
-    error::{ToolError, SETTINGS_ERROR},
-    run,
-    settings::Core,
-    workspace,
-};
+use tfc_toolset::{error::SETTINGS_ERROR, run, settings::Core, workspace};
 use tfc_toolset_extras::default_client;
 
 const ABOUT: &str =
@@ -90,128 +80,6 @@ struct ApplyArgs {
     pub is_destroy: Option<bool>,
     #[arg(long, help = ABOUT_REFRESH_ONLY, default_value = "false")]
     pub refresh_only: Option<bool>,
-}
-
-struct QueueOptions {
-    pub max_concurrent: usize,
-    pub max_iterations: usize,
-    pub status_check_sleep_seconds: u64,
-}
-
-struct QueueResult {
-    pub results: Vec<RunResult>,
-    pub errors: Vec<RunResult>,
-}
-
-async fn work_queue(
-    queue: &mut BTreeMap<String, workspace::Workspace>,
-    options: QueueOptions,
-    attributes: run::Attributes,
-    client: Client,
-    core: &Core,
-) -> Result<QueueResult, ToolError> {
-    let running = DashMap::with_capacity(options.max_concurrent);
-    let mut results = Vec::with_capacity(queue.len());
-    let mut errors = Vec::new();
-    while !queue.is_empty() {
-        let mut handles = Vec::with_capacity(options.max_concurrent);
-        while running.len() < options.max_concurrent && !queue.is_empty() {
-            let (id, ws) = queue.pop_first().unwrap();
-            info!("Creating run for workspace: {}", &ws.id);
-            let client = client.clone();
-            let attributes = attributes.clone();
-            let will_auto_apply = attributes.auto_apply.unwrap_or(false);
-            let will_save_plan = attributes.save_plan.unwrap_or(false);
-            let core = core.clone();
-            let ws_id = ws.id.clone();
-            let mut iterations = 0;
-            let handle: JoinHandle<Result<RunResult, ToolError>> =
-                async_std::task::spawn(async move {
-                    let mut run = run::create(
-                        &id.clone(),
-                        Some(attributes),
-                        &core,
-                        client.clone(),
-                    )
-                    .await?;
-                    info!(
-                        "Run {} created for workspace {}",
-                        &run.id,
-                        &id.clone()
-                    );
-                    while !run::COMPLETED_STATUSES.contains(
-                        &run.attributes
-                            .status
-                            .clone()
-                            .unwrap_or(run::Status::Unknown),
-                    ) {
-                        run =
-                            run::status(&run.id, &core, client.clone()).await?;
-                        let status = run
-                            .attributes
-                            .status
-                            .clone()
-                            .unwrap_or(run::Status::Unknown);
-                        info!("Run {} status: {}", &run.id, &status);
-                        if run::COMPLETED_STATUSES.contains(&status)
-                            || !will_auto_apply
-                                && status == run::Status::Planned
-                            || will_save_plan
-                                && status == run::Status::PlannedAndSaved
-                        {
-                            // If auto_apply is false and status is planned, then we can break out of the loop
-                            // because the run will require confirmation before applying
-                            // If save_plan is true and status is planned_and_saved, then we can break out of the loop
-                            // If completed, then we can also break out of the loop
-                            break;
-                        }
-                        iterations += 1;
-                        if iterations >= options.max_iterations {
-                            error!(
-                                    "Run {} for workspace {} has been in status {} too long.",
-                                    &run.id, &id.clone(), &status.clone()
-                                );
-                            if status == run::Status::Pending {
-                                error!(
-                                    "There is likely previous run pending. Please check the workspace in the UI."
-                                );
-                            } else {
-                                error!(
-                                    "This is likely some error. Please check the run in the UI."
-                                );
-                            }
-                            break;
-                        }
-                        async_std::task::sleep(Duration::from_secs(
-                            options.status_check_sleep_seconds,
-                        ))
-                        .await;
-                    }
-                    Ok(RunResult {
-                        id: run.id,
-                        status: run
-                            .attributes
-                            .status
-                            .unwrap_or(run::Status::Unknown)
-                            .to_string(),
-                        workspace_id: id,
-                    })
-                });
-            running.insert(ws_id, ws);
-            handles.push(handle);
-        }
-        for handle in handles {
-            let result = handle.await?;
-            running.remove(result.id.clone().as_str());
-            if run::ERROR_STATUSES
-                .contains(&run::Status::from(result.status.clone()))
-            {
-                errors.push(result.clone());
-            }
-            results.push(result);
-        }
-    }
-    Ok(QueueResult { results, errors })
 }
 
 fn set_default_args(args: &mut run::Attributes, default: &DefaultArgs) {
@@ -300,9 +168,9 @@ async fn main() -> miette::Result<()> {
                 queue.insert(ws.id.clone(), ws.clone());
             }
 
-            let queue_results = work_queue(
+            let queue_results = run::work_queue(
                 &mut queue,
-                QueueOptions {
+                run::QueueOptions {
                     max_concurrent,
                     max_iterations,
                     status_check_sleep_seconds,
@@ -342,9 +210,9 @@ async fn main() -> miette::Result<()> {
                 queue.insert(ws.id.clone(), ws.clone());
             }
 
-            let queue_results = work_queue(
+            let queue_results = run::work_queue(
                 &mut queue,
-                QueueOptions {
+                run::QueueOptions {
                     max_concurrent,
                     max_iterations,
                     status_check_sleep_seconds,

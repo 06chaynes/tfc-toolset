@@ -4,25 +4,17 @@ use log::{error, info};
 use serde::{Deserialize, Serialize};
 use tfc_toolset::{
     error::ToolError,
+    run::RunResult,
     settings::{Core, Pagination, Query},
     variable,
     workspace::Workspace,
 };
 use tfc_toolset_extras::report::{Report, Reporter};
 
-pub type RunId = String;
-
 pub type RunReport = Report<Meta, Data, Errors>;
 
 // For now need to keep this updated with best effort :)
 const REPORT_VERSION: &str = "0.1.0";
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct RunResult {
-    pub id: RunId,
-    pub status: String,
-    pub workspace_id: String,
-}
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Variable {

@@ -2950,7 +2950,6 @@ dependencies = [
  "async-std",
  "clap",
  "config 0.13.3",
- "dashmap",
  "env_logger",
  "log",
  "miette",
@@ -2969,7 +2968,9 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-scoped",
+ "async-std",
  "config 0.13.3",
+ "dashmap",
  "log",
  "serde",
  "serde_json",
