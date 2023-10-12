@@ -41,12 +41,12 @@ impl FromStr for Vars {
             let hcl = if var_split[3].is_empty() {
                 None
             } else {
-                Some(var_split[3].parse::<bool>().unwrap())
+                Some(var_split[3].parse::<bool>()?)
             };
             let sensitive = if var_split[4].is_empty() {
                 None
             } else {
-                Some(var_split[4].parse::<bool>().unwrap())
+                Some(var_split[4].parse::<bool>()?)
             };
             Ok(Vars {
                 relationship_type: "vars".to_string(),

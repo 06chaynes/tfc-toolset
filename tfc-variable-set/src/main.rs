@@ -199,8 +199,8 @@ async fn main() -> miette::Result<()> {
 
             let mut vars: Option<Vec<variable::Vars>> = None;
             if let Some(v) = args.vars.clone() {
-                for variable in v.iter() {
-                    let var = variable::Vars::from_str(variable).into_diagnostic()?;
+                for var_string in v.iter() {
+                    let var = variable::Vars::from_str(var_string).into_diagnostic()?;
                     match vars {
                         Some(ref mut vars) => vars.push(var),
                         None => vars = Some(vec![var]),

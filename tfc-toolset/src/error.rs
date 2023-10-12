@@ -24,4 +24,7 @@ pub enum ToolError {
     /// std IO related errors
     #[error(transparent)]
     Io(#[from] std::io::Error),
+    /// Error parsing boolean value
+    #[error(transparent)]
+    Bool(#[from] std::str::ParseBoolError),
 }
