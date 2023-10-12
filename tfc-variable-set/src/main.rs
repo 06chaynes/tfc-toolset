@@ -1,5 +1,6 @@
 mod report;
 
+use std::str::FromStr;
 use clap::{Parser, Subcommand};
 use env_logger::Env;
 use log::*;
@@ -196,57 +197,17 @@ async fn main() -> miette::Result<()> {
             .await
             .into_diagnostic()?;
 
-            // the vars are in the format of key=value:description:category:hcl:sensitive
-            // we need to parse each one into a variable::Vars
-            // description, category, hcl, sensitive are all optional and will be None if not provided
-            // to skip a field just use a colon e.g. key=value::::true would only set sensitive
-            // accepting the default for the rest
             let mut vars: Option<Vec<variable::Vars>> = None;
             if let Some(v) = args.vars.clone() {
-                for var in v.iter() {
-                    // the string format is key=value:description:category:hcl:sensitive
-                    let var_split: Vec<&str> = var.split(':').collect();
-                    let key_val = var_split[0].to_string();
-                    let key_val_split: Vec<&str> = key_val.split('=').collect();
-                    let key = key_val_split[0].to_string();
-                    let value = key_val_split[1].to_string();
-                    let description = if var_split[1].is_empty() {
-                        None
-                    } else {
-                        Some(var_split[1].to_string())
-                    };
-                    let category = if var_split[2].is_empty() {
-                        None
-                    } else {
-                        Some(variable::Category::from(var_split[2].to_string()))
-                    };
-                    let hcl = if var_split[3].is_empty() {
-                        None
-                    } else {
-                        Some(var_split[3].parse::<bool>().unwrap())
-                    };
-                    let sensitive = if var_split[4].is_empty() {
-                        None
-                    } else {
-                        Some(var_split[4].parse::<bool>().unwrap())
-                    };
-                    let var = variable::Vars {
-                        relationship_type: "vars".to_string(),
-                        attributes: variable::Attributes {
-                            key,
-                            value: Some(value),
-                            description,
-                            category,
-                            hcl,
-                            sensitive,
-                        },
-                    };
+                for variable in v.iter() {
+                    let var = variable::Vars::from_str(variable).into_diagnostic()?;
                     match vars {
-                        Some(ref mut v) => v.push(var),
+                        Some(ref mut vars) => vars.push(var),
                         None => vars = Some(vec![var]),
                     }
                 }
             }
+            debug!("vars: {:#?}", vars);
 
             // Create variable set
             variable_set::create(

@@ -148,9 +148,7 @@ async fn main() -> miette::Result<()> {
                                     // Only keep terraform variables
                                     variables.retain(|var| {
                                         var.attributes.category
-                                            == Some(
-                                                variable::Category::Terraform,
-                                            )
+                                            == variable::Category::Terraform
                                     });
                                     for var in &variables {
                                         for detected in
