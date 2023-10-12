@@ -228,14 +228,15 @@ dependencies = [
 
 [[package]]
 name = "async-h1"
-version = "2.3.3"
+version = "2.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8101020758a4fc3a7c326cb42aa99e9fa77cbfb76987c128ad956406fe1f70a7"
+checksum = "5d1d1dae8cb2c4258a79d6ed088b7fb9b4763bf4e9b22d040779761e046a2971"
 dependencies = [
  "async-channel",
  "async-dup",
- "async-std",
- "futures-core",
+ "async-global-executor",
+ "async-io",
+ "futures-lite",
  "http-types",
  "httparse",
  "log",
@@ -284,7 +285,7 @@ dependencies = [
  "cfg-if",
  "event-listener 3.0.0",
  "futures-lite",
- "rustix 0.38.18",
+ "rustix 0.38.19",
  "windows-sys 0.48.0",
 ]
 
@@ -312,7 +313,7 @@ dependencies = [
  "cfg-if",
  "futures-core",
  "futures-io",
- "rustix 0.38.18",
+ "rustix 0.38.19",
  "signal-hook-registry",
  "slab",
  "windows-sys 0.48.0",
@@ -1511,7 +1512,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cb0889898416213fab133e1d33a0e5858a48177452750691bde3666d0fdbaf8b"
 dependencies = [
  "hermit-abi",
- "rustix 0.38.18",
+ "rustix 0.38.19",
  "windows-sys 0.48.0",
 ]
 
@@ -1538,9 +1539,9 @@ checksum = "af150ab688ff2122fcef229be89cb50dd66af9e01a4ff320cc137eecc9bacc38"
 
 [[package]]
 name = "jobserver"
-version = "0.1.26"
+version = "0.1.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "936cfd212a0155903bcbc060e316fb6cc7cbf2e1907329391ebadc1fe0ce77c2"
+checksum = "8c37f63953c4c63420ed5fd3d6d398c719489b9f872b9fa683262f8edd363c7d"
 dependencies = [
  "libc",
 ]
@@ -2274,9 +2275,9 @@ dependencies = [
 
 [[package]]
 name = "regex-automata"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5d58da636bd923eae52b7e9120271cbefb16f399069ee566ca5ebf9c30e32238"
+checksum = "465c6fc0621e4abc4187a2bda0937bfd4f722c2730b29562e19689ea796c9a4b"
 dependencies = [
  "aho-corasick",
  "memchr",
@@ -2285,15 +2286,15 @@ dependencies = [
 
 [[package]]
 name = "regex-syntax"
-version = "0.8.0"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3cbb081b9784b07cceb8824c8583f86db4814d172ab043f3c23f7dc600bf83d"
+checksum = "56d84fdd47036b038fc80dd333d10b6aab10d5d31f4a366e20014def75328d33"
 
 [[package]]
 name = "retry-policies"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a715dc4d0e8aea3085a9a94d76e79c79c7df7c9f6be609da841a6d2489ca3687"
+checksum = "17dd00bff1d737c40dbcd47d4375281bf4c17933f9eef0a185fc7bacca23ecbd"
 dependencies = [
  "anyhow",
  "chrono",
@@ -2367,9 +2368,9 @@ dependencies = [
 
 [[package]]
 name = "rustix"
-version = "0.38.18"
+version = "0.38.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5a74ee2d7c2581cd139b42447d7d9389b889bdaad3a73f1ebb16f2a3237bb19c"
+checksum = "745ecfa778e66b2b63c88a61cb36e0eea109e803b0b86bf9879fbc77c70e86ed"
 dependencies = [
  "bitflags 2.4.0",
  "errno",
@@ -2864,7 +2865,7 @@ dependencies = [
  "cfg-if",
  "fastrand 2.0.1",
  "redox_syscall 0.3.5",
- "rustix 0.38.18",
+ "rustix 0.38.19",
  "windows-sys 0.48.0",
 ]
 
