@@ -4,7 +4,7 @@ use crate::{
     workspace::{Workspace, WorkspaceVariables},
 };
 
-pub fn variable(
+pub fn by_variable(
     workspace_variables: &mut Vec<WorkspaceVariables>,
     config: &Core,
 ) -> Result<(), ToolError> {
@@ -90,7 +90,7 @@ pub fn variable(
     Ok(())
 }
 
-pub fn tag(
+pub fn by_tag(
     workspaces: &mut Vec<Workspace>,
     config: &Core,
 ) -> Result<(), ToolError> {

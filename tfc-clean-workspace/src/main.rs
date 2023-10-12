@@ -65,7 +65,8 @@ async fn main() -> miette::Result<()> {
             // Filter the workspaces if query tags have been provided
             if core.workspaces.query.tags.is_some() {
                 info!("Filtering workspaces with tags query.");
-                filter::tag(&mut workspaces, &core).into_diagnostic()?;
+                filter::workspace::by_tag(&mut workspaces, &core)
+                    .into_diagnostic()?;
             }
 
             if core.workspaces.query.variables.is_some()
@@ -80,8 +81,11 @@ async fn main() -> miette::Result<()> {
                 // Filter the workspaces if query variables have been provided
                 if core.workspaces.query.variables.is_some() {
                     info!("Filtering workspaces with variable query.");
-                    filter::variable(&mut workspaces_variables, &core)
-                        .into_diagnostic()?;
+                    filter::workspace::by_variable(
+                        &mut workspaces_variables,
+                        &core,
+                    )
+                    .into_diagnostic()?;
                 }
 
                 workspaces.clear();

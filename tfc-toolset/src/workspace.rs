@@ -65,7 +65,7 @@ pub async fn list_filtered(
     // Filter the workspaces if query tags have been provided
     if core.workspaces.query.tags.is_some() {
         info!("Filtering workspaces with tags query.");
-        filter::tag(&mut workspaces, core)?;
+        filter::workspace::by_tag(&mut workspaces, core)?;
     }
 
     if core.workspaces.query.variables.is_some() {
@@ -75,7 +75,7 @@ pub async fn list_filtered(
         // Filter the workspaces if query variables have been provided
         if core.workspaces.query.variables.is_some() {
             info!("Filtering workspaces with variable query.");
-            filter::variable(&mut workspaces_variables, core)?;
+            filter::workspace::by_variable(&mut workspaces_variables, core)?;
         }
 
         workspaces.clear();
