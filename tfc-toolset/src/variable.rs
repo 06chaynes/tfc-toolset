@@ -15,7 +15,7 @@ pub struct Vars {
 // the vars are in the format of key=value:description:category:hcl:sensitive
 // we need to parse each one into a variable::Vars
 // description, category, hcl, sensitive are all optional and will be None if not provided
-// to skip a field just use a colon e.g. key=value::::true would only set sensitive
+// to skip a field just use a colon e.g. key=value::::true would only set key, value, and sensitive
 // accepting the default for the rest
 impl FromStr for Vars {
     type Err = ToolError;
