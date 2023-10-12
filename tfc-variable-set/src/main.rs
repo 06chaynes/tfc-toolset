@@ -1,10 +1,10 @@
 mod report;
 
-use std::str::FromStr;
 use clap::{Parser, Subcommand};
 use env_logger::Env;
 use log::*;
 use miette::{IntoDiagnostic, WrapErr};
+use std::str::FromStr;
 use surf::Client;
 use tfc_toolset::error::ToolError;
 use tfc_toolset::workspace::Workspace;
@@ -200,7 +200,8 @@ async fn main() -> miette::Result<()> {
             let mut vars: Option<Vec<variable::Vars>> = None;
             if let Some(v) = args.vars.clone() {
                 for var_string in v.iter() {
-                    let var = variable::Vars::from_str(var_string).into_diagnostic()?;
+                    let var = variable::Vars::from_str(var_string)
+                        .into_diagnostic()?;
                     match vars {
                         Some(ref mut vars) => vars.push(var),
                         None => vars = Some(vec![var]),

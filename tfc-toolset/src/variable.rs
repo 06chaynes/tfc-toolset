@@ -24,8 +24,7 @@ impl FromStr for Vars {
         if s.contains(':') {
             let var_split: Vec<&str> = s.split(':').collect();
             let key_val = var_split[0].to_string();
-            let key_val_split: Vec<&str> =
-                key_val.split('=').collect();
+            let key_val_split: Vec<&str> = key_val.split('=').collect();
             let key = key_val_split[0].to_string();
             let value = key_val_split[1].to_string();
             let description = if var_split[1].is_empty() {
@@ -60,8 +59,7 @@ impl FromStr for Vars {
                 },
             })
         } else {
-            let key_val_split =
-                s.split('=').collect::<Vec<&str>>();
+            let key_val_split = s.split('=').collect::<Vec<&str>>();
             let key = key_val_split[0].to_string();
             let value = key_val_split[1].to_string();
             Ok(Vars {
