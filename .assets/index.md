@@ -14,6 +14,8 @@ A collection of tools to help in management of your Terraform cloud organization
 
 - `tfc-run-workspace`: A tool for creating multiple Terraform Cloud runs in parallel with provided specifications.
 
+- `tfc-variable-set`: Manages Terraform Cloud variable sets yay!
+
 - `tfc-report-tui`: Reading large JSON payloads can be a headache, this maybe slightly less so.
 
 ## Why?
