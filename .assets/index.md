@@ -21,7 +21,3 @@ A collection of tools to help in management of your Terraform cloud organization
 ## Why?
 
 Because I like a side of automation with my automation. nom nom nom
-
-## How do I use this?
-
-More details on each tool/library can be found on the respective page below:
