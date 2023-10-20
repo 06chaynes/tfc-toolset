@@ -1,14 +1,17 @@
 use crate::{
+    build_request,
     error::{surf_to_tool_error, ToolError},
+    set_page_number,
     settings::Core,
-    variable::Vars,
+    variable::{Variable, VariablesOuter},
     workspace::Workspace,
-    BASE_URL,
+    Meta, BASE_URL,
 };
+use async_scoped::AsyncScope;
 use log::*;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use surf::{http::Method, Client, RequestBuilder};
+use surf::{http::Method, Client};
 use url::Url;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -58,22 +61,17 @@ pub struct ProjectsOuter {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct VarsOuter {
-    pub data: Vec<Vars>,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Relationships {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub workspaces: Option<WorkspacesOuter>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub projects: Option<ProjectsOuter>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub vars: Option<VarsOuter>,
+    pub vars: Option<VariablesOuter>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-struct VarSetRequest {
+pub struct VarSet {
     #[serde(rename = "type")]
     pub relationship_type: String,
     pub attributes: Attributes,
@@ -81,8 +79,21 @@ struct VarSetRequest {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-struct VarSetRequestOuter {
-    pub data: VarSetRequest,
+pub struct VarSets {
+    pub data: Vec<VarSet>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub meta: Option<Meta>,
+}
+
+impl VarSets {
+    pub fn new(var_sets: Vec<VarSet>) -> Self {
+        VarSets { data: var_sets, meta: None }
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+struct VarSetOuter {
+    pub data: VarSet,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -92,13 +103,13 @@ pub struct VarSetOptions {
     pub global: Option<bool>,
     pub workspaces: Option<Vec<Workspace>>,
     pub projects: Option<Vec<String>>,
-    pub vars: Option<Vec<Vars>>,
+    pub vars: Option<Vec<Variable>>,
 }
 
-impl VarSetRequestOuter {
+impl VarSetOuter {
     pub fn new(options: VarSetOptions) -> Self {
         Self {
-            data: VarSetRequest {
+            data: VarSet {
                 relationship_type: "vars".to_string(),
                 attributes: Attributes {
                     name: options.name.to_string(),
@@ -124,7 +135,7 @@ impl VarSetRequestOuter {
                             })
                             .collect(),
                     }),
-                    vars: options.vars.map(|v| VarsOuter { data: v }),
+                    vars: options.vars.map(|v| VariablesOuter { data: v }),
                 },
             },
         }
@@ -157,6 +168,191 @@ impl From<Vec<Workspace>> for ApplyVarSetOuter {
     }
 }
 
+async fn check_pagination(
+    meta: Meta,
+    var_set_list: &mut VarSets,
+    url: Url,
+    config: &Core,
+    client: Client,
+) -> Result<(), ToolError> {
+    let max_depth = config.pagination.max_depth.parse::<u32>()?;
+    if max_depth > 1 || max_depth == 0 {
+        let current_depth: u32 = 1;
+        if let Some(next_page) = meta.pagination.next_page {
+            if max_depth == 0 || current_depth < max_depth {
+                let num_pages: u32 = if max_depth >= meta.pagination.total_pages
+                    || max_depth == 0
+                {
+                    meta.pagination.total_pages
+                } else {
+                    max_depth
+                };
+
+                // Get the next page and merge the result
+                let (_, var_set_pages) = AsyncScope::scope_and_block(|s| {
+                    for n in next_page..=num_pages {
+                        let c = client.clone();
+                        let u = url.clone();
+                        let proc = || async move {
+                            info!("Retrieving variable set page {}.", &n);
+                            let u = match set_page_number(n, u) {
+                                Some(u) => u,
+                                None => {
+                                    error!("Failed to set page number.");
+                                    return None;
+                                }
+                            };
+                            let req = build_request(
+                                Method::Get,
+                                u.clone(),
+                                config,
+                                None,
+                            );
+                            match c.send(req).await {
+                                Ok(mut s) => {
+                                    info!(
+                                                "Successfully retrieved variable set page {}!",
+                                                &n
+                                            );
+                                    let res =
+                                        match s.body_json::<VarSets>().await {
+                                            Ok(r) => r,
+                                            Err(e) => {
+                                                error!("{:#?}", e);
+                                                return None;
+                                            }
+                                        };
+                                    Some(res.data)
+                                }
+                                Err(e) => {
+                                    error!(
+                                                "Failed to retrieve variable set page {} :(",
+                                                &n
+                                            );
+                                    error!("{:#?}", e);
+                                    None
+                                }
+                            }
+                        };
+                        s.spawn(proc());
+                    }
+                });
+                for mut t in var_set_pages.into_iter().flatten() {
+                    var_set_list.data.append(&mut t);
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+pub async fn show(
+    variable_set_id: &str,
+    config: &Core,
+    client: Client,
+) -> Result<VarSet, ToolError> {
+    let url = Url::parse(&format!("{}/varsets/{}", BASE_URL, variable_set_id))?;
+    let req = build_request(Method::Get, url, config, None);
+    let mut res = client.send(req).await.map_err(surf_to_tool_error)?;
+    if res.status().is_success() {
+        let var_set: VarSetOuter =
+            res.body_json().await.map_err(surf_to_tool_error)?;
+        Ok(var_set.data)
+    } else {
+        error!("Failed to show variable set");
+        let error = res.body_string().await.map_err(surf_to_tool_error)?;
+        Err(ToolError::General(anyhow::anyhow!(error)))
+    }
+}
+
+pub async fn list_by_org(
+    config: &Core,
+    client: Client,
+) -> Result<VarSets, ToolError> {
+    info!(
+        "Retrieving the initial list of variable sets for org {}.",
+        config.org
+    );
+    let params = vec![
+        ("page[size]", config.pagination.page_size.clone()),
+        ("page[number]", config.pagination.start_page.clone()),
+    ];
+    let url = Url::parse_with_params(
+        &format!("{}/organizations/{}/varsets", BASE_URL, config.org),
+        &params,
+    )?;
+    let req = build_request(Method::Get, url.clone(), config, None);
+    let mut var_set_list: VarSets = match client.send(req).await {
+        Ok(mut res) => {
+            info!("Variable sets for org {} retrieved.", config.org);
+            match res.body_json().await {
+                Ok(t) => t,
+                Err(e) => {
+                    error!("{:#?}", e);
+                    return Err(ToolError::General(anyhow::anyhow!(e)));
+                }
+            }
+        }
+        Err(e) => {
+            error!("Failed to fetch variable sets for org {}.", config.org);
+            return Err(ToolError::General(anyhow::anyhow!(e)));
+        }
+    };
+    // Need to check pagination
+    if let Some(meta) = var_set_list.meta.clone() {
+        check_pagination(meta, &mut var_set_list, url, config, client).await?;
+    }
+    info!("Finished retrieving variable sets.");
+    Ok(var_set_list)
+}
+
+pub async fn list_by_project(
+    config: &Core,
+    client: Client,
+) -> Result<VarSets, ToolError> {
+    if config.project.clone().is_none() {
+        return Err(ToolError::General(anyhow::anyhow!(
+            "No project specified in config"
+        )));
+    }
+    let project_id = config.project.clone().unwrap();
+    info!(
+        "Retrieving the initial list of variable sets for project {}.",
+        project_id
+    );
+    let params = vec![
+        ("page[size]", config.pagination.page_size.clone()),
+        ("page[number]", config.pagination.start_page.clone()),
+    ];
+    let url = Url::parse_with_params(
+        &format!("{}/projects/{}/varsets", BASE_URL, project_id),
+        &params,
+    )?;
+    let req = build_request(Method::Get, url.clone(), config, None);
+    let mut var_set_list: VarSets = match client.send(req).await {
+        Ok(mut res) => {
+            info!("Variable sets for project {} retrieved.", project_id);
+            match res.body_json().await {
+                Ok(t) => t,
+                Err(e) => {
+                    error!("{:#?}", e);
+                    return Err(ToolError::General(anyhow::anyhow!(e)));
+                }
+            }
+        }
+        Err(e) => {
+            error!("Failed to fetch variable sets for project {}.", project_id);
+            return Err(ToolError::General(anyhow::anyhow!(e)));
+        }
+    };
+    // Need to check pagination
+    if let Some(meta) = var_set_list.meta.clone() {
+        check_pagination(meta, &mut var_set_list, url, config, client).await?;
+    }
+    info!("Finished retrieving variable sets.");
+    Ok(var_set_list)
+}
+
 pub async fn create(
     options: VarSetOptions,
     config: &Core,
@@ -166,11 +362,12 @@ pub async fn create(
         "{}/organizations/{}/varsets",
         BASE_URL, config.org
     ))?;
-    let req = RequestBuilder::new(Method::Post, url)
-        .header("Authorization", format!("Bearer {}", config.token))
-        .header("Content-Type", "application/vnd.api+json")
-        .body(json!(VarSetRequestOuter::new(options)))
-        .build();
+    let req = build_request(
+        Method::Post,
+        url,
+        config,
+        Some(json!(VarSetOuter::new(options))),
+    );
     let mut res = client.send(req).await.map_err(surf_to_tool_error)?;
     if res.status().is_success() {
         info!("Successfully created variable set");
@@ -192,11 +389,12 @@ pub async fn apply_workspace(
         "{}/varsets/{}/relationships/workspaces",
         BASE_URL, variable_set_id
     ))?;
-    let req = RequestBuilder::new(Method::Post, url)
-        .header("Authorization", format!("Bearer {}", config.token))
-        .header("Content-Type", "application/vnd.api+json")
-        .body(json!(ApplyVarSetOuter::from(workspaces)))
-        .build();
+    let req = build_request(
+        Method::Post,
+        url,
+        config,
+        Some(json!(ApplyVarSetOuter::from(workspaces))),
+    );
     let mut res = client.send(req).await.map_err(surf_to_tool_error)?;
     if res.status().is_success() {
         info!("Successfully applied workspaces to variable set");
@@ -218,11 +416,12 @@ pub async fn remove_workspace(
         "{}/varsets/{}/relationships/workspaces",
         BASE_URL, variable_set_id
     ))?;
-    let req = RequestBuilder::new(Method::Delete, url)
-        .header("Authorization", format!("Bearer {}", config.token))
-        .header("Content-Type", "application/vnd.api+json")
-        .body(json!(WorkspacesOuter::from(workspaces)))
-        .build();
+    let req = build_request(
+        Method::Delete,
+        url,
+        config,
+        Some(json!(WorkspacesOuter::from(workspaces))),
+    );
     let mut res = client.send(req).await.map_err(surf_to_tool_error)?;
     if res.status().is_success() {
         info!("Successfully removed workspace from variable set");

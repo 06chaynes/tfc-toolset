@@ -827,6 +827,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0f32d04922c60427da6f9fef14d042d9edddef64cb9d4ce0d64d0685fbeb1fd3"
 dependencies = [
  "powerfmt",
+ "serde",
 ]
 
 [[package]]
@@ -2935,11 +2936,22 @@ dependencies = [
  "serde",
  "serde_json",
  "surf",
+ "tfc-report",
  "tfc-toolset",
  "tfc-toolset-extras",
  "thiserror",
  "url",
  "walkdir",
+]
+
+[[package]]
+name = "tfc-report"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "serde",
+ "serde_json",
+ "tfc-toolset",
 ]
 
 [[package]]
@@ -2952,9 +2964,9 @@ dependencies = [
  "serde",
  "serde_json",
  "tfc-clean-workspace",
+ "tfc-report",
  "tfc-run-workspace",
  "tfc-toolset",
- "tfc-toolset-extras",
  "tfc-which-workspace",
  "thiserror",
  "unicode-width",
@@ -2974,6 +2986,7 @@ dependencies = [
  "serde",
  "serde_json",
  "surf",
+ "tfc-report",
  "tfc-toolset",
  "tfc-toolset-extras",
  "thiserror",
@@ -2982,7 +2995,7 @@ dependencies = [
 
 [[package]]
 name = "tfc-toolset"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "async-scoped",
@@ -2994,6 +3007,7 @@ dependencies = [
  "serde_json",
  "surf",
  "thiserror",
+ "time 0.3.30",
  "url",
 ]
 
@@ -3006,6 +3020,7 @@ dependencies = [
  "config 0.13.3",
  "http-cache-surf",
  "log",
+ "regex",
  "serde",
  "serde_json",
  "surf",
@@ -3030,6 +3045,7 @@ dependencies = [
  "serde",
  "serde_json",
  "surf",
+ "tfc-report",
  "tfc-toolset",
  "tfc-toolset-extras",
  "thiserror",
@@ -3049,9 +3065,32 @@ dependencies = [
  "serde",
  "serde_json",
  "surf",
+ "tfc-report",
  "tfc-toolset",
  "tfc-toolset-extras",
  "thiserror",
+ "url",
+]
+
+[[package]]
+name = "tfct"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-std",
+ "clap",
+ "config 0.13.3",
+ "dirs",
+ "env_logger",
+ "log",
+ "miette",
+ "serde",
+ "serde_json",
+ "surf",
+ "tfc-toolset",
+ "tfc-toolset-extras",
+ "thiserror",
+ "time 0.3.30",
  "url",
 ]
 

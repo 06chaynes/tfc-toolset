@@ -1,4 +1,5 @@
 use crate::{
+    build_request,
     error::{surf_to_tool_error, ToolError},
     settings::Core,
     workspace, BASE_URL,
@@ -11,7 +12,7 @@ use serde_json::json;
 use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter};
 use std::time::Duration;
-use surf::{http::Method, Client, RequestBuilder};
+use surf::{http::Method, Client};
 use url::Url;
 
 // Statuses in Terraform Cloud that indicate a run is in a completed state
@@ -153,36 +154,27 @@ impl From<String> for Status {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
 pub struct Attributes {
     pub message: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "terraform-version")]
     pub terraform_version: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "plan-only")]
     pub plan_only: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "save-plan")]
     pub save_plan: Option<bool>,
-    #[serde(rename = "target-addrs")]
     pub target_addrs: Vec<String>,
-    #[serde(rename = "replace-addrs")]
     pub replace_addrs: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub refresh: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "refresh-only")]
     pub refresh_only: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "auto-apply")]
     pub auto_apply: Option<bool>,
-    #[serde(rename = "allow-empty-apply")]
     pub allow_empty_apply: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "is-destroy")]
     pub is_destroy: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "created-at")]
     pub created_at: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub status: Option<Status>,
@@ -226,21 +218,26 @@ pub struct Relationships {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct RunRequest {
+pub struct Run {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
     pub attributes: Attributes,
     #[serde(rename = "type")]
     pub request_type: String,
     pub relationships: Relationships,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub links: Option<Links>,
 }
 #[derive(Clone, Debug, Deserialize, Serialize)]
-struct RunRequestOuter {
-    pub data: RunRequest,
+struct RunOuter {
+    pub data: Run,
 }
 
-impl RunRequestOuter {
+impl RunOuter {
     fn new(workspace_id: &str, attributes: Option<Attributes>) -> Self {
         Self {
-            data: RunRequest {
+            data: Run {
+                id: None,
                 attributes: attributes.unwrap_or_default(),
                 request_type: "runs".to_string(),
                 relationships: Relationships {
@@ -251,6 +248,7 @@ impl RunRequestOuter {
                         },
                     },
                 },
+                links: None,
             },
         }
     }
@@ -263,29 +261,21 @@ pub struct Links {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Run {
-    pub id: String,
-    pub attributes: Attributes,
-    pub links: Links,
-}
-
-#[derive(Clone, Debug, Deserialize)]
-struct RunResponseOuter {
-    pub data: Run,
-}
-
+#[serde(rename_all = "kebab-case")]
 pub struct QueueOptions {
     pub max_concurrent: usize,
     pub max_iterations: usize,
     pub status_check_sleep_seconds: u64,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct QueueResult {
     pub results: Vec<RunResult>,
     pub errors: Vec<RunResult>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
 pub struct RunResult {
     pub id: RunId,
     pub status: String,
@@ -300,15 +290,30 @@ pub async fn create(
     config: &Core,
     client: Client,
 ) -> Result<Run, ToolError> {
+    info!("Creating run for workspace: {}", workspace_id);
     let url = Url::parse(&format!("{}/runs", BASE_URL))?;
-    let req = RequestBuilder::new(Method::Post, url)
-        .header("Authorization", format!("Bearer {}", config.token))
-        .header("Content-Type", "application/vnd.api+json")
-        .body(json!(RunRequestOuter::new(workspace_id, attributes)))
-        .build();
-    let res = client.recv_string(req).await.map_err(surf_to_tool_error)?;
-    let run: RunResponseOuter = serde_json::from_str(&res)?;
-    Ok(run.data)
+    let req = build_request(
+        Method::Post,
+        url,
+        config,
+        Some(json!(RunOuter::new(workspace_id, attributes))),
+    );
+    match client.send(req).await {
+        Ok(mut r) => {
+            if r.status().is_success() {
+                info!("Successfully created run!");
+                let res = r.body_string().await.map_err(surf_to_tool_error)?;
+                let run: RunOuter = serde_json::from_str(&res)?;
+                Ok(run.data)
+            } else {
+                let error =
+                    r.body_string().await.map_err(surf_to_tool_error)?;
+                error!("Failed to create run: {}", error);
+                Err(ToolError::General(anyhow::anyhow!(error)))
+            }
+        }
+        Err(e) => Err(surf_to_tool_error(e)),
+    }
 }
 
 pub async fn status(
@@ -316,13 +321,25 @@ pub async fn status(
     config: &Core,
     client: Client,
 ) -> Result<Run, ToolError> {
+    info!("Getting status for run: {}", run_id);
     let url = Url::parse(&format!("{}/runs/{}", BASE_URL, run_id))?;
-    let req = RequestBuilder::new(Method::Get, url)
-        .header("Authorization", format!("Bearer {}", config.token))
-        .build();
-    let res = client.recv_string(req).await.map_err(surf_to_tool_error)?;
-    let run: RunResponseOuter = serde_json::from_str(&res)?;
-    Ok(run.data)
+    let req = build_request(Method::Get, url, config, None);
+    match client.send(req).await {
+        Ok(mut r) => {
+            if r.status().is_success() {
+                info!("Successfully retrieved run status!");
+                let res = r.body_string().await.map_err(surf_to_tool_error)?;
+                let run: RunOuter = serde_json::from_str(&res)?;
+                Ok(run.data)
+            } else {
+                error!("Failed to retrieve run status :(");
+                let error =
+                    r.body_string().await.map_err(surf_to_tool_error)?;
+                Err(ToolError::General(anyhow::anyhow!(error)))
+            }
+        }
+        Err(e) => Err(surf_to_tool_error(e)),
+    }
 }
 
 pub async fn work_queue(
@@ -356,9 +373,10 @@ pub async fn work_queue(
                         client.clone(),
                     )
                     .await?;
+                    let run_id = run.id.clone().unwrap();
                     info!(
                         "Run {} created for workspace {}",
-                        &run.id,
+                        &run_id,
                         &id.clone()
                     );
                     while !COMPLETED_STATUSES.contains(
@@ -367,13 +385,13 @@ pub async fn work_queue(
                             .clone()
                             .unwrap_or(Status::Unknown),
                     ) {
-                        run = status(&run.id, &core, client.clone()).await?;
+                        run = status(&run_id, &core, client.clone()).await?;
                         let status = run
                             .attributes
                             .status
                             .clone()
                             .unwrap_or(Status::Unknown);
-                        info!("Run {} status: {}", &run.id, &status);
+                        info!("Run {} status: {}", &run_id, &status);
                         if COMPLETED_STATUSES.contains(&status)
                             || !will_auto_apply && status == Status::Planned
                             || will_save_plan
@@ -389,7 +407,7 @@ pub async fn work_queue(
                         if iterations >= options.max_iterations {
                             error!(
                                     "Run {} for workspace {} has been in status {} too long.",
-                                    &run.id, &id.clone(), &status.clone()
+                                    &run_id, &id.clone(), &status.clone()
                                 );
                             if status == Status::Pending {
                                 error!(
@@ -408,7 +426,7 @@ pub async fn work_queue(
                         .await;
                     }
                     Ok(RunResult {
-                        id: run.id,
+                        id: run_id,
                         status: run
                             .attributes
                             .status

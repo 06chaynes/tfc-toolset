@@ -1,23 +1,29 @@
-use crate::{error::ToolError, settings::Core, BASE_URL};
+use crate::workspace::{Workspace, WorkspaceVariables};
+use crate::{build_request, error::ToolError, settings::Core, BASE_URL};
+use async_scoped::AsyncScope;
+use log::{error, info};
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
-use surf::{http::Method, Client, RequestBuilder};
+use surf::{http::Method, Client};
 use url::Url;
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Vars {
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct Variable {
     #[serde(rename = "type")]
     pub relationship_type: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
     pub attributes: Attributes,
 }
 
 // the vars are in the format of key=value:description:category:hcl:sensitive
-// we need to parse each one into a variable::Vars
+// we need to parse each one into a variable::Variable
 // description, category, hcl, sensitive are all optional and will be None if not provided
 // to skip a field just use a colon e.g. key=value::::true would only set key, value, and sensitive
 // accepting the default for the rest
-impl FromStr for Vars {
+impl FromStr for Variable {
     type Err = ToolError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -47,8 +53,9 @@ impl FromStr for Vars {
             } else {
                 Some(var_split[4].parse::<bool>()?)
             };
-            Ok(Vars {
+            Ok(Variable {
                 relationship_type: "vars".to_string(),
+                id: None,
                 attributes: Attributes {
                     key,
                     value: Some(value),
@@ -62,8 +69,9 @@ impl FromStr for Vars {
             let key_val_split = s.split('=').collect::<Vec<&str>>();
             let key = key_val_split[0].to_string();
             let value = key_val_split[1].to_string();
-            Ok(Vars {
+            Ok(Variable {
                 relationship_type: "vars".to_string(),
+                id: None,
                 attributes: Attributes {
                     key,
                     value: Some(value),
@@ -118,17 +126,50 @@ pub struct Attributes {
     pub sensitive: Option<bool>,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
-pub struct Variable {
-    pub id: String,
-    pub attributes: Attributes,
-}
-
-#[derive(Clone, Debug, Deserialize)]
-struct VariablesResponseOuter {
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct VariablesOuter {
     pub data: Vec<Variable>,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize)]
+struct VariableOuter {
+    pub data: Variable,
+}
+
+pub async fn create(
+    workspace_id: &str,
+    var: Variable,
+    config: &Core,
+    client: Client,
+) -> Result<Variable, ToolError> {
+    info!(
+        "Creating variable: {} in workspace: {}",
+        var.attributes.key, workspace_id
+    );
+    let url =
+        Url::parse(&format!("{}/workspaces/{}/vars/", BASE_URL, workspace_id))?;
+    let req = build_request(
+        Method::Post,
+        url,
+        config,
+        Some(json!(VariableOuter { data: var })),
+    );
+    match client.send(req).await {
+        Ok(mut res) => {
+            if res.status().is_success() {
+                let body: VariableOuter =
+                    res.body_json().await.map_err(|e| e.into_inner())?;
+                Ok(body.data)
+            } else {
+                error!("Failed to create variable :(");
+                let error =
+                    res.body_string().await.map_err(|e| e.into_inner())?;
+                Err(ToolError::General(anyhow::anyhow!(error)))
+            }
+        }
+        Err(e) => Err(ToolError::General(e.into_inner())),
+    }
+}
 pub async fn list(
     workspace_id: &str,
     config: &Core,
@@ -136,13 +177,49 @@ pub async fn list(
 ) -> Result<Vec<Variable>, ToolError> {
     let url =
         Url::parse(&format!("{}/workspaces/{}/vars/", BASE_URL, workspace_id))?;
-    let req = RequestBuilder::new(Method::Get, url)
-        .header("Authorization", format!("Bearer {}", config.token))
-        .build();
-    match client.recv_string(req).await {
-        Ok(s) => Ok(serde_json::from_str::<VariablesResponseOuter>(&s)?.data),
+    let req = build_request(Method::Get, url, config, None);
+    match client.send(req).await {
+        Ok(mut res) => {
+            let body: VariablesOuter =
+                res.body_json().await.map_err(|e| e.into_inner())?;
+            Ok(body.data)
+        }
         Err(e) => Err(ToolError::General(e.into_inner())),
     }
+}
+
+pub async fn list_batch(
+    config: &Core,
+    client: Client,
+    workspaces: Vec<Workspace>,
+) -> Result<Vec<WorkspaceVariables>, ToolError> {
+    // Get the variables for each workspace
+    let (_, workspaces_variables) = AsyncScope::scope_and_block(|s| {
+        for workspace in workspaces {
+            let c = client.clone();
+            let proc = || async move {
+                match list(&workspace.id, config, c).await {
+                    Ok(variables) => {
+                        info!(
+                            "Successfully retrieved variables for workspace {}",
+                            workspace.attributes.name.clone().unwrap()
+                        );
+                        Some(WorkspaceVariables { workspace, variables })
+                    }
+                    Err(e) => {
+                        error!(
+                            "Unable to retrieve variables for workspace {}",
+                            workspace.attributes.name.unwrap()
+                        );
+                        error!("{:#?}", e);
+                        None
+                    }
+                }
+            };
+            s.spawn(proc());
+        }
+    });
+    Ok(workspaces_variables.into_iter().flatten().collect())
 }
 
 pub async fn delete(
@@ -151,16 +228,27 @@ pub async fn delete(
     config: &Core,
     client: Client,
 ) -> Result<(), ToolError> {
+    info!(
+        "Deleting variable: {} from workspace: {}",
+        variable_id, workspace_id
+    );
     let url = Url::parse(&format!(
         "{}/workspaces/{}/vars/{}",
         BASE_URL, workspace_id, variable_id
     ))?;
-    let req = RequestBuilder::new(Method::Delete, url)
-        .header("Authorization", format!("Bearer {}", config.token))
-        .build();
-    client
-        .recv_string(req)
-        .await
-        .map_err(|e| ToolError::General(e.into_inner()))?;
-    Ok(())
+    let req = build_request(Method::Delete, url, config, None);
+    match client.send(req).await {
+        Ok(mut res) => {
+            if res.status().is_success() {
+                info!("Successfully deleted variable!");
+                Ok(())
+            } else {
+                error!("Failed to delete variable :(");
+                let error =
+                    res.body_string().await.map_err(|e| e.into_inner())?;
+                Err(ToolError::General(anyhow::anyhow!(error)))
+            }
+        }
+        Err(e) => Err(ToolError::General(e.into_inner())),
+    }
 }

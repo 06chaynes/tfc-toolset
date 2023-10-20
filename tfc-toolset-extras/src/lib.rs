@@ -1,8 +1,13 @@
-pub mod report;
+pub mod error;
+pub mod file;
+
+pub use error::ExtrasError;
+pub use file::input::{variable::VariablesFile, workspace::WorkspacesFile};
 
 use http_cache_surf::{
     CACacheManager, Cache, CacheMode, CacheOptions, HttpCache, HttpCacheOptions,
 };
+use regex::Regex;
 use surf::Client;
 use surf_governor::GovernorMiddleware;
 use surf_retry::{ExponentialBackoff, RetryMiddleware};
@@ -44,4 +49,24 @@ pub fn default_client() -> Result<Client, ToolError> {
             options: build_cache_options(),
         },
     )))
+}
+
+pub fn parse_workspace_name(
+    workspace_name: &str,
+) -> Result<String, ExtrasError> {
+    let re = Regex::new("^[a-zA-Z0-9_-]*$")?;
+    let caps = re.captures(workspace_name);
+    match caps {
+        Some(_) => Ok(workspace_name.to_string()),
+        None => Err(ExtrasError::BadWorkspaceName(workspace_name.to_string())),
+    }
+}
+
+pub fn parse_tag_name(tag_name: &str) -> Result<String, ExtrasError> {
+    let re = Regex::new("^[a-zA-Z0-9_:-]*$")?;
+    let caps = re.captures(tag_name);
+    match caps {
+        Some(_) => Ok(tag_name.to_string()),
+        None => Err(ExtrasError::BadTagName(tag_name.to_string())),
+    }
 }

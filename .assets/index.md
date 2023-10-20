@@ -8,15 +8,7 @@ A collection of tools to help in management of your Terraform cloud organization
 
 - `tfc-toolset-extras`: Extends the core library with more optional functionality.
 
-- `tfc-which-workspace`: A search tool for finding workspaces that match specified parameters. Sometimes you just need to know which workspaces have a specific value for a specific variable right? ... Right? Happens all the time I'm sure.
-
-- `tfc-clean-workspace`: Throw your workspaces in a tub and scrub! Generate massive overly verbose reports on your hundreds of workspaces with details of all the things you need to fix! Maybe even fix some of those things automagically (or maybe not!)!
-
-- `tfc-run-workspace`: A tool for creating multiple Terraform Cloud runs in parallel with provided specifications.
-
-- `tfc-variable-set`: Manages Terraform Cloud variable sets yay!
-
-- `tfc-report-tui`: Reading large JSON payloads can be a headache, this maybe slightly less so.
+- `tfct`: A tool to help manage a toolset that helps manage your deployments.
 
 ## Why?
 

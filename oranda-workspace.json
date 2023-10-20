@@ -12,24 +12,8 @@
         "path": "./tfc-toolset-extras"
       },
       {
-        "slug": "tfc-which-workspace",
-        "path": "./tfc-which-workspace"
-      },
-      {
-        "slug": "tfc-clean-workspace",
-        "path": "./tfc-clean-workspace"
-      },
-      {
-        "slug": "tfc-run-workspace",
-        "path": "./tfc-run-workspace"
-      },
-      {
-        "slug": "tfc-variable-set",
-        "path": "./tfc-variable-set"
-      },
-      {
-        "slug": "tfc-report-tui",
-        "path": "./tfc-report-tui"
+        "slug": "tfct",
+        "path": "./tfct"
       }
     ]
   },

@@ -27,4 +27,13 @@ pub enum ToolError {
     /// Error parsing boolean value
     #[error(transparent)]
     Bool(#[from] std::str::ParseBoolError),
+    /// Invalid variable query format
+    #[error("Invalid variable query format: {0}. Expected format: key:operator:value")]
+    InvalidVariableQuery(String),
+    /// Invalid tag query format
+    #[error("Invalid tag query format: {0}. Expected format: operator:name")]
+    InvalidTagQuery(String),
+    /// Invalid query operator
+    #[error("Invalid query operator: {0}. Expected one of: ==, !=, ~=, !~=")]
+    InvalidQueryOperator(String),
 }
