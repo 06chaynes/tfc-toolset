@@ -1,10 +1,9 @@
-use super::{about, WorkspaceArgs};
+use super::{about, WorkspaceArgs, parse_variable_file, check_variable_identifier};
 use crate::{
     cli::command::common::{check_workspace_identifier, parse_workspace_file},
     error::ArgError,
 };
 
-use crate::cli::variable::parse_variable_file;
 use clap::Args;
 use log::info;
 use surf::Client;
@@ -13,10 +12,10 @@ use tfc_toolset_extras::parse_workspace_name;
 
 #[derive(Args, Debug)]
 pub struct DeleteArgs {
-    #[arg(short = 'k', long, help = about::VARIABLE_KEY)]
-    pub var_key: Option<Vec<String>>,
-    #[arg(short = 'i', long, help = about::VARIABLE_ID)]
-    pub var_id: Option<Vec<String>>,
+    #[arg(short = 'k', long, help = about::VARIABLE_KEY, required = false)]
+    pub var_key: Vec<String>,
+    #[arg(short = 'v', long, help = about::VARIABLE_ID, required = false)]
+    pub var_id: Vec<String>,
     #[arg(long, help = about::VAR_FILE)]
     pub var_file: Option<String>,
     #[clap(flatten)]
@@ -29,6 +28,7 @@ pub async fn delete(
     client: Client,
 ) -> miette::Result<(), ArgError> {
     check_workspace_identifier(&args.default)?;
+    check_variable_identifier(args)?;
     if let Some(workspace_name) = &args.default.workspace_name {
         parse_workspace_name(workspace_name)?;
         let workspace =
@@ -57,12 +57,12 @@ async fn process(
     client: Client,
 ) -> miette::Result<(), ArgError> {
     for workspace in workspaces {
-        info!("Deleting variable from workspace {}.", workspace.id);
-        if let Some(vars) = args.var_id.clone() {
-            delete_vars_by_id(vars, &workspace.id, config, client.clone())
+        info!("Deleting variables from workspace {}.", workspace.id);
+        if !args.var_id.is_empty() {
+            delete_vars_by_id(args.var_id.clone(), &workspace.id, config, client.clone())
                 .await?;
-        } else if let Some(vars) = args.var_key.clone() {
-            delete_vars_by_key(vars, &workspace.id, config, client.clone())
+        } else if !args.var_key.is_empty() {
+            delete_vars_by_key(args.var_key.clone(), &workspace.id, config, client.clone())
                 .await?;
         } else if let Some(variables_file) = &args.var_file {
             let vars = parse_variable_file(variables_file).await?;
@@ -110,5 +110,6 @@ async fn delete_vars_by_key(
             }
         }
     }
+    info!("Finished deleting variables.");
     Ok(())
 }

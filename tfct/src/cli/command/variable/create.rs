@@ -3,10 +3,9 @@ use crate::{
     cli::command::common::{check_workspace_identifier, parse_workspace_file},
     error::ArgError,
     settings::Settings,
-    variable::check_variable_identifier,
+    variable::{check_variable_identifier_basic, parse_variable_file},
 };
 
-use crate::cli::variable::parse_variable_file;
 use log::{debug, info};
 use std::str::FromStr;
 use surf::Client;
@@ -24,7 +23,7 @@ pub async fn create(
     client: Client,
 ) -> miette::Result<Vec<WorkspaceVariables>, ArgError> {
     check_workspace_identifier(&args.default)?;
-    check_variable_identifier(args)?;
+    check_variable_identifier_basic(args)?;
     let mut vars: Option<Vec<variable::Variable>> = None;
     for var_string in args.var.iter() {
         let var = variable::Variable::from_str(var_string)?;

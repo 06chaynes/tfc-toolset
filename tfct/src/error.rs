@@ -25,13 +25,20 @@ pub enum ArgError {
         help("Must provide a name `--name`")
     )]
     MissingWorkspaceName,
-    /// Missing variable indentifer
+    /// Missing variable identifier
+    #[error("Missing variable identifier")]
+    #[diagnostic(
+    code(tfct::tag::missing_variable_identifier),
+    help("Must provide either `--var-key` (-k) or `--var-id` (-v) or `--var-file`")
+    )]
+    MissingVariableIdentifier,
+    /// Missing variable identifier basic version
     #[error("Missing variable identifier")]
     #[diagnostic(
         code(tfct::tag::missing_variable_identifier),
         help("Must provide either `--var` or `--var-file`")
     )]
-    MissingVariableIdentifier,
+    MissingVariableIdentifierBasic,
     /// Missing tag identifier
     #[error("Missing tag identifier")]
     #[diagnostic(

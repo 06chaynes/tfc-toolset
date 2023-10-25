@@ -42,10 +42,20 @@ pub struct ManageArgs {
     default: WorkspaceArgs,
 }
 
-pub(crate) fn check_variable_identifier(
+pub(crate) fn check_variable_identifier_basic(
     args: &ManageArgs,
 ) -> Result<(), ArgError> {
     if args.var.is_empty() && args.var_file.is_none() {
+        Err(ArgError::MissingVariableIdentifierBasic)
+    } else {
+        Ok(())
+    }
+}
+
+pub(crate) fn check_variable_identifier(
+    args: &DeleteArgs,
+) -> Result<(), ArgError> {
+    if args.var_key.is_empty() && args.var_id.is_empty() && args.var_file.is_none() {
         Err(ArgError::MissingVariableIdentifier)
     } else {
         Ok(())
