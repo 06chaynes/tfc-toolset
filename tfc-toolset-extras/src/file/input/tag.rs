@@ -14,6 +14,8 @@ pub struct Tag {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub attributes: Option<Attributes>,
     pub workspace: Option<Workspace>,
 }
@@ -33,6 +35,7 @@ impl From<Vec<WorkspaceTags>> for TagsFile {
                 for tag in tag_vec.data {
                     let entry = Tag {
                         id: tag.id,
+                        name: Some(tag.attributes.name.clone()), // We do this to make importing with a file easier
                         attributes: Some(tag.attributes),
                         workspace: Some(workspace_tags.workspace.clone()),
                     };

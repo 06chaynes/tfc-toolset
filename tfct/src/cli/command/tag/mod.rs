@@ -33,7 +33,7 @@ pub(crate) enum TagCmds {
 
 #[derive(Args, Debug)]
 pub struct ManageArgs {
-    #[arg(short, long, help = about::NAME, required = true)]
+    #[arg(short, long, help = about::NAME, required = false)]
     pub name: Vec<String>,
     #[arg(long, help = about::TAG_FILE)]
     pub tag_file: Option<String>,
@@ -56,6 +56,10 @@ pub(crate) async fn parse_tag_file(path: &str) -> Result<Vec<Tag>, ArgError> {
         for tag_entry in tag_entries {
             if let Some(tag) = tag_entry.attributes {
                 tags.push(Tag::new(tag.name));
+            } else if let Some(tag) = tag_entry.name {
+                tags.push(Tag::new(tag));
+            } else {
+                return Err(ArgError::MissingTagIdentifier);
             }
         }
     }

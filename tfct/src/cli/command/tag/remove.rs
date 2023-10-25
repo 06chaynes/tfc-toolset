@@ -1,6 +1,9 @@
 use super::ManageArgs;
 use crate::{
-    cli::command::common::{check_workspace_identifier, parse_workspace_file},
+    cli::{
+        command::common::{check_workspace_identifier, parse_workspace_file},
+        tag::{check_tag_identifier, parse_tag_file},
+    },
     error::ArgError,
 };
 
@@ -19,26 +22,35 @@ pub async fn remove(
     client: Client,
 ) -> miette::Result<(), ArgError> {
     check_workspace_identifier(&args.default)?;
+    check_tag_identifier(args)?;
+    let mut tags = Vec::new();
     for tag in &args.name {
         parse_tag_name(tag)?;
+        tags.push(tag.clone());
+    }
+    if let Some(tag_file) = &args.tag_file {
+        let tag_file = parse_tag_file(tag_file).await?;
+        for tag in tag_file {
+            tags.push(tag.attributes.name);
+        }
     }
     if let Some(workspace_name) = &args.default.workspace_name {
         parse_workspace_name(workspace_name)?;
         let workspace =
             workspace::show_by_name(workspace_name, config, client.clone())
                 .await?;
-        process(vec![workspace], args, config, client.clone()).await?;
+        process(vec![workspace], tags, config, client.clone()).await?;
     } else if let Some(workspace_id) = &args.default.workspace_id {
         let workspace =
             workspace::show(workspace_id, config, client.clone()).await?;
-        process(vec![workspace], args, config, client.clone()).await?;
+        process(vec![workspace], tags, config, client.clone()).await?;
     } else if let Some(file_path) = &args.default.workspace_file {
         let workspaces =
             parse_workspace_file(file_path, config, client.clone()).await?;
-        process(workspaces, args, config, client.clone()).await?;
+        process(workspaces, tags, config, client.clone()).await?;
     } else if args.default.auto_discover_workspaces {
         let workspaces = workspace::list(true, config, client.clone()).await?;
-        process(workspaces, args, config, client.clone()).await?;
+        process(workspaces, tags, config, client.clone()).await?;
     }
     info!("Finished removing tags.");
     Ok(())
@@ -46,13 +58,13 @@ pub async fn remove(
 
 async fn process(
     workspaces: Vec<Workspace>,
-    args: &ManageArgs,
+    tags: Vec<String>,
     config: &Core,
     client: Client,
 ) -> miette::Result<(), ArgError> {
     for workspace in workspaces {
         info!("Removing tags from workspace {}.", workspace.id);
-        tag::remove(&workspace.id, args.name.clone(), config, client.clone())
+        tag::remove(&workspace.id, tags.clone(), config, client.clone())
             .await?;
     }
     Ok(())
