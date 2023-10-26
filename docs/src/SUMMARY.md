@@ -7,6 +7,7 @@
 - [Tools](./tools/tools.md)
   - [tfct](./tools/tfct/tfct.md)
     - [Configuration](./tools/tfct/configuration/configuration.md)
+      - [Filtering](./tools/tfct/configuration/filtering.md)
     - [Commands](./tools/tfct/commands/commands.md)
       - [workspace](./tools/tfct/commands/workspace/workspace.md)
         - [create](./tools/tfct/commands/workspace/create.md)

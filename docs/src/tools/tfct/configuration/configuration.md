@@ -98,3 +98,5 @@ The valid operators to use in the cli arguments are:
 - `!~=` for `NotContains`
 - `==` for `Equals`
 - `!=` for `NotEquals`
+
+For more information on filtering see [Filtering](./filtering.md).
