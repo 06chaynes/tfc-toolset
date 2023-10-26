@@ -39,13 +39,13 @@ async fn main() -> miette::Result<()> {
         .run
         .status_check_sleep_seconds
         .unwrap_or(settings::STATUS_CHECK_SLEEP_SECONDS_DEFAULT);
+    // Override the configs with any cli arguments
+    override_core(&mut core, &cli.root)?;
+    override_config(&mut config, &cli.root);
     // Initialize the logger
     env_logger::Builder::from_env(Env::default().default_filter_or(&core.log))
         .init();
     let client = default_client(None).into_diagnostic()?;
-    // Override the configs with any cli arguments
-    override_core(&mut core, &cli.root)?;
-    override_config(&mut config, &cli.root);
     // Match on the cli subcommand
     match &cli.command {
         Commands::Workspace(workspace_cmd) => match &workspace_cmd.command {
