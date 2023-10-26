@@ -27,18 +27,6 @@ async fn main() -> miette::Result<()> {
     let mut core = Core::new().into_diagnostic().wrap_err(SETTINGS_ERROR)?;
     let mut config =
         Settings::new().into_diagnostic().wrap_err(SETTINGS_ERROR)?;
-    let _max_concurrent = config
-        .run
-        .max_concurrent
-        .unwrap_or(settings::MAX_CONCURRENT_DEFAULT.into());
-    let _max_iterations = config
-        .run
-        .max_iterations
-        .unwrap_or(settings::MAX_ITERATIONS_DEFAULT.into());
-    let _status_check_sleep_seconds = config
-        .run
-        .status_check_sleep_seconds
-        .unwrap_or(settings::STATUS_CHECK_SLEEP_SECONDS_DEFAULT);
     // Override the configs with any cli arguments
     override_core(&mut core, &cli.root)?;
     override_config(&mut config, &cli.root);
