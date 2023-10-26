@@ -1,4 +1,6 @@
-use super::{about, WorkspaceArgs, parse_variable_file, check_variable_identifier};
+use super::{
+    about, check_variable_identifier, parse_variable_file, WorkspaceArgs,
+};
 use crate::{
     cli::command::common::{check_workspace_identifier, parse_workspace_file},
     error::ArgError,
@@ -59,11 +61,21 @@ async fn process(
     for workspace in workspaces {
         info!("Deleting variables from workspace {}.", workspace.id);
         if !args.var_id.is_empty() {
-            delete_vars_by_id(args.var_id.clone(), &workspace.id, config, client.clone())
-                .await?;
+            delete_vars_by_id(
+                args.var_id.clone(),
+                &workspace.id,
+                config,
+                client.clone(),
+            )
+            .await?;
         } else if !args.var_key.is_empty() {
-            delete_vars_by_key(args.var_key.clone(), &workspace.id, config, client.clone())
-                .await?;
+            delete_vars_by_key(
+                args.var_key.clone(),
+                &workspace.id,
+                config,
+                client.clone(),
+            )
+            .await?;
         } else if let Some(variables_file) = &args.var_file {
             let vars = parse_variable_file(variables_file).await?;
             delete_vars_by_key(
