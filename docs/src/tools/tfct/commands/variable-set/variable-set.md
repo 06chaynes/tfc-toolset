@@ -1,13 +1,13 @@
-# tag
+# variable-set
 
 ## Description
 
-Manage workspace tags.
+Manage variable sets.
 
 ## Usage
 
 ```bash
-tfct tag [command] [options]
+tfct variable-set [command] [options]
 ```
 
 ## Global Options
@@ -21,9 +21,8 @@ tfct tag [command] [options]
 
 ## Subcommands
 
-| Name                    | Description                   |
-|-------------------------|-------------------------------|
-| [`add`](./add.md)       | Add tags to a workspace.      |
-| [`remove`](./remove.md) | Remove tags from a workspace. |
-| [`list`](./list.md)     | List tags for a workspace.    |
-| `help`                  | Prints help information.      |
+| Name                    | Description                             |
+|-------------------------|-----------------------------------------|
+| [`apply`](./apply.md)   | Apply a workspace to a variable set.    |
+| [`remove`](./remove.md) | Remove a workspace from a variable set. |
+| `help`                  | Prints help information.                |

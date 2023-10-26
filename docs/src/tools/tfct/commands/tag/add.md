@@ -1,5 +1,9 @@
 # add
 
+## Description
+
+Add tags to a workspace.
+
 ## Usage
 
 ```bash
@@ -16,11 +20,13 @@ tfct tag add [options]
 ## Examples
 
 ### Add a tag to a workspace
+
 ```bash
-tfct tag add --workspace-name "My Workspace" --name my-tag
+tfct tag add --workspace-name "my-workspace" --name my-tag
 ```
 
 ### Add a tag to a workspace using a file
+
 ```json
 {
   "tags": [
@@ -30,6 +36,7 @@ tfct tag add --workspace-name "My Workspace" --name my-tag
   ]
 }
 ```
+
 ```bash
 tfct tag add --workspace-id "ws-id" --tag-file tags.json
 ```

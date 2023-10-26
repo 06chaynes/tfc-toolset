@@ -4,15 +4,15 @@
 
 Manage workspaces.
 
-## [variable](./variable.md)
+## [variable](./variable/variable.md)
 
 Manage workspace variables.
 
-## [variable-set](./variable-set.md)
+## [variable-set](./variable-set/variable-set.md)
 
 Manage variable sets.
 
-## [tag](./tag.md)
+## [tag](./tag/tag.md)
 
 Manage workspace tags.
 
@@ -32,7 +32,7 @@ Prints help message for a command.
 | `-V`  | `--version`                                   | Prints version information.                                               |
 |       | `--org <ORG>`                                 | The name organization to use.                                             |
 |       | `--token <TOKEN>`                             | The token to use for authentication.                                      |
-|       | `--project <PROJECT>`                         | The ID of the project to use.                                             |
+|       | `--project-id <PROJECT_ID>`                   | The ID of the project to use.                                             |
 |       | `--log <LOG>`                                 | The log level to use.                                                     |
 |       | `--output <OUTPUT>`                           | The location where output should be written.                              |
 |       | `--start-page <START_PAGE>`                   | The page to start at when retrieving data.                                |

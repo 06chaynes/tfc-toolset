@@ -1,5 +1,9 @@
 # remove
 
+## Description
+
+Remove tags from a workspace.
+
 ## Usage
 
 ```bash
@@ -16,11 +20,13 @@ tfct tag remove [options]
 ## Examples
 
 ### Remove a tag to a workspace
+
 ```bash
-tfct tag remove --workspace-name "My Workspace" --name my-tag
+tfct tag remove --workspace-name "my-workspace" --name my-tag
 ```
 
 ### Remove a tag to a workspace using a file
+
 ```json
 {
   "tags": [
@@ -30,6 +36,7 @@ tfct tag remove --workspace-name "My Workspace" --name my-tag
   ]
 }
 ```
+
 ```bash
 tfct tag remove --workspace-id "ws-id" --tag-file tags.json
 ```
