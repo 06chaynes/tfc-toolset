@@ -55,7 +55,10 @@ pub(crate) fn check_variable_identifier_basic(
 pub(crate) fn check_variable_identifier(
     args: &DeleteArgs,
 ) -> Result<(), ArgError> {
-    if args.var_key.is_empty() && args.var_id.is_empty() && args.var_file.is_none() {
+    if args.var_key.is_empty()
+        && args.var_id.is_empty()
+        && args.var_file.is_none()
+    {
         Err(ArgError::MissingVariableIdentifier)
     } else {
         Ok(())
