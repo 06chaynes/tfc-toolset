@@ -11,7 +11,10 @@
       - [workspace](./tools/tfct/commands/workspace.md)
       - [variable](./tools/tfct/commands/variable.md)
       - [variable-set](./tools/tfct/commands/variable-set.md)
-      - [tag](./tools/tfct/commands/tag.md)
+      - [tag](./tools/tfct/commands/tag/tag.md)
+        - [add](./tools/tfct/commands/tag/add.md)
+        - [remove](./tools/tfct/commands/tag/remove.md)
+        - [list](./tools/tfct/commands/tag/list.md)
       - [run](./tools/tfct/commands/run.md)
       - [help](./tools/tfct/commands/help.md)
 
