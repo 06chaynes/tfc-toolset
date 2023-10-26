@@ -108,7 +108,7 @@ impl Core {
     pub fn new() -> Result<Self, ConfigError> {
         let s = Config::builder()
             // Set defaults
-            .set_default("log", "warn".to_string())?
+            .set_default("log", "info".to_string())?
             .set_default("token", "".to_string())?
             .set_default("org", "".to_string())?
             .set_default("output", "report.json".to_string())?
