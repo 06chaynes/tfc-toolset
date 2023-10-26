@@ -1,11 +1,18 @@
-use crate::workspace::{Workspace, WorkspaceVariables};
-use crate::{build_request, error::ToolError, settings::Core, BASE_URL};
+use crate::{
+    build_request,
+    error::ToolError,
+    settings::Core,
+    workspace::{Workspace, WorkspaceVariables},
+    BASE_URL,
+};
 use async_scoped::AsyncScope;
 use log::{error, info};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::fmt::{Display, Formatter};
-use std::str::FromStr;
+use std::{
+    fmt::{Display, Formatter},
+    str::FromStr,
+};
 use surf::{http::Method, Client};
 use url::Url;
 

@@ -7,8 +7,7 @@ use async_scoped::AsyncScope;
 use log::{error, info};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use surf::http::Method;
-use surf::Client;
+use surf::{http::Method, Client};
 use url::Url;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

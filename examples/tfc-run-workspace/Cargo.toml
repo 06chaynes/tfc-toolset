@@ -31,14 +31,14 @@ surf = { version = "2.3.2", default-features = false, features = ["encoding", "h
 thiserror = "1.0.49"
 url = "2.4.1"
 
+[dependencies.tfc-report]
+path = "../tfc-report"
+version = "0.1.0"
+
 [dependencies.tfc-toolset]
 path = "../../tfc-toolset"
 version = "0.2.0"
 
 [dependencies.tfc-toolset-extras]
 path = "../../tfc-toolset-extras"
-version = "0.1.0"
-
-[dependencies.tfc-report]
-path = "../tfc-report"
 version = "0.1.0"

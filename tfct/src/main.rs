@@ -4,8 +4,8 @@ mod error;
 mod settings;
 
 use clap::Parser;
-use cli::{override_config, override_core};
 use cli::{
+    override_config, override_core,
     run::{self, RunCmds},
     tag::{self, TagCmds},
     variable::{self, VariableCmds},

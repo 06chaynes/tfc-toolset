@@ -1,8 +1,6 @@
 use crate::ExtrasError;
 use serde::{Deserialize, Serialize};
-use std::fs::File;
-use std::io::BufReader;
-use std::path::Path;
+use std::{fs::File, io::BufReader, path::Path};
 use tfc_toolset::{
     error::ToolError,
     tag::Attributes,
