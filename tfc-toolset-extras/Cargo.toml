@@ -13,6 +13,7 @@ rust-version = "1.67.1"
 anyhow = "1.0.75"
 async-scoped = { version = "0.7.1", features = ["use-async-std"] }
 config = "0.13.3"
+dirs = "5.0.1"
 http-cache-surf = "0.11.4"
 log = "0.4.20"
 regex = "1.10.2"

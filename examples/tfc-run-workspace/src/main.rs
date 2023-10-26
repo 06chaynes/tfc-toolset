@@ -134,7 +134,7 @@ async fn main() -> miette::Result<()> {
     let status_check_sleep_seconds = config
         .status_check_sleep_seconds
         .unwrap_or(settings::STATUS_CHECK_SLEEP_SECONDS_DEFAULT);
-    let client = default_client().into_diagnostic()?;
+    let client = default_client(None).into_diagnostic()?;
     // Match on the cli subcommand
     match &cli.command {
         Commands::Plan(args) => {
