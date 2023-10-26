@@ -3,10 +3,12 @@ resolver = "2"
 members = [
     "tfc-toolset",
     "tfc-toolset-extras",
-    "tfc-clean-workspace",
-    "tfc-which-workspace",
-    "tfc-run-workspace",
-    "tfc-report-tui"
+    "tfct",
+    "examples/tfc-clean-workspace",
+    "examples/tfc-report-tui",
+    "examples/tfc-run-workspace",
+    "examples/tfc-variable-set",
+    "examples/tfc-which-workspace"
 ]
 
 # Config for 'cargo dist'

@@ -1,6 +1,7 @@
 {
   "workspace": {
     "name": "tfc-toolset",
+    "docs_path": "./.assets/index.md",
     "members": [
       {
         "slug": "tfc-toolset",
@@ -11,20 +12,8 @@
         "path": "./tfc-toolset-extras"
       },
       {
-        "slug": "tfc-which-workspace",
-        "path": "./tfc-which-workspace"
-      },
-      {
-        "slug": "tfc-clean-workspace",
-        "path": "./tfc-clean-workspace"
-      },
-      {
-        "slug": "tfc-run-workspace",
-        "path": "./tfc-run-workspace"
-      },
-      {
-        "slug": "tfc-report-tui",
-        "path": "./tfc-report-tui"
+        "slug": "tfct",
+        "path": "./tfct"
       }
     ]
   },
