@@ -4,7 +4,7 @@ use crate::settings::Settings;
 use clap::{Args, Parser, Subcommand};
 pub(super) use command::{run, tag, variable, variable_set, workspace};
 use miette::IntoDiagnostic;
-use std::str::FromStr;
+use std::{path::PathBuf, str::FromStr};
 use tfc_toolset::settings::{Core, Query, Tag, Variable};
 
 const CLI: &str =
@@ -68,7 +68,7 @@ pub struct RootArgs {
     #[arg(long, help = LOG, global = true)]
     pub log: Option<String>,
     #[arg(long, help = OUTPUT, global = true)]
-    pub output: Option<String>,
+    pub output: Option<PathBuf>,
     #[arg(long, help = START_PAGE, global = true)]
     pub start_page: Option<String>,
     #[arg(long, help = MAX_DEPTH, global = true)]

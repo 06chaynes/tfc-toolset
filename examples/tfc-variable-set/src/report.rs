@@ -54,7 +54,7 @@ pub fn new() -> VarSetReport {
 
 #[allow(dead_code)]
 pub fn load(config: &Core) -> Result<VarSetReport, ToolError> {
-    info!("Loading report from: {}", &config.output);
+    info!("Loading report from: {}", &config.output.display());
     match serde_json::from_reader(&File::open(&config.output)?) {
         Ok(report) => {
             info!("Report Loaded!");

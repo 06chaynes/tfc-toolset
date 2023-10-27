@@ -1,7 +1,7 @@
 use crate::error::ToolError;
 use config::{Config, ConfigError, Environment, File};
 use serde::{Deserialize, Serialize};
-use std::str::FromStr;
+use std::{path::PathBuf, str::FromStr};
 
 pub const DEFAULT_TERRAFORM_VERSION: &str = "1.5.7";
 
@@ -97,7 +97,7 @@ pub struct Core {
     pub token: String,
     pub org: String,
     pub project: Option<String>,
-    pub output: String,
+    pub output: PathBuf,
     pub save_output: bool,
     pub pagination: Pagination,
     pub workspaces: Workspaces,

@@ -35,7 +35,7 @@ where
     E: Serialize + Deserialize<'de>,
 {
     pub fn save(&self, config: &Core) -> Result<(), ToolError> {
-        info!("Saving report to: {}", &config.output);
+        info!("Saving report to: {}", &config.output.display());
         match serde_json::to_writer_pretty(&File::create(&config.output)?, self)
         {
             Ok(_) => {

@@ -73,7 +73,7 @@ pub fn new() -> CleanReport {
 }
 
 pub fn load(config: &Core) -> Result<CleanReport, ToolError> {
-    info!("Loading report from: {}", &config.output);
+    info!("Loading report from: {}", &config.output.display());
     match serde_json::from_reader(&File::open(&config.output)?) {
         Ok(report) => {
             info!("Report Loaded!");
