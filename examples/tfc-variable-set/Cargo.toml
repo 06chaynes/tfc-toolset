@@ -8,6 +8,7 @@ license = "MIT OR Apache-2.0"
 readme = "README.md"
 edition = "2021"
 rust-version = "1.67.1"
+publish = false
 
 [[bin]]
 name = "tfc-variable-set"
