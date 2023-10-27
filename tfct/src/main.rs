@@ -4,8 +4,8 @@ mod error;
 mod settings;
 
 use clap::Parser;
-use cli::{override_config, override_core};
 use cli::{
+    override_config, override_core,
     run::{self, RunCmds},
     tag::{self, TagCmds},
     variable::{self, VariableCmds},
@@ -27,25 +27,13 @@ async fn main() -> miette::Result<()> {
     let mut core = Core::new().into_diagnostic().wrap_err(SETTINGS_ERROR)?;
     let mut config =
         Settings::new().into_diagnostic().wrap_err(SETTINGS_ERROR)?;
-    let _max_concurrent = config
-        .run
-        .max_concurrent
-        .unwrap_or(settings::MAX_CONCURRENT_DEFAULT.into());
-    let _max_iterations = config
-        .run
-        .max_iterations
-        .unwrap_or(settings::MAX_ITERATIONS_DEFAULT.into());
-    let _status_check_sleep_seconds = config
-        .run
-        .status_check_sleep_seconds
-        .unwrap_or(settings::STATUS_CHECK_SLEEP_SECONDS_DEFAULT);
-    // Initialize the logger
-    env_logger::Builder::from_env(Env::default().default_filter_or(&core.log))
-        .init();
-    let client = default_client().into_diagnostic()?;
     // Override the configs with any cli arguments
     override_core(&mut core, &cli.root)?;
     override_config(&mut config, &cli.root);
+    // Initialize the logger
+    env_logger::Builder::from_env(Env::default().default_filter_or(&core.log))
+        .init();
+    let client = default_client(None).into_diagnostic()?;
     // Match on the cli subcommand
     match &cli.command {
         Commands::Workspace(workspace_cmd) => match &workspace_cmd.command {

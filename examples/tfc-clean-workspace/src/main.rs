@@ -48,7 +48,7 @@ async fn main() -> miette::Result<()> {
     // Initialize the logger
     env_logger::Builder::from_env(Env::default().default_filter_or(&core.log))
         .init();
-    let client = default_client().into_diagnostic()?;
+    let client = default_client(None).into_diagnostic()?;
     // Match on the cli subcommand
     match &cli.command {
         Commands::Plan => {

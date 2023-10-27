@@ -8,7 +8,7 @@ use crate::{
     Meta, BASE_URL,
 };
 use async_scoped::AsyncScope;
-use log::*;
+use log::{error, info};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use surf::{http::Method, Client};

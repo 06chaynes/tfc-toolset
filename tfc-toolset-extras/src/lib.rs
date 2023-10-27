@@ -2,7 +2,10 @@ pub mod error;
 pub mod file;
 
 pub use error::ExtrasError;
-pub use file::input::{variable::VariablesFile, workspace::WorkspacesFile};
+pub use file::{
+    tag::TagsFile, variable::VariablesFile, workspace::WorkspacesFile,
+};
+use std::path::PathBuf;
 
 use http_cache_surf::{
     CACacheManager, Cache, CacheMode, CacheOptions, HttpCache, HttpCacheOptions,
@@ -40,12 +43,16 @@ pub fn build_cache_options() -> HttpCacheOptions {
     }
 }
 
-pub fn default_client() -> Result<Client, ToolError> {
+pub fn default_client(path: Option<PathBuf>) -> Result<Client, ToolError> {
     // Build the http client with a cache, governor, and retry enabled
     Ok(Client::new().with(build_retry()).with(build_governor()?).with(Cache(
         HttpCache {
             mode: CacheMode::Default,
-            manager: CACacheManager::default(),
+            manager: CACacheManager {
+                path: path.unwrap_or_else(|| {
+                    dirs::cache_dir().unwrap().join("tfc-toolset")
+                }),
+            },
             options: build_cache_options(),
         },
     )))

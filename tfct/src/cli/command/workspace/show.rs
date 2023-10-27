@@ -1,7 +1,9 @@
-use crate::cli::command::common::{
-    check_workspace_identifier_basic, WorkspaceArgsBasic,
+use crate::{
+    cli::command::common::{
+        check_workspace_identifier_basic, WorkspaceArgsBasic,
+    },
+    settings::Settings,
 };
-use crate::settings::Settings;
 use log::info;
 use miette::IntoDiagnostic;
 use surf::Client;

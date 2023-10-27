@@ -12,8 +12,7 @@ use crate::settings::Core;
 use log::error;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use surf::http::Method;
-use surf::{Request, RequestBuilder};
+use surf::{http::Method, Request, RequestBuilder};
 use url::Url;
 
 pub const BASE_URL: &str = "https://app.terraform.io/api/v2";

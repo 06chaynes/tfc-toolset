@@ -9,9 +9,11 @@ use dashmap::DashMap;
 use log::{error, info};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::collections::BTreeMap;
-use std::fmt::{Display, Formatter};
-use std::time::Duration;
+use std::{
+    collections::BTreeMap,
+    fmt::{Display, Formatter},
+    time::Duration,
+};
 use surf::{http::Method, Client};
 use url::Url;
 

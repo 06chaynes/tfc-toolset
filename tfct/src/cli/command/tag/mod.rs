@@ -13,7 +13,7 @@ use super::common::WorkspaceArgs;
 use crate::error::ArgError;
 use clap::{Args, Subcommand};
 use tfc_toolset::tag::Tag;
-use tfc_toolset_extras::file::input::tag::TagsFile;
+use tfc_toolset_extras::TagsFile;
 
 #[derive(Args, Debug)]
 pub(crate) struct Commands {

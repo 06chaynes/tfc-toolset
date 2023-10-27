@@ -1,7 +1,6 @@
 use super::{build_options, DefaultArgs};
 
-use crate::error::ArgError;
-use crate::settings::Settings;
+use crate::{error::ArgError, settings::Settings};
 use log::{debug, info};
 use miette::IntoDiagnostic;
 use surf::Client;

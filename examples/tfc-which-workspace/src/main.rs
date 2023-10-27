@@ -17,7 +17,7 @@ async fn main() -> miette::Result<()> {
     )
     .init();
 
-    let client = default_client().into_diagnostic()?;
+    let client = default_client(None).into_diagnostic()?;
 
     // Get filtered list of workspaces
     let workspaces = workspace::list(true, &config, client.clone())

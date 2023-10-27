@@ -1,4 +1,4 @@
-use super::WorkspaceArgs;
+use super::{TagsFile, WorkspaceArgs};
 use crate::{
     cli::command::common::{check_workspace_identifier, parse_workspace_file},
     error::ArgError,
@@ -12,7 +12,6 @@ use tfc_toolset::{
     tag,
     workspace::{self, Workspace, WorkspaceTags},
 };
-use tfc_toolset_extras::file::input::tag::TagsFile;
 use tfc_toolset_extras::parse_workspace_name;
 
 pub async fn list(
