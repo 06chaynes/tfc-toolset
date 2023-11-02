@@ -209,20 +209,32 @@ async fn check_pagination(
                                 None,
                             );
                             match c.send(req).await {
-                                Ok(mut s) => {
-                                    info!(
+                                Ok(mut r) => {
+                                    if r.status().is_success() {
+                                        info!(
                                                 "Successfully retrieved variable set page {}!",
                                                 &n
                                             );
-                                    let res =
-                                        match s.body_json::<VarSets>().await {
+                                        let res = match r
+                                            .body_json::<VarSets>()
+                                            .await
+                                        {
                                             Ok(r) => r,
                                             Err(e) => {
                                                 error!("{:#?}", e);
                                                 return None;
                                             }
                                         };
-                                    Some(res.data)
+                                        Some(res.data)
+                                    } else {
+                                        let e =
+                                            r.body_string().await.unwrap_or(
+                                                "Failed to parse error"
+                                                    .to_string(),
+                                            );
+                                        error!("{:#?}", e);
+                                        None
+                                    }
                                 }
                                 Err(e) => {
                                     error!(
@@ -284,17 +296,23 @@ pub async fn list_by_org(
     let req = build_request(Method::Get, url.clone(), config, None);
     let mut var_set_list: VarSets = match client.send(req).await {
         Ok(mut res) => {
-            info!("Variable sets for org {} retrieved.", config.org);
-            match res.body_json().await {
-                Ok(t) => t,
-                Err(e) => {
-                    error!("{:#?}", e);
-                    return Err(ToolError::General(anyhow::anyhow!(e)));
+            if res.status().is_success() {
+                info!("Variable sets for org {} retrieved.", config.org);
+                match res.body_json().await {
+                    Ok(t) => t,
+                    Err(e) => {
+                        error!("{:#?}", e);
+                        return Err(ToolError::General(anyhow::anyhow!(e)));
+                    }
                 }
+            } else {
+                error!("Failed to fetch variable sets for org {}.", config.org);
+                let error =
+                    res.body_string().await.map_err(surf_to_tool_error)?;
+                return Err(ToolError::General(anyhow::anyhow!(error)));
             }
         }
         Err(e) => {
-            error!("Failed to fetch variable sets for org {}.", config.org);
             return Err(ToolError::General(anyhow::anyhow!(e)));
         }
     };
@@ -331,17 +349,26 @@ pub async fn list_by_project(
     let req = build_request(Method::Get, url.clone(), config, None);
     let mut var_set_list: VarSets = match client.send(req).await {
         Ok(mut res) => {
-            info!("Variable sets for project {} retrieved.", project_id);
-            match res.body_json().await {
-                Ok(t) => t,
-                Err(e) => {
-                    error!("{:#?}", e);
-                    return Err(ToolError::General(anyhow::anyhow!(e)));
+            if res.status().is_success() {
+                info!("Variable sets for project {} retrieved.", project_id);
+                match res.body_json().await {
+                    Ok(t) => t,
+                    Err(e) => {
+                        error!("{:#?}", e);
+                        return Err(ToolError::General(anyhow::anyhow!(e)));
+                    }
                 }
+            } else {
+                error!(
+                    "Failed to fetch variable sets for project {}.",
+                    project_id
+                );
+                let error =
+                    res.body_string().await.map_err(surf_to_tool_error)?;
+                return Err(ToolError::General(anyhow::anyhow!(error)));
             }
         }
         Err(e) => {
-            error!("Failed to fetch variable sets for project {}.", project_id);
             return Err(ToolError::General(anyhow::anyhow!(e)));
         }
     };

@@ -187,9 +187,17 @@ pub async fn list(
     let req = build_request(Method::Get, url, config, None);
     match client.send(req).await {
         Ok(mut res) => {
-            let body: VariablesOuter =
-                res.body_json().await.map_err(|e| e.into_inner())?;
-            Ok(body.data)
+            if res.status().is_success() {
+                info!("Successfully retrieved variables!");
+                let body: VariablesOuter =
+                    res.body_json().await.map_err(|e| e.into_inner())?;
+                Ok(body.data)
+            } else {
+                error!("Failed to list variables :(");
+                let error =
+                    res.body_string().await.map_err(|e| e.into_inner())?;
+                Err(ToolError::General(anyhow::anyhow!(error)))
+            }
         }
         Err(e) => Err(ToolError::General(e.into_inner())),
     }
