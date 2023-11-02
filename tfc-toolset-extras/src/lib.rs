@@ -52,7 +52,7 @@ pub fn default_client(path: Option<PathBuf>) -> Result<Client, ToolError> {
             mode: CacheMode::Default,
             manager: CACacheManager {
                 path: path.unwrap_or_else(|| {
-                    dirs::cache_dir().unwrap().join("tfc-toolset")
+                    dirs::cache_dir().unwrap_or("./".into()).join("tfc-toolset")
                 }),
             },
             options: build_cache_options(),

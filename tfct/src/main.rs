@@ -5,7 +5,8 @@ mod settings;
 
 use clap::Parser;
 use cli::{
-    override_config, override_core,
+    clean::{self, CleanCmds},
+    override_clean_config, override_config, override_core,
     run::{self, RunCmds},
     tag::{self, TagCmds},
     validate_core,
@@ -102,6 +103,12 @@ async fn main() -> miette::Result<()> {
                     .into_diagnostic()
                     .wrap_err(SETTINGS_ERROR)?;
                 run::apply(args, &config, &core, client.clone()).await?;
+            }
+        },
+        Commands::Clean(clean_cmd) => match &clean_cmd.command {
+            CleanCmds::Workspace(args) => {
+                override_clean_config(&mut config, args);
+                clean::workspace(args, &config, &core, client.clone()).await?;
             }
         },
     }

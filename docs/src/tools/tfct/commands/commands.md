@@ -1,6 +1,6 @@
 # Commands
 
-## [workspace](./workspace.md)
+## [workspace](./workspace/workspace.md)
 
 Manage workspaces.
 
@@ -16,9 +16,13 @@ Manage variable sets.
 
 Manage workspace tags.
 
-## [run](./run.md)
+## [run](./run/run.md)
 
 Manage workspace runs.
+
+## [clean](./clean/clean.md)
+
+Run cleanup operations.
 
 ## [help](./help.md)
 

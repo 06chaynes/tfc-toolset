@@ -78,3 +78,22 @@ pub enum ArgError {
     #[diagnostic(code(tfct::tfc_toolset_extras::extras_error))]
     ExtrasError(#[from] tfc_toolset_extras::error::ExtrasError),
 }
+
+/// An error type for clean operations
+#[derive(Error, Diagnostic, Debug)]
+pub enum CleanError {
+    /// Git related errors
+    #[error(transparent)]
+    #[diagnostic(
+        code(clean_workspace::git),
+        help("My bad, something went wrong with git!")
+    )]
+    Git(#[from] git2::Error),
+    /// Walkdir related errors
+    #[error(transparent)]
+    #[diagnostic(
+        code(clean_workspace::walkdir),
+        help("Oh Bother, something went walking the directory!")
+    )]
+    Walkdir(#[from] walkdir::Error),
+}

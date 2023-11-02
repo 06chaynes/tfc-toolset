@@ -30,5 +30,7 @@
         - [status](./tools/tfct/commands/run/status.md)
         - [plan](./tools/tfct/commands/run/plan.md)
         - [apply](./tools/tfct/commands/run/apply.md)
+      - [clean](./tools/tfct/commands/clean/clean.md)
+        - [workspace](./tools/tfct/commands/clean/workspace.md)
       - [help](./tools/tfct/commands/help.md)
 
