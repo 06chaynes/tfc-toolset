@@ -8,7 +8,9 @@ pub enum ArgError {
     #[error("Missing Token")]
     #[diagnostic(
         code(tfct::auth::missing_token),
-        help("Must provide a token via `--token` or in settings.toml")
+        help(
+            "Must provide a token via `--token` argument or in settings.toml"
+        )
     )]
     MissingToken,
     /// Missing VCS OAuth Token ID

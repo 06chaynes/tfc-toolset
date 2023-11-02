@@ -3,9 +3,9 @@ mod command;
 use crate::{error::ArgError, settings::Settings};
 use clap::{Args, Parser, Subcommand};
 pub(super) use command::{run, tag, variable, variable_set, workspace};
+use log::warn;
 use miette::IntoDiagnostic;
 use std::{path::PathBuf, str::FromStr};
-use log::warn;
 use tfc_toolset::settings::{Core, Query, Tag, Variable};
 
 const CLI: &str =
@@ -211,7 +211,9 @@ pub(crate) fn validate_core(core: &Core) -> miette::Result<(), ArgError> {
         return Err(ArgError::MissingToken);
     }
     if core.org.is_empty() {
-        warn!("No organization provided, this will likely result in 404 errors");
+        warn!(
+            "No organization provided, this will likely result in 404 errors"
+        );
     }
     Ok(())
 }
