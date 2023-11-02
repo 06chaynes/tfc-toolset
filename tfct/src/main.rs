@@ -8,6 +8,7 @@ use cli::{
     override_config, override_core,
     run::{self, RunCmds},
     tag::{self, TagCmds},
+    validate_core,
     variable::{self, VariableCmds},
     variable_set::{self, VariableSetCmds},
     workspace::{self, WorkspaceCmds},
@@ -33,6 +34,7 @@ async fn main() -> miette::Result<()> {
     // Initialize the logger
     env_logger::Builder::from_env(Env::default().default_filter_or(&core.log))
         .init();
+    validate_core(&core)?;
     let client = default_client(None).into_diagnostic()?;
     // Match on the cli subcommand
     match &cli.command {

@@ -1,10 +1,11 @@
 mod command;
 
-use crate::settings::Settings;
+use crate::{error::ArgError, settings::Settings};
 use clap::{Args, Parser, Subcommand};
 pub(super) use command::{run, tag, variable, variable_set, workspace};
 use miette::IntoDiagnostic;
 use std::{path::PathBuf, str::FromStr};
+use log::warn;
 use tfc_toolset::settings::{Core, Query, Tag, Variable};
 
 const CLI: &str =
@@ -203,4 +204,14 @@ pub(crate) fn override_core(
 
 pub(crate) fn override_config(config: &mut Settings, args: &RootArgs) {
     config.pretty_output = args.pretty_output;
+}
+
+pub(crate) fn validate_core(core: &Core) -> miette::Result<(), ArgError> {
+    if core.token.is_empty() {
+        return Err(ArgError::MissingToken);
+    }
+    if core.org.is_empty() {
+        warn!("No organization provided, this will likely result in 404 errors");
+    }
+    Ok(())
 }

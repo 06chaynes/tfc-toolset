@@ -4,6 +4,13 @@ use thiserror::Error;
 /// An error type for argument parsing
 #[derive(Error, Diagnostic, Debug)]
 pub enum ArgError {
+    /// Missing Auth Token
+    #[error("Missing Token")]
+    #[diagnostic(
+        code(tfct::auth::missing_token),
+        help("Must provide a token via `--token` or in settings.toml")
+    )]
+    MissingToken,
     /// Missing VCS OAuth Token ID
     #[error("VCS OAuth Token ID is required when VCS Identifier is provided")]
     #[diagnostic(
