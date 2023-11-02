@@ -40,6 +40,8 @@ pub fn build_cache_options() -> HttpCacheOptions {
             ignore_cargo_cult: false,
         }),
         cache_key: None,
+        cache_mode_fn: None,
+        cache_bust: None,
     }
 }
 

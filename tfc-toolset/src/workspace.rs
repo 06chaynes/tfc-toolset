@@ -158,7 +158,10 @@ pub struct Attributes {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub auto_apply: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(with = "time::serde::rfc3339::option")]
+    // This seems to make the field required in the JSON
+    // Would be nice to have a way to make it optional
+    // commented it out for now
+    //#[serde(with = "time::serde::rfc3339::option")]
     pub auto_destroy_at: Option<OffsetDateTime>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,

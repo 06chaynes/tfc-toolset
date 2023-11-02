@@ -5,11 +5,11 @@ members = [
     "examples/tfc-report-tui",
     "examples/tfc-run-workspace",
     "examples/tfc-variable-set",
-    "examples/tfc-which-workspace"
-,
+    "examples/tfc-which-workspace",
     "tfc-toolset",
     "tfc-toolset-extras",
-    "tfct"]
+    "tfct"
+]
 
 # Config for 'cargo dist'
 [workspace.metadata.dist]
