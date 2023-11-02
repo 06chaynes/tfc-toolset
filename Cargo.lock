@@ -3140,10 +3140,15 @@ name = "tfct"
 version = "0.1.0-alpha5"
 dependencies = [
  "anyhow",
+ "async-scoped",
  "async-std",
  "clap",
  "config 0.13.3",
+ "dirs",
  "env_logger",
+ "git2",
+ "git2_credentials",
+ "hcl-rs",
  "log",
  "miette",
  "serde",
@@ -3154,6 +3159,7 @@ dependencies = [
  "thiserror",
  "time 0.3.30",
  "url",
+ "walkdir",
 ]
 
 [[package]]

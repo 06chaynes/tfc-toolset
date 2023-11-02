@@ -14,16 +14,25 @@ categories = [
 edition = "2021"
 rust-version = "1.67.1"
 
+[package.metadata.wix]
+upgrade-guid = "5ED7AE6B-E7ED-40DC-A33B-F816903029B2"
+path-guid = "B8F8DC64-E27C-4E8A-813F-1DF1C5B27F48"
+
 [[bin]]
 name = "tfct"
 path = "src/main.rs"
 
 [dependencies]
 anyhow = "1.0.75"
+async-scoped = { version = "0.7.1", features = ["use-async-std"] }
 async-std = { version = "1.12.0", features = ["attributes"] }
 clap = { version = "4.4.7", features = ["derive", "wrap_help"] }
 config = "0.13.3"
+dirs = "5.0.1"
 env_logger = "0.10.0"
+git2 = { version = "0.18.1", features = ["vendored-libgit2", "vendored-openssl"] }
+git2_credentials = "0.13.0"
+hcl-rs = "0.16.6"
 log = "0.4.20"
 miette = { version = "5.10.0", features = ["fancy"] }
 serde = { version = "1.0.190", features = ["derive"] }
@@ -32,6 +41,7 @@ surf = { version = "2.3.2", default-features = false, features = ["encoding", "h
 thiserror = "1.0.50"
 time = { version = "0.3.30", features = ["serde", "parsing", "formatting", "serde-well-known"] }
 url = "2.4.1"
+walkdir = "2.4.0"
 
 [dependencies.tfc-toolset]
 path = "../tfc-toolset"
