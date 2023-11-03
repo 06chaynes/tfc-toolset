@@ -1,19 +1,25 @@
 # tfc-toolset
 
+[![CI](https://img.shields.io/github/actions/workflow/status/06chaynes/tfc-toolset/rust.yml?label=CI&style=for-the-badge)](https://github.com/06chaynes/tfc-toolset/actions/workflows/rust.yml)
+[![Crates.io](https://img.shields.io/crates/v/tfc-toolset?style=for-the-badge)](https://crates.io/crates/tfc-toolset)
+![Crates.io](https://img.shields.io/crates/l/tfc-toolset?style=for-the-badge)
+
 A collection of tools to help in management of your Terraform cloud organization.
+
+## Minimum Supported Rust Version (MSRV)
+
+1.67.1
 
 ## Install
 
-```toml
-[dependencies]
-tfc-toolset = { git = "https://github.com/06chaynes/tfc-toolset" }
-```
-
-<!-- With [cargo add](https://github.com/killercup/cargo-edit#Installation) installed :
-
 ```sh
 cargo add tfc-toolset
-``` -->
+```
+
+## Documentation
+
+- [API Docs](https://docs.rs/tfc-toolset)
+- [Book](https://tfc-toolset.rs/tfc-toolset/book)
 
 ## License
 

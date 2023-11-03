@@ -5,9 +5,11 @@ mod settings;
 
 use clap::Parser;
 use cli::{
-    override_config, override_core,
+    clean::{self, CleanCmds},
+    override_clean_config, override_config, override_core,
     run::{self, RunCmds},
     tag::{self, TagCmds},
+    validate_core,
     variable::{self, VariableCmds},
     variable_set::{self, VariableSetCmds},
     workspace::{self, WorkspaceCmds},
@@ -33,6 +35,7 @@ async fn main() -> miette::Result<()> {
     // Initialize the logger
     env_logger::Builder::from_env(Env::default().default_filter_or(&core.log))
         .init();
+    validate_core(&core)?;
     let client = default_client(None).into_diagnostic()?;
     // Match on the cli subcommand
     match &cli.command {
@@ -100,6 +103,12 @@ async fn main() -> miette::Result<()> {
                     .into_diagnostic()
                     .wrap_err(SETTINGS_ERROR)?;
                 run::apply(args, &config, &core, client.clone()).await?;
+            }
+        },
+        Commands::Clean(clean_cmd) => match &clean_cmd.command {
+            CleanCmds::Workspace(args) => {
+                override_clean_config(&mut config, args);
+                clean::workspace(args, &config, &core, client.clone()).await?;
             }
         },
     }

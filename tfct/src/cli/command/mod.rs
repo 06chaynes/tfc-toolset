@@ -1,3 +1,4 @@
+pub(crate) mod clean;
 pub(crate) mod common;
 pub(crate) mod run;
 pub(crate) mod tag;

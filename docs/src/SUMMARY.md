@@ -6,6 +6,7 @@
   - [tfc-toolset-extras](./libraries/tfc-toolset-extras.md)
 - [Tools](./tools/tools.md)
   - [tfct](./tools/tfct/tfct.md)
+    - [Installation](./tools/tfct/installation.md)
     - [Configuration](./tools/tfct/configuration/configuration.md)
       - [Filtering](./tools/tfct/configuration/filtering.md)
     - [Commands](./tools/tfct/commands/commands.md)
@@ -30,5 +31,7 @@
         - [status](./tools/tfct/commands/run/status.md)
         - [plan](./tools/tfct/commands/run/plan.md)
         - [apply](./tools/tfct/commands/run/apply.md)
+      - [clean](./tools/tfct/commands/clean/clean.md)
+        - [workspace](./tools/tfct/commands/clean/workspace.md)
       - [help](./tools/tfct/commands/help.md)
 

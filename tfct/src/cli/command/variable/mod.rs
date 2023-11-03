@@ -75,6 +75,13 @@ pub(crate) async fn parse_variable_file(
             if let Some(var) = variable_entry.var {
                 let variable = Variable::from_str(&var)?;
                 variables.push(variable);
+            } else if let Some(attributes) = variable_entry.attributes {
+                let variable = Variable {
+                    relationship_type: "vars".to_string(),
+                    id: variable_entry.id,
+                    attributes,
+                };
+                variables.push(variable);
             }
         }
     }

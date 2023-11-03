@@ -4,6 +4,15 @@ use thiserror::Error;
 /// An error type for argument parsing
 #[derive(Error, Diagnostic, Debug)]
 pub enum ArgError {
+    /// Missing Auth Token
+    #[error("Missing Token")]
+    #[diagnostic(
+        code(tfct::auth::missing_token),
+        help(
+            "Must provide a token via `--token` argument or in settings.toml"
+        )
+    )]
+    MissingToken,
     /// Missing VCS OAuth Token ID
     #[error("VCS OAuth Token ID is required when VCS Identifier is provided")]
     #[diagnostic(
@@ -68,4 +77,23 @@ pub enum ArgError {
     #[error(transparent)]
     #[diagnostic(code(tfct::tfc_toolset_extras::extras_error))]
     ExtrasError(#[from] tfc_toolset_extras::error::ExtrasError),
+}
+
+/// An error type for clean operations
+#[derive(Error, Diagnostic, Debug)]
+pub enum CleanError {
+    /// Git related errors
+    #[error(transparent)]
+    #[diagnostic(
+        code(clean_workspace::git),
+        help("My bad, something went wrong with git!")
+    )]
+    Git(#[from] git2::Error),
+    /// Walkdir related errors
+    #[error(transparent)]
+    #[diagnostic(
+        code(clean_workspace::walkdir),
+        help("Oh Bother, something went walking the directory!")
+    )]
+    Walkdir(#[from] walkdir::Error),
 }

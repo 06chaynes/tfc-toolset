@@ -158,7 +158,10 @@ pub struct Attributes {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub auto_apply: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(with = "time::serde::rfc3339::option")]
+    // This seems to make the field required in the JSON
+    // Would be nice to have a way to make it optional
+    // commented it out for now
+    //#[serde(with = "time::serde::rfc3339::option")]
     pub auto_destroy_at: Option<OffsetDateTime>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
@@ -545,19 +548,24 @@ pub async fn list(
     }
     let req = build_request(Method::Get, url.clone(), config, None);
     let mut workspace_list: Workspaces = match client.send(req).await {
-        Ok(mut s) => {
-            info!("Successfully retrieved workspaces!");
-            match s.body_json().await {
-                Ok(r) => r,
-                Err(e) => {
-                    error!("{:#?}", e);
-                    return Err(ToolError::General(anyhow::anyhow!(e)));
+        Ok(mut r) => {
+            if r.status().is_success() {
+                info!("Successfully retrieved workspaces!");
+                match r.body_json().await {
+                    Ok(r) => r,
+                    Err(e) => {
+                        error!("{:#?}", e);
+                        return Err(ToolError::General(anyhow::anyhow!(e)));
+                    }
                 }
+            } else {
+                error!("Failed to retrieve workspaces :(");
+                let error =
+                    r.body_string().await.map_err(surf_to_tool_error)?;
+                return Err(ToolError::General(anyhow::anyhow!(error)));
             }
         }
         Err(e) => {
-            error!("Failed to retrieve workspaces :(");
-            error!("{:#?}", e);
             return Err(ToolError::General(anyhow::anyhow!(e)));
         }
     };
@@ -601,22 +609,34 @@ pub async fn list(
                                         None,
                                     );
                                     match c.send(req).await {
-                                        Ok(mut s) => {
-                                            info!(
+                                        Ok(mut r) => {
+                                            if r.status().is_success() {
+                                                info!(
                                                 "Successfully retrieved workspaces page {}!",
                                                 &n
                                             );
-                                            let res = match s
-                                                .body_json::<Workspaces>()
-                                                .await
-                                            {
-                                                Ok(r) => r,
-                                                Err(e) => {
-                                                    error!("{:#?}", e);
-                                                    return None;
-                                                }
-                                            };
-                                            Some(res.data)
+                                                let res = match r
+                                                    .body_json::<Workspaces>()
+                                                    .await
+                                                {
+                                                    Ok(r) => r,
+                                                    Err(e) => {
+                                                        error!("{:#?}", e);
+                                                        return None;
+                                                    }
+                                                };
+                                                Some(res.data)
+                                            } else {
+                                                let e = r
+                                                    .body_string()
+                                                    .await
+                                                    .unwrap_or(
+                                                        "Failed to parse error"
+                                                            .to_string(),
+                                                    );
+                                                error!("{:#?}", e);
+                                                None
+                                            }
                                         }
                                         Err(e) => {
                                             error!(

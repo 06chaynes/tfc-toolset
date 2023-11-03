@@ -73,17 +73,26 @@ pub async fn list(
     let req = build_request(Method::Get, url.clone(), config, None);
     let mut tag_list: Tags = match client.send(req).await {
         Ok(mut res) => {
-            info!("Tags for workspace {} retrieved.", workspace_id);
-            match res.body_json().await {
-                Ok(t) => t,
-                Err(e) => {
-                    error!("{:#?}", e);
-                    return Err(ToolError::General(anyhow::anyhow!(e)));
+            if res.status().is_success() {
+                info!("Tags for workspace {} retrieved.", workspace_id);
+                match res.body_json().await {
+                    Ok(t) => t,
+                    Err(e) => {
+                        error!("{:#?}", e);
+                        return Err(ToolError::General(anyhow::anyhow!(e)));
+                    }
                 }
+            } else {
+                error!(
+                    "Failed to retrieve tags for workspace {}.",
+                    workspace_id
+                );
+                let error =
+                    res.body_string().await.map_err(|e| e.into_inner())?;
+                return Err(ToolError::General(anyhow::anyhow!(error)));
             }
         }
         Err(e) => {
-            error!("Failed to fetch tags for workspace {}.", workspace_id);
             return Err(ToolError::General(e.into_inner()));
         }
     };
@@ -124,20 +133,34 @@ pub async fn list(
                                     None,
                                 );
                                 match c.send(req).await {
-                                    Ok(mut s) => {
-                                        info!(
+                                    Ok(mut r) => {
+                                        if r.status().is_success() {
+                                            info!(
                                                 "Successfully retrieved tags page {}!",
                                                 &n
                                             );
-                                        let res =
-                                            match s.body_json::<Tags>().await {
+                                            let res = match r
+                                                .body_json::<Tags>()
+                                                .await
+                                            {
                                                 Ok(r) => r,
                                                 Err(e) => {
                                                     error!("{:#?}", e);
                                                     return None;
                                                 }
                                             };
-                                        Some(res.data)
+                                            Some(res.data)
+                                        } else {
+                                            let e = r
+                                                .body_string()
+                                                .await
+                                                .unwrap_or(
+                                                    "Failed to parse error"
+                                                        .to_string(),
+                                                );
+                                            error!("{:#?}", e);
+                                            None
+                                        }
                                     }
                                     Err(e) => {
                                         error!(
@@ -188,14 +211,18 @@ pub async fn add(
     let req =
         build_request(Method::Post, url, config, Some(json!(Tags::new(tags))));
     match client.send(req).await {
-        Ok(_) => {
-            info!("Workspace {} tagged.", workspace_id);
-            Ok(())
+        Ok(mut r) => {
+            if r.status().is_success() {
+                info!("Workspace {} tagged.", workspace_id);
+                Ok(())
+            } else {
+                error!("Failed to tag workspace {}.", workspace_id);
+                let error =
+                    r.body_string().await.map_err(|e| e.into_inner())?;
+                Err(ToolError::General(anyhow::anyhow!(error)))
+            }
         }
-        Err(e) => {
-            error!("Failed to tag workspace {}.", workspace_id);
-            Err(ToolError::General(e.into_inner()))
-        }
+        Err(e) => Err(ToolError::General(e.into_inner())),
     }
 }
 
@@ -229,14 +256,21 @@ pub async fn remove(
         Some(json!(Tags::new(tags))),
     );
     match client.send(req).await {
-        Ok(_) => {
-            info!("Tags removed from workspace {}.", workspace_id);
-            Ok(())
+        Ok(mut r) => {
+            if r.status().is_success() {
+                info!("Tags removed from workspace {}.", workspace_id);
+                Ok(())
+            } else {
+                error!(
+                    "Failed to remove tags from workspace {}.",
+                    workspace_id
+                );
+                let error =
+                    r.body_string().await.map_err(|e| e.into_inner())?;
+                Err(ToolError::General(anyhow::anyhow!(error)))
+            }
         }
-        Err(e) => {
-            error!("Failed to remove tags from workspace {}.", workspace_id);
-            Err(ToolError::General(e.into_inner()))
-        }
+        Err(e) => Err(ToolError::General(e.into_inner())),
     }
 }
 

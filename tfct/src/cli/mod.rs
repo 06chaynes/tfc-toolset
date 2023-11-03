@@ -1,10 +1,14 @@
 mod command;
 
-use crate::settings::Settings;
+use crate::{
+    cli::command::clean::CleanWorkspaceArgs, error::ArgError,
+    settings::Settings,
+};
 use clap::{Args, Parser, Subcommand};
-pub(super) use command::{run, tag, variable, variable_set, workspace};
+pub(super) use command::{clean, run, tag, variable, variable_set, workspace};
+use log::warn;
 use miette::IntoDiagnostic;
-use std::str::FromStr;
+use std::{path::PathBuf, str::FromStr};
 use tfc_toolset::settings::{Core, Query, Tag, Variable};
 
 const CLI: &str =
@@ -15,6 +19,7 @@ const VARIABLE: &str = "Manage workspace variables";
 const VARIABLE_SET: &str = "Manage variable sets";
 const TAG: &str = "Manage workspace tags";
 const RUN: &str = "Manage runs";
+const CLEAN: &str = "Run cleanup operations";
 const ORG: &str = "The name of the organization";
 const TOKEN: &str = "The token to use for authentication";
 const PROJECT: &str = "The id of the project";
@@ -55,6 +60,8 @@ pub(super) enum Commands {
     VariableSet(Box<variable_set::Commands>),
     #[clap(about = RUN)]
     Run(Box<run::Commands>),
+    #[clap(about = CLEAN)]
+    Clean(Box<clean::Commands>),
 }
 
 #[derive(Args, Debug)]
@@ -68,7 +75,7 @@ pub struct RootArgs {
     #[arg(long, help = LOG, global = true)]
     pub log: Option<String>,
     #[arg(long, help = OUTPUT, global = true)]
-    pub output: Option<String>,
+    pub output: Option<PathBuf>,
     #[arg(long, help = START_PAGE, global = true)]
     pub start_page: Option<String>,
     #[arg(long, help = MAX_DEPTH, global = true)]
@@ -203,4 +210,34 @@ pub(crate) fn override_core(
 
 pub(crate) fn override_config(config: &mut Settings, args: &RootArgs) {
     config.pretty_output = args.pretty_output;
+}
+
+pub(crate) fn override_clean_config(
+    config: &mut Settings,
+    args: &CleanWorkspaceArgs,
+) {
+    if let Some(dry_run) = args.dry_run {
+        config.cleanup.dry_run = dry_run;
+    }
+    if let Some(git_dir) = args.git_dir.clone() {
+        config.cleanup.repositories.git_dir = git_dir;
+    }
+    if let Some(unlisted_variables) = args.unlisted_variables {
+        config.cleanup.unlisted_variables = unlisted_variables;
+    }
+    if let Some(missing_repositories) = args.missing_repositories {
+        config.cleanup.missing_repositories = missing_repositories;
+    }
+}
+
+pub(crate) fn validate_core(core: &Core) -> miette::Result<(), ArgError> {
+    if core.token.is_empty() {
+        return Err(ArgError::MissingToken);
+    }
+    if core.org.is_empty() {
+        warn!(
+            "No organization provided, this will likely result in 404 errors"
+        );
+    }
+    Ok(())
 }

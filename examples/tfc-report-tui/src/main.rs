@@ -227,7 +227,7 @@ fn run_app<B: Backend>(
     }
 }
 
-fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
+fn ui(f: &mut Frame, app: &mut App) {
     let menu_titles = ["Home", "Info", "Workspaces", "Quit"];
     let size = f.size();
     let chunks = Layout::default()
