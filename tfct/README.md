@@ -13,6 +13,16 @@ A tool to help manage a toolset that helps manage your deployments
 
 ## Install
 
+You can find the latest binaries for Linux, macOS, and Windows on the [releases page](https://github.com/06chaynes/tfc-toolset/releases).
+
+### Via Homebrew
+
+```sh
+brew install 06chaynes/homebrew-tfct/tfct
+```
+
+### Via Cargo
+
 ```sh
 cargo install tfct
 ```
