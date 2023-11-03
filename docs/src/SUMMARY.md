@@ -6,6 +6,7 @@
   - [tfc-toolset-extras](./libraries/tfc-toolset-extras.md)
 - [Tools](./tools/tools.md)
   - [tfct](./tools/tfct/tfct.md)
+    - [Installation](./tools/tfct/installation.md)
     - [Configuration](./tools/tfct/configuration/configuration.md)
       - [Filtering](./tools/tfct/configuration/filtering.md)
     - [Commands](./tools/tfct/commands/commands.md)
