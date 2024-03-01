@@ -5,7 +5,7 @@ use crate::{
     settings::{Core, Operators, Query, Tag},
     tag, variable, variable_set, Meta, BASE_URL,
 };
-use async_scoped::AsyncScope;
+use async_scoped::AsyncStdScope;
 use log::{error, info};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -586,7 +586,7 @@ pub async fn list(
                     };
 
                     // Get the next page and merge the result
-                    let (_, workspace_pages) = AsyncScope::scope_and_block(
+                    let (_, workspace_pages) = AsyncStdScope::scope_and_block(
                         |s| {
                             for n in next_page..=num_pages {
                                 let c = client.clone();

@@ -169,7 +169,7 @@ async fn main() -> miette::Result<()> {
             }
 
             let queue_results = run::work_queue(
-                &mut queue,
+                queue,
                 run::QueueOptions {
                     max_concurrent,
                     max_iterations,
@@ -211,7 +211,7 @@ async fn main() -> miette::Result<()> {
             }
 
             let queue_results = run::work_queue(
-                &mut queue,
+                queue,
                 run::QueueOptions {
                     max_concurrent,
                     max_iterations,

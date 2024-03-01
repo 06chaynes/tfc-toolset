@@ -7,7 +7,7 @@ use crate::{
     workspace::Workspace,
     Meta, BASE_URL,
 };
-use async_scoped::AsyncScope;
+use async_scoped::AsyncStdScope;
 use log::{error, info};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -189,7 +189,7 @@ async fn check_pagination(
                 };
 
                 // Get the next page and merge the result
-                let (_, var_set_pages) = AsyncScope::scope_and_block(|s| {
+                let (_, var_set_pages) = AsyncStdScope::scope_and_block(|s| {
                     for n in next_page..=num_pages {
                         let c = client.clone();
                         let u = url.clone();

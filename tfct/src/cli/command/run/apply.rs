@@ -58,7 +58,7 @@ pub async fn apply(
             let mut queue = BTreeMap::new();
             queue.insert(workspace.id.clone(), workspace.clone());
             let queue_results = work_queue(
-                &mut queue,
+                queue,
                 options,
                 attributes,
                 client.clone(),
@@ -84,7 +84,7 @@ pub async fn apply(
             let mut queue = BTreeMap::new();
             queue.insert(workspace_id.clone(), workspace.clone());
             let queue_results = work_queue(
-                &mut queue,
+                queue,
                 options,
                 attributes,
                 client.clone(),
@@ -110,7 +110,7 @@ pub async fn apply(
             queue.insert(ws.id.clone(), ws.clone());
         }
         let queue_results =
-            work_queue(&mut queue, options, attributes, client.clone(), core)
+            work_queue(queue, options, attributes, client.clone(), core)
                 .await?;
         info!("{:#?}", &queue_results);
     } else if args.default.workspace.auto_discover_workspaces {
@@ -120,7 +120,7 @@ pub async fn apply(
             queue.insert(ws.id.clone(), ws.clone());
         }
         let queue_results =
-            work_queue(&mut queue, options, attributes, client.clone(), core)
+            work_queue(queue, options, attributes, client.clone(), core)
                 .await?;
         info!("{:#?}", &queue_results);
     }

@@ -5,7 +5,7 @@ use crate::{
     workspace::{Workspace, WorkspaceVariables},
     BASE_URL,
 };
-use async_scoped::AsyncScope;
+use async_scoped::AsyncStdScope;
 use log::{error, info};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -209,7 +209,7 @@ pub async fn list_batch(
     workspaces: Vec<Workspace>,
 ) -> Result<Vec<WorkspaceVariables>, ToolError> {
     // Get the variables for each workspace
-    let (_, workspaces_variables) = AsyncScope::scope_and_block(|s| {
+    let (_, workspaces_variables) = AsyncStdScope::scope_and_block(|s| {
         for workspace in workspaces {
             let c = client.clone();
             let proc = || async move {
