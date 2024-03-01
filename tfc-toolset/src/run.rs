@@ -442,7 +442,7 @@ async fn queue_worker(
             Ok(r) => r,
             Err(e) => {
                 let error = RunResult {
-                    id: id.clone(),
+                    id: "unknown".to_string(),
                     status: e.to_string(),
                     workspace_id: id,
                 };
