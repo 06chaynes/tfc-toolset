@@ -490,7 +490,6 @@ pub async fn work_queue(
                 errors.append(&mut error);
             }
             Err(e) => {
-                error!("Error in queue worker: {}", e);
                 let error = RunResult {
                     id: "unknown".to_string(),
                     status: e.to_string(),

@@ -12,7 +12,7 @@ categories = [
     "command-line-utilities"
 ]
 edition = "2021"
-rust-version = "1.67.1"
+rust-version = "1.71.1"
 
 [package.metadata.wix]
 upgrade-guid = "5ED7AE6B-E7ED-40DC-A33B-F816903029B2"

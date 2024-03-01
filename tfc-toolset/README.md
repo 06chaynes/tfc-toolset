@@ -8,7 +8,7 @@ A collection of tools to help in management of your Terraform cloud organization
 
 ## Minimum Supported Rust Version (MSRV)
 
-1.67.1
+1.71.1
 
 ## Install
 

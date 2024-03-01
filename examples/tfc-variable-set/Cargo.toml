@@ -7,7 +7,7 @@ repository = "https://github.com/06chaynes/tfc-toolset.git"
 license = "MIT OR Apache-2.0"
 readme = "README.md"
 edition = "2021"
-rust-version = "1.67.1"
+rust-version = "1.71.1"
 publish = false
 
 [[bin]]
