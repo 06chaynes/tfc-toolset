@@ -478,8 +478,6 @@ pub async fn work_queue(
         split_workload[i % options.max_concurrent].push(ws.clone());
     }
 
-    dbg!(&split_workload);
-
     // Spawn a thread for each workload
     let mut handles = Vec::with_capacity(options.max_concurrent);
     for workload in split_workload {
