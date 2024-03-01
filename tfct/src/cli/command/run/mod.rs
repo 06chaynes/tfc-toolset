@@ -21,14 +21,14 @@ pub(crate) struct Commands {
 pub(crate) enum RunCmds {
     #[clap(about = about::STATUS)]
     Status(StatusArgs),
+    #[clap(about = about::SPEC)]
+    Spec(DefaultArgs),
     #[clap(about = about::PLAN)]
-    Plan(DefaultArgs),
-    #[clap(about = about::APPLY)]
-    Apply(ApplyArgs),
+    Plan(PlanArgs),
 }
 
 #[derive(clap::Args, Debug)]
-pub struct ApplyArgs {
+pub struct PlanArgs {
     #[clap(flatten)]
     pub default: DefaultArgs,
     #[arg(long, help = about::AUTO_APPLY, default_value = "false")]
@@ -101,7 +101,7 @@ fn override_queue_options(options: &mut QueueOptions, default: &DefaultArgs) {
     }
 }
 
-fn set_apply_args(args: &mut Attributes, apply: &ApplyArgs) {
+fn set_apply_args(args: &mut Attributes, apply: &PlanArgs) {
     if let Some(auto_apply) = apply.auto_apply {
         args.auto_apply = Some(auto_apply);
     }
