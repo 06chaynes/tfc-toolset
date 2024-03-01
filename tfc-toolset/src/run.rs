@@ -484,9 +484,21 @@ pub async fn work_queue(
 
     // Wait for all threads to finish
     for handle in handles {
-        let (mut result, mut error) = handle.await?;
-        results.append(&mut result);
-        errors.append(&mut error);
+        match handle.await {
+            Ok((mut result, mut error)) => {
+                results.append(&mut result);
+                errors.append(&mut error);
+            }
+            Err(e) => {
+                error!("Error in queue worker: {}", e);
+                let error = RunResult {
+                    id: "unknown".to_string(),
+                    status: e.to_string(),
+                    workspace_id: "unknown".to_string(),
+                };
+                errors.push(error);
+            }
+        }
     }
 
     Ok(QueueResult { results, errors })
