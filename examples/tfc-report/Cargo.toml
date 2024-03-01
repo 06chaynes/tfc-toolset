@@ -7,7 +7,7 @@ repository = "https://github.com/06chaynes/tfc-toolset.git"
 license = "MIT OR Apache-2.0"
 readme = "README.md"
 edition = "2021"
-rust-version = "1.67.1"
+rust-version = "1.71.1"
 publish = false
 
 [lib]
@@ -21,6 +21,6 @@ serde_json = "1.0.108"
 
 [dependencies.tfc-toolset]
 path = "../../tfc-toolset"
-version = "0.3.0"
+version = "0.4.0"
 
 

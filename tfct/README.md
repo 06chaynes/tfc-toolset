@@ -9,7 +9,7 @@ A tool to help manage a toolset that helps manage your deployments
 
 ## Minimum Supported Rust Version (MSRV)
 
-1.67.1
+1.71.1
 
 ## Install
 

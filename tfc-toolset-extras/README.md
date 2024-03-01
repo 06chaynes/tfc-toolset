@@ -8,7 +8,7 @@ Junk you may want in your trunk
 
 ## Minimum Supported Rust Version (MSRV)
 
-1.67.1
+1.71.1
 
 ## Install
 

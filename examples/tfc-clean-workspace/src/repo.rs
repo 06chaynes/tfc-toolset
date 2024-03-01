@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use crate::{error::CleanError, parse, settings::Settings};
-use async_scoped::AsyncScope;
+use async_scoped::AsyncStdScope;
 use git2::{build::RepoBuilder, ErrorCode, Repository};
 use git2_credentials::CredentialHandler;
 use log::*;
@@ -128,7 +128,7 @@ pub fn process(
         }
     }
     // This doesn't actually need to be async but it's easier to just have it match
-    let (_, process_result_vec) = AsyncScope::scope_and_block(|s| {
+    let (_, process_result_vec) = AsyncStdScope::scope_and_block(|s| {
         for vcs in &repos {
             let proc = || async move {
                 let mut result = ProcessResult {

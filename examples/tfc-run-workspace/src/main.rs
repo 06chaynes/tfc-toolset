@@ -6,7 +6,6 @@ use env_logger::Env;
 use log::*;
 use miette::{IntoDiagnostic, WrapErr};
 use settings::Settings;
-use std::collections::BTreeMap;
 use tfc_toolset::{error::SETTINGS_ERROR, run, settings::Core, workspace};
 use tfc_toolset_extras::default_client;
 
@@ -162,14 +161,8 @@ async fn main() -> miette::Result<()> {
             }
             set_default_args(&mut attributes, args);
 
-            let mut queue = BTreeMap::new();
-
-            for ws in workspaces.iter() {
-                queue.insert(ws.id.clone(), ws.clone());
-            }
-
             let queue_results = run::work_queue(
-                &mut queue,
+                workspaces.clone(),
                 run::QueueOptions {
                     max_concurrent,
                     max_iterations,
@@ -204,14 +197,8 @@ async fn main() -> miette::Result<()> {
             set_default_args(&mut attributes, &args.default);
             set_apply_args(&mut attributes, args);
 
-            let mut queue = BTreeMap::new();
-
-            for ws in workspaces.iter() {
-                queue.insert(ws.id.clone(), ws.clone());
-            }
-
             let queue_results = run::work_queue(
-                &mut queue,
+                workspaces.clone(),
                 run::QueueOptions {
                     max_concurrent,
                     max_iterations,

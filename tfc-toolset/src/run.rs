@@ -5,7 +5,6 @@ use crate::{
     workspace, BASE_URL,
 };
 use async_std::task::{self, JoinHandle};
-use dashmap::DashMap;
 use log::{error, info};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -18,14 +17,11 @@ use surf::{http::Method, Client};
 use url::Url;
 
 // Statuses in Terraform Cloud that indicate a run is in a completed state
-pub const COMPLETED_STATUSES: [Status; 6] = [
-    Status::Applied,
-    Status::Canceled,
-    Status::ForceCanceled,
-    Status::Errored,
-    Status::Discarded,
-    Status::PlannedAndFinished,
-];
+pub const COMPLETED_STATUSES: [Status; 2] =
+    [Status::Applied, Status::PlannedAndFinished];
+
+pub const NO_APPLY_END_STATUSES: [Status; 2] =
+    [Status::Planned, Status::CostEstimated];
 
 // Statuses in Terraform Cloud that indicate a run is in an error state
 pub const ERROR_STATUSES: [Status; 8] = [
@@ -344,111 +340,163 @@ pub async fn status(
     }
 }
 
+fn run_has_ended(
+    status: &Status,
+    will_auto_apply: bool,
+    will_save_plan: bool,
+) -> bool {
+    COMPLETED_STATUSES.contains(status)
+        || ERROR_STATUSES.contains(status)
+        || !will_auto_apply && NO_APPLY_END_STATUSES.contains(status)
+        || will_save_plan && status == &Status::PlannedAndSaved
+}
+
+fn build_handle(
+    id: String,
+    options: QueueOptions,
+    attributes: Attributes,
+    core: Core,
+    client: Client,
+) -> JoinHandle<Result<RunResult, ToolError>> {
+    task::spawn(async move {
+        let will_auto_apply = attributes.auto_apply.unwrap_or(false);
+        let will_save_plan = attributes.save_plan.unwrap_or(false);
+        let mut iterations = 0;
+        let mut run =
+            create(&id.clone(), Some(attributes), &core, client.clone())
+                .await?;
+        let run_id = run.id.clone().unwrap();
+        info!("Run {} created for workspace {}", &run_id, &id.clone());
+        while !run_has_ended(
+            &run.attributes.status.clone().unwrap_or(Status::Unknown),
+            will_auto_apply,
+            will_save_plan,
+        ) {
+            run = status(&run_id, &core, client.clone()).await?;
+            let status =
+                run.attributes.status.clone().unwrap_or(Status::Unknown);
+            info!("Run {} status: {}", &run_id, &status);
+            if run_has_ended(&status, will_auto_apply, will_save_plan) {
+                break;
+            }
+            iterations += 1;
+            if iterations >= options.max_iterations {
+                error!(
+                    "Run {} for workspace {} has been in status {} too long.",
+                    &run_id,
+                    &id.clone(),
+                    &status.clone()
+                );
+                if status == Status::Pending {
+                    error!(
+                        "There is likely previous run pending. Please check the workspace in the UI."
+                    );
+                } else {
+                    error!(
+                        "This is likely some error. Please check the run in the UI."
+                    );
+                }
+                break;
+            }
+            async_std::task::sleep(Duration::from_secs(
+                options.status_check_sleep_seconds,
+            ))
+            .await;
+        }
+        Ok(RunResult {
+            id: run_id,
+            status: run
+                .attributes
+                .status
+                .unwrap_or(Status::Unknown)
+                .to_string(),
+            workspace_id: id,
+        })
+    })
+}
+
+async fn queue_worker(
+    workload: Vec<workspace::Workspace>,
+    options: QueueOptions,
+    attributes: Attributes,
+    core: Core,
+    client: Client,
+) -> (Vec<RunResult>, Vec<RunResult>) {
+    let mut queue = BTreeMap::new();
+    for ws in workload.iter() {
+        queue.insert(ws.id.clone(), ws.clone());
+    }
+    let mut results = Vec::with_capacity(queue.len());
+    let mut errors = Vec::new();
+
+    while !queue.is_empty() {
+        let (id, _ws) = queue.pop_first().unwrap();
+        let handle = build_handle(
+            id.clone(),
+            options.clone(),
+            attributes.clone(),
+            core.clone(),
+            client.clone(),
+        );
+        let result = match handle.await {
+            Ok(r) => r,
+            Err(e) => {
+                let error = RunResult {
+                    id: "unknown".to_string(),
+                    status: e.to_string(),
+                    workspace_id: id,
+                };
+                errors.push(error.clone());
+                error
+            }
+        };
+        if ERROR_STATUSES.contains(&Status::from(result.status.clone())) {
+            errors.push(result.clone());
+        }
+        results.push(result);
+    }
+    (results, errors)
+}
+
 pub async fn work_queue(
-    queue: &mut BTreeMap<String, workspace::Workspace>,
+    workspaces: Vec<workspace::Workspace>,
     options: QueueOptions,
     attributes: Attributes,
     client: Client,
     core: &Core,
 ) -> Result<QueueResult, ToolError> {
-    let running = DashMap::with_capacity(options.max_concurrent);
-    let mut results = Vec::with_capacity(queue.len());
+    let mut results = Vec::with_capacity(workspaces.len());
     let mut errors = Vec::new();
-    while !queue.is_empty() {
-        let mut handles = Vec::with_capacity(options.max_concurrent);
-        while running.len() < options.max_concurrent && !queue.is_empty() {
-            let (id, ws) = queue.pop_first().unwrap();
-            info!("Creating run for workspace: {}", &ws.id);
-            let client = client.clone();
-            let attributes = attributes.clone();
-            let will_auto_apply = attributes.auto_apply.unwrap_or(false);
-            let will_save_plan = attributes.save_plan.unwrap_or(false);
-            let core = core.clone();
-            let ws_id = ws.id.clone();
-            let mut iterations = 0;
-            let handle: JoinHandle<Result<RunResult, ToolError>> = task::spawn(
-                async move {
-                    let mut run = create(
-                        &id.clone(),
-                        Some(attributes),
-                        &core,
-                        client.clone(),
-                    )
-                    .await?;
-                    let run_id = run.id.clone().unwrap();
-                    info!(
-                        "Run {} created for workspace {}",
-                        &run_id,
-                        &id.clone()
-                    );
-                    while !COMPLETED_STATUSES.contains(
-                        &run.attributes
-                            .status
-                            .clone()
-                            .unwrap_or(Status::Unknown),
-                    ) {
-                        run = status(&run_id, &core, client.clone()).await?;
-                        let status = run
-                            .attributes
-                            .status
-                            .clone()
-                            .unwrap_or(Status::Unknown);
-                        info!("Run {} status: {}", &run_id, &status);
-                        if COMPLETED_STATUSES.contains(&status)
-                            || !will_auto_apply && status == Status::Planned
-                            || will_save_plan
-                                && status == Status::PlannedAndSaved
-                        {
-                            // If auto_apply is false and status is planned, then we can break out of the loop
-                            // because the run will require confirmation before applying
-                            // If save_plan is true and status is planned_and_saved, then we can break out of the loop
-                            // If completed, then we can also break out of the loop
-                            break;
-                        }
-                        iterations += 1;
-                        if iterations >= options.max_iterations {
-                            error!(
-                                    "Run {} for workspace {} has been in status {} too long.",
-                                    &run_id, &id.clone(), &status.clone()
-                                );
-                            if status == Status::Pending {
-                                error!(
-                                    "There is likely previous run pending. Please check the workspace in the UI."
-                                );
-                            } else {
-                                error!(
-                                    "This is likely some error. Please check the run in the UI."
-                                );
-                            }
-                            break;
-                        }
-                        async_std::task::sleep(Duration::from_secs(
-                            options.status_check_sleep_seconds,
-                        ))
-                        .await;
-                    }
-                    Ok(RunResult {
-                        id: run_id,
-                        status: run
-                            .attributes
-                            .status
-                            .unwrap_or(Status::Unknown)
-                            .to_string(),
-                        workspace_id: id,
-                    })
-                },
-            );
-            running.insert(ws_id, ws);
-            handles.push(handle);
-        }
-        for handle in handles {
-            let result = handle.await?;
-            running.remove(result.id.clone().as_str());
-            if ERROR_STATUSES.contains(&Status::from(result.status.clone())) {
-                errors.push(result.clone());
-            }
-            results.push(result);
-        }
+
+    let mut split_workload = Vec::new();
+
+    for _ in 0..options.max_concurrent {
+        split_workload.push(Vec::new());
     }
+
+    for (i, ws) in workspaces.iter().enumerate() {
+        split_workload[i % options.max_concurrent].push(ws.clone());
+    }
+
+    // Spawn a thread for each workload
+    let mut handles = Vec::with_capacity(options.max_concurrent);
+    for workload in split_workload {
+        let handle = task::spawn(queue_worker(
+            workload,
+            options.clone(),
+            attributes.clone(),
+            core.clone(),
+            client.clone(),
+        ));
+        handles.push(handle);
+    }
+
+    // Wait for all threads to finish
+    for handle in handles {
+        let (mut result, mut error) = handle.await;
+        results.append(&mut result);
+        errors.append(&mut error);
+    }
+
     Ok(QueueResult { results, errors })
 }
