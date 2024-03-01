@@ -2,7 +2,7 @@ use crate::{
     cli::{
         command::common::{check_workspace_identifier, parse_workspace_file},
         run::{
-            override_queue_options, set_apply_args, set_default_args, ApplyArgs,
+            override_queue_options, set_apply_args, set_default_args, PlanArgs,
         },
     },
     error::ArgError,
@@ -19,7 +19,7 @@ use tfc_toolset::{
 use tfc_toolset_extras::parse_workspace_name;
 
 pub async fn plan(
-    args: &ApplyArgs,
+    args: &PlanArgs,
     config: &Settings,
     core: &Core,
     client: Client,

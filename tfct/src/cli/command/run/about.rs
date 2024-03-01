@@ -1,6 +1,6 @@
 pub(super) const STATUS: &str = "Get the status of a run.";
-pub(super) const PLAN: &str = "Queue up plan only runs";
-pub(super) const APPLY: &str = "Queue up plan and apply runs";
+pub(super) const SPEC: &str = "Queue up speculative plan runs";
+pub(super) const PLAN: &str = "Queue up plan and apply runs";
 pub(super) const CREATE: &str = "Create a run.";
 pub(super) const RUN_ID: &str = "The id of the run.";
 pub(super) const MESSAGE: &str = "A message to include with the run";

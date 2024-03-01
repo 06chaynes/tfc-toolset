@@ -92,13 +92,13 @@ async fn main() -> miette::Result<()> {
             RunCmds::Status(args) => {
                 run::status(args, &core, client.clone()).await?;
             }
-            RunCmds::Plan(args) => {
+            RunCmds::Spec(args) => {
                 let config = Settings::new()
                     .into_diagnostic()
                     .wrap_err(SETTINGS_ERROR)?;
                 run::spec(args, &config, &core, client.clone()).await?;
             }
-            RunCmds::Apply(args) => {
+            RunCmds::Plan(args) => {
                 let config = Settings::new()
                     .into_diagnostic()
                     .wrap_err(SETTINGS_ERROR)?;
