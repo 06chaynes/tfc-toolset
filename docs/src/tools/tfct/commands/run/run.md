@@ -15,6 +15,6 @@ tfct run [command] [options]
 | Name                    | Description                   |
 |-------------------------|-------------------------------|
 | [`status`](./status.md) | Get the status of a run.      |
-| [`plan`](./plan.md)     | Queue up plan only runs.      |
-| [`apply`](./apply.md)   | Queue up plan and apply runs. |
+| [`spec`](./spec.md)     | Queue up speculative runs.    |
+| [`plan`](./plan.md)     | Queue up plan and apply runs. |
 | `help`                  | Prints help information.      |

@@ -96,13 +96,13 @@ async fn main() -> miette::Result<()> {
                 let config = Settings::new()
                     .into_diagnostic()
                     .wrap_err(SETTINGS_ERROR)?;
-                run::plan(args, &config, &core, client.clone()).await?;
+                run::spec(args, &config, &core, client.clone()).await?;
             }
             RunCmds::Apply(args) => {
                 let config = Settings::new()
                     .into_diagnostic()
                     .wrap_err(SETTINGS_ERROR)?;
-                run::apply(args, &config, &core, client.clone()).await?;
+                run::plan(args, &config, &core, client.clone()).await?;
             }
         },
         Commands::Clean(clean_cmd) => match &clean_cmd.command {

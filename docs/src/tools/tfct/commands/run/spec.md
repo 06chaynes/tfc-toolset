@@ -1,13 +1,13 @@
-# apply
+# spec
 
 ## Description
 
-Queue up plan and apply runs
+Queue up speculative plan runs.
 
 ## Usage
 
 ```bash
-tfct run apply [options]
+tfct run spec [options]
 ```
 
 ## Options
@@ -26,21 +26,17 @@ tfct run apply [options]
 |       | `--target-addrs <TARGET_ADDRS>`                                         | A list of resource addresses to target for the run.                                                                              |
 |       | `--replace-addrs <REPLACE_ADDRS>`                                       | A list of resource addresses to replace for the run.                                                                             |
 |       | `--terraform-version <TERRAFORM_VERSION>`                               | The version of Terraform to use for this run, overriding the value from settings.                                                |
-|       | `--auto-apply <AUTO_APPLY>`                                             | Automatically apply the run if the plan is successful [default: false] [possible values: true, false].                           |
-|       | `--allow-empty-apply <ALLOW_EMPTY_APPLY>`                               | Apply the run even when the plan contains no changes [default: false] [possible values: true, false].                            |
-|       | `--is-destroy <IS_DESTROY>`                                             | Whether this plan is a destroy plan that will destroy all provisioned resources [default: false] [possible values: true, false]. |
-|       | `--refresh-only <REFRESH_ONLY>`                                         | Whether this run should refresh the state without modifying any resources [default: false] [possible values: true, false].       |
 
 ## Examples
 
 ### Create a run on a workspace
 
 ```bash
-tfct run apply --workspace-name "my-workspace"
+tfct run spec --workspace-name "my-workspace"
 ```
 
 ### Create a run on a multiple workspaces with a max concurrency of 2
 
 ```bash
-tfct run apply --workspace-file "workspaces.json" -q --queue-max-concurrent 2
+tfct run spec --workspace-file "workspaces.json" -q --queue-max-concurrent 2
 ```

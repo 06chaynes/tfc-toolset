@@ -1,10 +1,10 @@
 mod about;
-pub(crate) mod apply;
 pub(crate) mod plan;
+pub(crate) mod spec;
 pub(crate) mod status;
 
-pub use apply::apply;
 pub use plan::plan;
+pub use spec::spec;
 pub use status::{status, StatusArgs};
 
 use crate::cli::command::common::WorkspaceArgs;

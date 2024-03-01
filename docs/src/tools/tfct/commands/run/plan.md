@@ -2,7 +2,7 @@
 
 ## Description
 
-Queue up plan only runs
+Queue up plan and apply runs.
 
 ## Usage
 
@@ -13,7 +13,7 @@ tfct run plan [options]
 ## Options
 
 | Short | Long                                                                    | Description                                                                                                                      |
-|-------|-------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| ----- | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | `-w`  | `--workspace-name <WORKSPACE_NAME>`                                     | The name of the workspace to create the run on.                                                                                  |
 | `-i`  | `--workspace-id <WORKSPACE_ID>`                                         | The id of the workspace to create the run on.                                                                                    |
 | `-f`  | `--workspace-file <WORKSPACE_FILE>`                                     | The file containing a list of workspace names or IDs.                                                                            |
@@ -26,6 +26,10 @@ tfct run plan [options]
 |       | `--target-addrs <TARGET_ADDRS>`                                         | A list of resource addresses to target for the run.                                                                              |
 |       | `--replace-addrs <REPLACE_ADDRS>`                                       | A list of resource addresses to replace for the run.                                                                             |
 |       | `--terraform-version <TERRAFORM_VERSION>`                               | The version of Terraform to use for this run, overriding the value from settings.                                                |
+|       | `--auto-apply <AUTO_APPLY>`                                             | Automatically apply the run if the plan is successful [default: false] [possible values: true, false].                           |
+|       | `--allow-empty-apply <ALLOW_EMPTY_APPLY>`                               | Apply the run even when the plan contains no changes [default: false] [possible values: true, false].                            |
+|       | `--is-destroy <IS_DESTROY>`                                             | Whether this plan is a destroy plan that will destroy all provisioned resources [default: false] [possible values: true, false]. |
+|       | `--refresh-only <REFRESH_ONLY>`                                         | Whether this run should refresh the state without modifying any resources [default: false] [possible values: true, false].       |
 
 ## Examples
 
