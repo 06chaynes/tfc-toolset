@@ -10,7 +10,6 @@ use crate::{
 };
 
 use log::info;
-use std::collections::BTreeMap;
 use surf::Client;
 use tfc_toolset::{
     run::{work_queue, Attributes, QueueOptions},
@@ -55,10 +54,8 @@ pub async fn apply(
                 .await?;
         info!("Creating plan run for workspace {}.", workspace_name);
         if args.default.queue {
-            let mut queue = BTreeMap::new();
-            queue.insert(workspace.id.clone(), workspace.clone());
             let queue_results = work_queue(
-                queue,
+                vec![workspace.clone()],
                 options,
                 attributes,
                 client.clone(),
@@ -81,10 +78,8 @@ pub async fn apply(
             workspace::show(workspace_id, core, client.clone()).await?;
         info!("Creating plan run for workspace {}.", workspace_id);
         if args.default.queue {
-            let mut queue = BTreeMap::new();
-            queue.insert(workspace_id.clone(), workspace.clone());
             let queue_results = work_queue(
-                queue,
+                vec![workspace.clone()],
                 options,
                 attributes,
                 client.clone(),
@@ -105,22 +100,14 @@ pub async fn apply(
     } else if let Some(file_path) = &args.default.workspace.workspace_file {
         let workspaces =
             parse_workspace_file(file_path, core, client.clone()).await?;
-        let mut queue = BTreeMap::new();
-        for ws in workspaces.iter() {
-            queue.insert(ws.id.clone(), ws.clone());
-        }
         let queue_results =
-            work_queue(queue, options, attributes, client.clone(), core)
+            work_queue(workspaces, options, attributes, client.clone(), core)
                 .await?;
         info!("{:#?}", &queue_results);
     } else if args.default.workspace.auto_discover_workspaces {
         let workspaces = workspace::list(true, core, client.clone()).await?;
-        let mut queue = BTreeMap::new();
-        for ws in workspaces.iter() {
-            queue.insert(ws.id.clone(), ws.clone());
-        }
         let queue_results =
-            work_queue(queue, options, attributes, client.clone(), core)
+            work_queue(workspaces, options, attributes, client.clone(), core)
                 .await?;
         info!("{:#?}", &queue_results);
     }

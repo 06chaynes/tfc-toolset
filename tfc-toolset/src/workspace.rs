@@ -6,6 +6,7 @@ use crate::{
     tag, variable, variable_set, Meta, BASE_URL,
 };
 use async_scoped::AsyncStdScope;
+use itertools::Itertools;
 use log::{error, info};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -659,7 +660,12 @@ pub async fn list(
             }
         }
     }
-    let mut workspaces = workspace_list.data;
+    let mut workspaces = workspace_list
+        .data
+        .iter()
+        .unique_by(|ws| ws.id.clone())
+        .cloned()
+        .collect::<Vec<Workspace>>();
     info!("Finished retrieving workspaces.");
     if filter {
         if let Some(query) = config.workspaces.query.clone() {

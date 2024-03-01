@@ -415,37 +415,79 @@ fn build_handle(
     })
 }
 
+async fn queue_worker(
+    workload: Vec<workspace::Workspace>,
+    options: QueueOptions,
+    attributes: Attributes,
+    core: Core,
+    client: Client,
+) -> Result<(Vec<RunResult>, Vec<RunResult>), ToolError> {
+    let mut queue = BTreeMap::new();
+    for ws in workload.iter() {
+        queue.insert(ws.id.clone(), ws.clone());
+    }
+    let mut results = Vec::with_capacity(queue.len());
+    let mut errors = Vec::new();
+
+    while !queue.is_empty() {
+        let (id, _ws) = queue.pop_first().unwrap();
+        let handle = build_handle(
+            id,
+            options.clone(),
+            attributes.clone(),
+            core.clone(),
+            client.clone(),
+        );
+        let result = handle.await?;
+        if ERROR_STATUSES.contains(&Status::from(result.status.clone())) {
+            errors.push(result.clone());
+        }
+        results.push(result);
+    }
+    Ok((results, errors))
+}
+
 pub async fn work_queue(
-    mut queue: BTreeMap<String, workspace::Workspace>,
+    workspaces: Vec<workspace::Workspace>,
     options: QueueOptions,
     attributes: Attributes,
     client: Client,
     core: &Core,
 ) -> Result<QueueResult, ToolError> {
-    let mut results = Vec::with_capacity(queue.len());
+    let mut results = Vec::with_capacity(workspaces.len());
     let mut errors = Vec::new();
 
-    while !queue.is_empty() {
-        let mut handles = Vec::new();
+    let mut split_workload = Vec::new();
 
-        for _ in 0..options.max_concurrent {
-            let (id, _ws) = queue.pop_first().unwrap();
-            let handle = build_handle(
-                id,
-                options.clone(),
-                attributes.clone(),
-                core.clone(),
-                client.clone(),
-            );
-            handles.push(handle);
-        }
-        for handle in handles {
-            let result = handle.await?;
-            if ERROR_STATUSES.contains(&Status::from(result.status.clone())) {
-                errors.push(result.clone());
-            }
-            results.push(result);
-        }
+    for _ in 0..options.max_concurrent {
+        split_workload.push(Vec::new());
     }
+
+    for (i, ws) in workspaces.iter().enumerate() {
+        split_workload[i % options.max_concurrent].push(ws.clone());
+    }
+
+    dbg!(&split_workload);
+
+    // Spawn a thread for each workload
+    let mut handles = Vec::with_capacity(options.max_concurrent);
+    for workload in split_workload {
+        let handle = task::spawn(queue_worker(
+            workload,
+            options.clone(),
+            attributes.clone(),
+            core.clone(),
+            client.clone(),
+        ));
+        handles.push(handle);
+    }
+
+    // Wait for all threads to finish
+    for handle in handles {
+        let (mut result, mut error) = handle.await?;
+        results.append(&mut result);
+        errors.append(&mut error);
+    }
+
     Ok(QueueResult { results, errors })
 }
