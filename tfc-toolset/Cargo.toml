@@ -1,6 +1,6 @@
 [package]
 name = "tfc-toolset"
-version = "0.3.0"
+version = "0.4.0"
 description = "A toolset to help manage a toolset that helps manage your deployments"
 authors = ["Christian Haynes <06chaynes@gmail.com>"]
 repository = "https://github.com/06chaynes/tfc-toolset.git"

@@ -21,10 +21,10 @@ path = "src/lib.rs"
 [dependencies]
 anyhow = "1.0.75"
 async-std = { version = "1.12.0", features = ["attributes"] }
-config = "0.13.3"
-env_logger = "0.10.0"
+config = "0.14.0"
+env_logger = "0.11.2"
 log = "0.4.20"
-miette = { version = "5.10.0", features = ["fancy"] }
+miette = { version = "7.1.0", features = ["fancy"] }
 serde = { version = "1.0.190", features = ["derive"] }
 serde_json = "1.0.108"
 surf = { version = "2.3.2", default-features = false, features = ["encoding", "h1-client-rustls"] }
@@ -37,8 +37,8 @@ version = "0.1.0"
 
 [dependencies.tfc-toolset]
 path = "../../tfc-toolset"
-version = "0.3.0"
+version = "0.4.0"
 
 [dependencies.tfc-toolset-extras]
 path = "../../tfc-toolset-extras"
-version = "0.2.0"
+version = "0.2.1"

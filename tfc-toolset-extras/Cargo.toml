@@ -1,6 +1,6 @@
 [package]
 name = "tfc-toolset-extras"
-version = "0.2.0"
+version = "0.2.1"
 description = "Extra stuff for tfc-toolset you may or may not want to use"
 authors = ["Christian Haynes <06chaynes@gmail.com>"]
 repository = "https://github.com/06chaynes/tfc-toolset.git"
@@ -12,8 +12,7 @@ rust-version = "1.67.1"
 
 [dependencies]
 anyhow = "1.0.75"
-async-scoped = { version = "0.7.1", features = ["use-async-std"] }
-config = "0.13.3"
+config = "0.14.0"
 dirs = "5.0.1"
 http-cache-surf = "0.12.0"
 log = "0.4.20"
@@ -28,4 +27,4 @@ url = "2.4.1"
 
 [dependencies.tfc-toolset]
 path = "../tfc-toolset"
-version = "0.3.0"
+version = "0.4.0"
