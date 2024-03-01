@@ -421,7 +421,7 @@ async fn queue_worker(
     attributes: Attributes,
     core: Core,
     client: Client,
-) -> Result<(Vec<RunResult>, Vec<RunResult>), ToolError> {
+) -> (Vec<RunResult>, Vec<RunResult>) {
     let mut queue = BTreeMap::new();
     for ws in workload.iter() {
         queue.insert(ws.id.clone(), ws.clone());
@@ -432,19 +432,30 @@ async fn queue_worker(
     while !queue.is_empty() {
         let (id, _ws) = queue.pop_first().unwrap();
         let handle = build_handle(
-            id,
+            id.clone(),
             options.clone(),
             attributes.clone(),
             core.clone(),
             client.clone(),
         );
-        let result = handle.await?;
+        let result = match handle.await {
+            Ok(r) => r,
+            Err(e) => {
+                let error = RunResult {
+                    id: id.clone(),
+                    status: e.to_string(),
+                    workspace_id: id,
+                };
+                errors.push(error.clone());
+                error
+            }
+        };
         if ERROR_STATUSES.contains(&Status::from(result.status.clone())) {
             errors.push(result.clone());
         }
         results.push(result);
     }
-    Ok((results, errors))
+    (results, errors)
 }
 
 pub async fn work_queue(
@@ -484,20 +495,9 @@ pub async fn work_queue(
 
     // Wait for all threads to finish
     for handle in handles {
-        match handle.await {
-            Ok((mut result, mut error)) => {
-                results.append(&mut result);
-                errors.append(&mut error);
-            }
-            Err(e) => {
-                let error = RunResult {
-                    id: "unknown".to_string(),
-                    status: e.to_string(),
-                    workspace_id: "unknown".to_string(),
-                };
-                errors.push(error);
-            }
-        }
+        let (mut result, mut error) = handle.await;
+        results.append(&mut result);
+        errors.append(&mut error);
     }
 
     Ok(QueueResult { results, errors })
