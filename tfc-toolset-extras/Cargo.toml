@@ -27,4 +27,4 @@ url = "2.4.1"
 
 [dependencies.tfc-toolset]
 path = "../tfc-toolset"
-version = "0.4.1"
+version = "0.5.0"
