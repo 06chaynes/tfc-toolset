@@ -450,7 +450,9 @@ fn build_handle(
                         "This is likely some error. Please check the run in the UI."
                     );
                 }
-                if options.cancel_on_timeout {
+                if options.cancel_on_timeout
+                    && (status == Status::Pending || status == Status::Applying)
+                {
                     cancel(&run_id, &core, client.clone()).await?;
                 }
                 break;
