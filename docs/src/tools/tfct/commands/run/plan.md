@@ -23,6 +23,7 @@ tfct run plan [options]
 |       | `--queue-max-iterations <QUEUE_MAX_ITERATIONS>`                         | The maximum number of times to check the status of a run before giving up.                                                       |
 |       | `--queue-status-check-sleep-seconds <QUEUE_STATUS_CHECK_SLEEP_SECONDS>` | The number of seconds to wait between checking the status of a run.                                                              |
 |       | `--cancel-on-timeout <CANCEL_ON_TIMEOUT>`                               | Whether to cancel the run if it reaches the configured limits [possible values: true, false].                                    |
+|       | `--message <MESSAGE>`                                                   | A message to include with the run [default: "Run created by tfc-toolset"].                                                       |
 |       | `--target-addrs <TARGET_ADDRS>`                                         | A list of resource addresses to target for the run.                                                                              |
 |       | `--replace-addrs <REPLACE_ADDRS>`                                       | A list of resource addresses to replace for the run.                                                                             |
 |       | `--terraform-version <TERRAFORM_VERSION>`                               | The version of Terraform to use for this run, overriding the value from settings.                                                |
