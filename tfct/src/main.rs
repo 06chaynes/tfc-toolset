@@ -104,6 +104,9 @@ async fn main() -> miette::Result<()> {
                     .wrap_err(SETTINGS_ERROR)?;
                 run::plan(args, &config, &core, client.clone()).await?;
             }
+            RunCmds::Cancel(args) => {
+                run::cancel(args, &core, client.clone()).await?;
+            }
         },
         Commands::Clean(clean_cmd) => match &clean_cmd.command {
             CleanCmds::Workspace(args) => {

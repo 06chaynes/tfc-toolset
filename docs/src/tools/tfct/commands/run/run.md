@@ -17,4 +17,5 @@ tfct run [command] [options]
 | [`status`](./status.md) | Get the status of a run.      |
 | [`spec`](./spec.md)     | Queue up speculative runs.    |
 | [`plan`](./plan.md)     | Queue up plan and apply runs. |
+| [`cancel`](./cancel.md) | Cancel a run.                 |
 | `help`                  | Prints help information.      |

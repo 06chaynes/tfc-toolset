@@ -1,8 +1,10 @@
 mod about;
+pub(crate) mod cancel;
 pub(crate) mod plan;
 pub(crate) mod spec;
 pub(crate) mod status;
 
+pub use cancel::{cancel, CancelArgs};
 pub use plan::plan;
 pub use spec::spec;
 pub use status::{status, StatusArgs};
@@ -25,6 +27,8 @@ pub(crate) enum RunCmds {
     Spec(DefaultArgs),
     #[clap(about = about::PLAN)]
     Plan(PlanArgs),
+    #[clap(about = about::CANCEL)]
+    Cancel(CancelArgs),
 }
 
 #[derive(clap::Args, Debug)]
