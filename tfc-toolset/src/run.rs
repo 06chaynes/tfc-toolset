@@ -456,8 +456,7 @@ pub async fn work_queue(
         let handle = thread::spawn(move || {
             task::block_on(async {
                 loop {
-                    // Try to steal work from other threads
-                    let stolen_work = {
+                    let work = {
                         let mut queue = queue_clone.lock().await;
                         if queue.is_empty() {
                             None
@@ -466,8 +465,7 @@ pub async fn work_queue(
                         }
                     };
 
-                    // Process the stolen work or do other work
-                    if let Some(work) = stolen_work {
+                    if let Some(work) = work {
                         let run_result = build_handle(
                             work.id.clone(),
                             opts_clone.read().await.clone(),

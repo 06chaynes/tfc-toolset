@@ -3162,7 +3162,7 @@ dependencies = [
 
 [[package]]
 name = "tfc-toolset"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "anyhow",
  "async-scoped",
@@ -3180,7 +3180,7 @@ dependencies = [
 
 [[package]]
 name = "tfc-toolset-extras"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "anyhow",
  "config 0.14.0",
@@ -3241,7 +3241,7 @@ dependencies = [
 
 [[package]]
 name = "tfct"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "anyhow",
  "async-scoped",
