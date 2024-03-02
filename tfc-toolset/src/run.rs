@@ -4,13 +4,16 @@ use crate::{
     settings::Core,
     workspace, BASE_URL,
 };
-use async_std::task::{self, JoinHandle};
+use async_std::{
+    sync::{Arc, Mutex, RwLock},
+    task::{self, JoinHandle},
+};
 use log::{error, info};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::{
-    collections::BTreeMap,
     fmt::{Display, Formatter},
+    thread,
     time::Duration,
 };
 use surf::{http::Method, Client};
@@ -415,49 +418,6 @@ fn build_handle(
     })
 }
 
-async fn queue_worker(
-    workload: Vec<workspace::Workspace>,
-    options: QueueOptions,
-    attributes: Attributes,
-    core: Core,
-    client: Client,
-) -> (Vec<RunResult>, Vec<RunResult>) {
-    let mut queue = BTreeMap::new();
-    for ws in workload.iter() {
-        queue.insert(ws.id.clone(), ws.clone());
-    }
-    let mut results = Vec::with_capacity(queue.len());
-    let mut errors = Vec::new();
-
-    while !queue.is_empty() {
-        let (id, _ws) = queue.pop_first().unwrap();
-        let handle = build_handle(
-            id.clone(),
-            options.clone(),
-            attributes.clone(),
-            core.clone(),
-            client.clone(),
-        );
-        let result = match handle.await {
-            Ok(r) => r,
-            Err(e) => {
-                let error = RunResult {
-                    id: "unknown".to_string(),
-                    status: e.to_string(),
-                    workspace_id: id,
-                };
-                errors.push(error.clone());
-                error
-            }
-        };
-        if ERROR_STATUSES.contains(&Status::from(result.status.clone())) {
-            errors.push(result.clone());
-        }
-        results.push(result);
-    }
-    (results, errors)
-}
-
 pub async fn work_queue(
     workspaces: Vec<workspace::Workspace>,
     options: QueueOptions,
@@ -465,38 +425,91 @@ pub async fn work_queue(
     client: Client,
     core: &Core,
 ) -> Result<QueueResult, ToolError> {
-    let mut results = Vec::with_capacity(workspaces.len());
-    let mut errors = Vec::new();
+    let queue: Arc<Mutex<Vec<workspace::Workspace>>> =
+        Arc::new(Mutex::new(Vec::with_capacity(workspaces.len())));
+    let results: Arc<Mutex<Vec<RunResult>>> =
+        Arc::new(Mutex::new(Vec::with_capacity(workspaces.len())));
+    let errors: Arc<Mutex<Vec<RunResult>>> = Arc::new(Mutex::new(Vec::new()));
 
-    let mut split_workload = Vec::new();
+    let max_concurrent = options.max_concurrent;
 
-    for _ in 0..options.max_concurrent {
-        split_workload.push(Vec::new());
+    let opts = Arc::new(RwLock::new(options));
+    let attrs = Arc::new(RwLock::new(attributes));
+    let c = Arc::new(RwLock::new(core.clone()));
+    let cl = Arc::new(RwLock::new(client));
+
+    for ws in workspaces {
+        queue.lock().await.push(ws);
     }
 
-    for (i, ws) in workspaces.iter().enumerate() {
-        split_workload[i % options.max_concurrent].push(ws.clone());
-    }
+    let mut handles = vec![];
 
-    // Spawn a thread for each workload
-    let mut handles = Vec::with_capacity(options.max_concurrent);
-    for workload in split_workload {
-        let handle = task::spawn(queue_worker(
-            workload,
-            options.clone(),
-            attributes.clone(),
-            core.clone(),
-            client.clone(),
-        ));
+    for _ in 0..max_concurrent {
+        let queue_clone = Arc::clone(&queue);
+        let results_clone = Arc::clone(&results);
+        let errors_clone = Arc::clone(&errors);
+        let opts_clone = Arc::clone(&opts);
+        let attrs_clone = Arc::clone(&attrs);
+        let core_clone = Arc::clone(&c);
+        let client_clone = Arc::clone(&cl);
+
+        let handle = thread::spawn(move || {
+            task::block_on(async {
+                loop {
+                    // Try to steal work from other threads
+                    let stolen_work = {
+                        let mut queue = queue_clone.lock().await;
+                        if queue.is_empty() {
+                            None
+                        } else {
+                            Some(queue.pop().unwrap())
+                        }
+                    };
+
+                    // Process the stolen work or do other work
+                    if let Some(work) = stolen_work {
+                        task::block_on(async {
+                            let run_result = build_handle(
+                                work.id.clone(),
+                                opts_clone.read().await.clone(),
+                                attrs_clone.read().await.clone(),
+                                core_clone.read().await.clone(),
+                                client_clone.read().await.clone(),
+                            )
+                            .await;
+                            match run_result {
+                                Ok(result) => {
+                                    results_clone.lock().await.push(result);
+                                }
+                                Err(e) => {
+                                    errors_clone.lock().await.push(RunResult {
+                                        id: "unknown".to_string(),
+                                        status: e.to_string(),
+                                        workspace_id: work.id.clone(),
+                                    });
+                                    error!(
+                                        "Error processing workspace {}: {}",
+                                        work.id, e
+                                    );
+                                }
+                            }
+                        });
+                    } else {
+                        info!("No more work to do, thread exiting.");
+                        break;
+                    }
+                }
+            });
+        });
         handles.push(handle);
     }
 
-    // Wait for all threads to finish
     for handle in handles {
-        let (mut result, mut error) = handle.await;
-        results.append(&mut result);
-        errors.append(&mut error);
+        handle.join().unwrap();
     }
 
-    Ok(QueueResult { results, errors })
+    let return_results = results.lock().await.clone();
+    let return_errors = errors.lock().await.clone();
+
+    Ok(QueueResult { results: return_results, errors: return_errors })
 }
