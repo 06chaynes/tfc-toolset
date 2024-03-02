@@ -468,32 +468,30 @@ pub async fn work_queue(
 
                     // Process the stolen work or do other work
                     if let Some(work) = stolen_work {
-                        task::block_on(async {
-                            let run_result = build_handle(
-                                work.id.clone(),
-                                opts_clone.read().await.clone(),
-                                attrs_clone.read().await.clone(),
-                                core_clone.read().await.clone(),
-                                client_clone.read().await.clone(),
-                            )
-                            .await;
-                            match run_result {
-                                Ok(result) => {
-                                    results_clone.lock().await.push(result);
-                                }
-                                Err(e) => {
-                                    errors_clone.lock().await.push(RunResult {
-                                        id: "unknown".to_string(),
-                                        status: e.to_string(),
-                                        workspace_id: work.id.clone(),
-                                    });
-                                    error!(
-                                        "Error processing workspace {}: {}",
-                                        work.id, e
-                                    );
-                                }
+                        let run_result = build_handle(
+                            work.id.clone(),
+                            opts_clone.read().await.clone(),
+                            attrs_clone.read().await.clone(),
+                            core_clone.read().await.clone(),
+                            client_clone.read().await.clone(),
+                        )
+                        .await;
+                        match run_result {
+                            Ok(result) => {
+                                results_clone.lock().await.push(result);
                             }
-                        });
+                            Err(e) => {
+                                errors_clone.lock().await.push(RunResult {
+                                    id: "unknown".to_string(),
+                                    status: e.to_string(),
+                                    workspace_id: work.id.clone(),
+                                });
+                                error!(
+                                    "Error processing workspace {}: {}",
+                                    work.id, e
+                                );
+                            }
+                        }
                     } else {
                         info!("No more work to do, thread exiting.");
                         break;
