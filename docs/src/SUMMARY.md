@@ -31,6 +31,8 @@
         - [status](./tools/tfct/commands/run/status.md)
         - [spec](./tools/tfct/commands/run/spec.md)
         - [plan](./tools/tfct/commands/run/plan.md)
+        - [cancel](./tools/tfct/commands/run/cancel.md)
+        - [discard](./tools/tfct/commands/run/discard.md)
       - [clean](./tools/tfct/commands/clean/clean.md)
         - [workspace](./tools/tfct/commands/clean/workspace.md)
       - [help](./tools/tfct/commands/help.md)

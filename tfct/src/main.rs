@@ -107,6 +107,9 @@ async fn main() -> miette::Result<()> {
             RunCmds::Cancel(args) => {
                 run::cancel(args, &core, client.clone()).await?;
             }
+            RunCmds::Discard(args) => {
+                run::discard(args, &core, client.clone()).await?;
+            }
         },
         Commands::Clean(clean_cmd) => match &clean_cmd.command {
             CleanCmds::Workspace(args) => {

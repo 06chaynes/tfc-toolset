@@ -369,6 +369,31 @@ pub async fn cancel(
     }
 }
 
+pub async fn discard(
+    run_id: &str,
+    config: &Core,
+    client: Client,
+) -> Result<(), ToolError> {
+    info!("Discarding run: {}", run_id);
+    let url =
+        Url::parse(&format!("{}/runs/{}/actions/discard", BASE_URL, run_id))?;
+    let req = build_request(Method::Post, url, config, None);
+    match client.send(req).await {
+        Ok(mut r) => {
+            if r.status().is_success() {
+                info!("Successfully discarded run!");
+                Ok(())
+            } else {
+                error!("Failed to discard run :(");
+                let error =
+                    r.body_string().await.map_err(surf_to_tool_error)?;
+                Err(ToolError::General(anyhow::anyhow!(error)))
+            }
+        }
+        Err(e) => Err(surf_to_tool_error(e)),
+    }
+}
+
 fn run_has_ended(
     status: &Status,
     will_auto_apply: bool,
