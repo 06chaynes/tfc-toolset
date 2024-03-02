@@ -9,14 +9,52 @@ use crate::{
     settings::{self, Settings},
 };
 
+use std::{fs::File, io::BufReader, path::Path};
+
 use log::info;
 use surf::Client;
 use tfc_toolset::{
-    run::{work_queue, Attributes, QueueOptions},
+    error::ToolError,
+    run::{work_queue, Attributes, QueueOptions, QueueResult, RunResult},
     settings::Core,
     workspace,
 };
-use tfc_toolset_extras::parse_workspace_name;
+use tfc_toolset_extras::{parse_workspace_name, ExtrasError};
+
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+pub struct QueueRunResult {
+    pub results: Vec<RunResult>,
+    pub errors: Vec<RunResult>,
+}
+
+impl QueueRunResult {
+    pub fn load<P: AsRef<Path>>(path: P) -> Result<Self, ExtrasError> {
+        let file = File::open(path).map_err(ToolError::Io)?;
+        let reader = BufReader::new(file);
+        let results_file: Self =
+            serde_json::from_reader(reader).map_err(ToolError::Json)?;
+        Ok(results_file)
+    }
+
+    pub fn save<P: AsRef<Path>>(
+        &self,
+        path: P,
+        pretty: bool,
+    ) -> Result<(), ToolError> {
+        if pretty {
+            serde_json::to_writer_pretty(&File::create(path)?, self)?;
+        } else {
+            serde_json::to_writer(&File::create(path)?, self)?;
+        }
+        Ok(())
+    }
+}
+
+impl From<QueueResult> for QueueRunResult {
+    fn from(queue_result: QueueResult) -> Self {
+        Self { results: queue_result.results, errors: queue_result.errors }
+    }
+}
 
 pub async fn plan(
     args: &PlanArgs,
@@ -104,12 +142,20 @@ pub async fn plan(
             work_queue(workspaces, options, attributes, client.clone(), core)
                 .await?;
         info!("{:#?}", &queue_results);
+        if core.save_output {
+            let queue_run_result = QueueRunResult::from(queue_results);
+            queue_run_result.save(&core.output, config.pretty_output)?;
+        }
     } else if args.default.workspace.auto_discover_workspaces {
         let workspaces = workspace::list(true, core, client.clone()).await?;
         let queue_results =
             work_queue(workspaces, options, attributes, client.clone(), core)
                 .await?;
         info!("{:#?}", &queue_results);
+        if core.save_output {
+            let queue_run_result = QueueRunResult::from(queue_results);
+            queue_run_result.save(&core.output, config.pretty_output)?;
+        }
     }
     Ok(())
 }
