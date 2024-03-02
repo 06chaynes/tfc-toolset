@@ -75,10 +75,12 @@ pub async fn plan(
         .run
         .status_check_sleep_seconds
         .unwrap_or(settings::STATUS_CHECK_SLEEP_SECONDS_DEFAULT);
+    let cancel_on_timeout = config.run.cancel_on_timeout.unwrap_or(false);
     let mut options = QueueOptions {
         max_concurrent,
         max_iterations,
         status_check_sleep_seconds,
+        cancel_on_timeout,
     };
     override_queue_options(&mut options, &args.default);
     let mut attributes = Attributes::default();

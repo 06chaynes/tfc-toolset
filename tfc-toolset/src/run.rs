@@ -267,6 +267,7 @@ pub struct QueueOptions {
     pub max_concurrent: usize,
     pub max_iterations: usize,
     pub status_check_sleep_seconds: u64,
+    pub cancel_on_timeout: bool,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -343,6 +344,31 @@ pub async fn status(
     }
 }
 
+pub async fn cancel(
+    run_id: &str,
+    config: &Core,
+    client: Client,
+) -> Result<(), ToolError> {
+    info!("Cancelling run: {}", run_id);
+    let url =
+        Url::parse(&format!("{}/runs/{}/actions/cancel", BASE_URL, run_id))?;
+    let req = build_request(Method::Post, url, config, None);
+    match client.send(req).await {
+        Ok(mut r) => {
+            if r.status().is_success() {
+                info!("Successfully cancelled run!");
+                Ok(())
+            } else {
+                error!("Failed to cancel run :(");
+                let error =
+                    r.body_string().await.map_err(surf_to_tool_error)?;
+                Err(ToolError::General(anyhow::anyhow!(error)))
+            }
+        }
+        Err(e) => Err(surf_to_tool_error(e)),
+    }
+}
+
 fn run_has_ended(
     status: &Status,
     will_auto_apply: bool,
@@ -398,6 +424,9 @@ fn build_handle(
                     error!(
                         "This is likely some error. Please check the run in the UI."
                     );
+                }
+                if options.cancel_on_timeout {
+                    cancel(&run_id, &core, client.clone()).await?;
                 }
                 break;
             }

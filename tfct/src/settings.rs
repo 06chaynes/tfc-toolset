@@ -18,6 +18,7 @@ pub struct Run {
     pub max_concurrent: Option<usize>,
     pub max_iterations: Option<usize>,
     pub status_check_sleep_seconds: Option<u64>,
+    pub cancel_on_timeout: Option<bool>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -40,6 +41,7 @@ impl Settings {
             .set_default("pretty_output", false)?
             .set_default("run.max_concurrent", MAX_CONCURRENT_DEFAULT)?
             .set_default("run.max_iterations", MAX_ITERATIONS_DEFAULT)?
+            .set_default("run.cancel_on_timeout", false)?
             .set_default(
                 "run.status_check_sleep_seconds",
                 STATUS_CHECK_SLEEP_SECONDS_DEFAULT,

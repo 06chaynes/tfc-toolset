@@ -28,3 +28,5 @@ pub(super) const MAX_ITERATIONS: &str = "The maximum number of times to \
     check the status of a run before giving up";
 pub(super) const STATUS_CHECK_SLEEP_SECONDS: &str = "The number of seconds to \
     wait between checking the status of a run";
+pub(super) const CANCEL_ON_TIMEOUT: &str = "Whether to cancel the run if it \
+    reaches the configured limits";
