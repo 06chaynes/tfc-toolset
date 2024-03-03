@@ -13,7 +13,7 @@ tfct workspace update [options]
 ## Options
 
 | Short | Long                                                | Description                                                                                                                                    |
-|-------|-----------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------|
+| ----- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | `-w`  | `--workspace-name <WORKSPACE_NAME>`                 | The name of the workspace to update.                                                                                                           |
 | `-i`  | `--workspace-id <WORKSPACE_ID>`                     | The ID of the workspace to update.                                                                                                             |
 |       | `--name <NAME>`                                     | The new name of the workspace.                                                                                                                 |
@@ -41,11 +41,10 @@ tfct workspace update [options]
 |       | `--working-directory <WORKING_DIRECTORY>`           | A relative path that Terraform will execute within                                                                                             |
 |       | `--agent-pool-id <AGENT_POOL_ID>`                   | The ID of the agent pool belonging to the workspace's organization                                                                             |
 
-
 ## Examples
 
 ### Create a workspace
 
 ```bash
-tfct workspace update --workspace-name "my-workspace" --description "My New Workspace description" 
+tfct workspace update --workspace-name "my-workspace" --description "My New Workspace description"
 ```

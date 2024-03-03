@@ -12,10 +12,10 @@ tfct tag remove [options]
 
 ## Options
 
-| Short | Long                      | Description                                   |
-|-------|---------------------------|-----------------------------------------------|
-| `-n`  | `--name <NAME>`           | The name of the tag to remove.                |
-|       | `--tag-file <TAG_FILE>`   | The file containing a list of tags to remove. |
+| Short | Long                    | Description                                   |
+| ----- | ----------------------- | --------------------------------------------- |
+| `-n`  | `--name <NAME>`         | The name of the tag to remove.                |
+|       | `--tag-file <TAG_FILE>` | The file containing a list of tags to remove. |
 
 ## Examples
 

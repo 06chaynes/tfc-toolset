@@ -12,11 +12,11 @@ tfct variable delete [options]
 
 ## Options
 
-| Short | Long                    | Description                                            |
-|-------|-------------------------|--------------------------------------------------------|
-| `-k`  | `--var-key <VAR_KEY>`   | The key of the variable to delete from the workspace.  |
-| `-v`  | `--var-id <VAR_ID>`     | The id of the variable to delete from the workspace.   |
-|       | `--var-file <VAR_FILE>` | The file containing variables.                         |
+| Short | Long                    | Description                                           |
+| ----- | ----------------------- | ----------------------------------------------------- |
+| `-k`  | `--var-key <VAR_KEY>`   | The key of the variable to delete from the workspace. |
+| `-v`  | `--var-id <VAR_ID>`     | The id of the variable to delete from the workspace.  |
+|       | `--var-file <VAR_FILE>` | The file containing variables.                        |
 
 ## Examples
 

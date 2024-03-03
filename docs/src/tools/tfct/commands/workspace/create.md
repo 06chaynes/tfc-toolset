@@ -13,7 +13,7 @@ tfct workspace create [options]
 ## Options
 
 | Short | Long                                                | Description                                                                                                                                    |
-|-------|-----------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------|
+| ----- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 |       | `--name <NAME>`                                     | The name of the workspace.                                                                                                                     |
 |       | `--description <DESC>`                              | A description for the workspace.                                                                                                               |
 |       | `--file-triggers-enabled <FILE_TRIGGERS_ENABLED>`   | Whether to filter runs based on the changed files in a VCS push [possible values: true, false]                                                 |
@@ -38,7 +38,6 @@ tfct workspace create [options]
 |       | `--trigger-patterns <TRIGGER_PATTERNS>`             | A list of glob patterns that describe the files Terraform Cloud monitors for changes                                                           |
 |       | `--working-directory <WORKING_DIRECTORY>`           | A relative path that Terraform will execute within                                                                                             |
 |       | `--agent-pool-id <AGENT_POOL_ID>`                   | The ID of the agent pool belonging to the workspace's organization                                                                             |
-
 
 ## Examples
 

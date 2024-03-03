@@ -13,7 +13,7 @@ tfct workspace list [options]
 ## Options
 
 | Short | Long       | Description                                      |
-|-------|------------|--------------------------------------------------|
+| ----- | ---------- | ------------------------------------------------ |
 | `-f`  | `--filter` | Filter the list of workspaces by given criteria. |
 
 ## Examples
