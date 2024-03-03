@@ -1,13 +1,13 @@
-# status
+# discard
 
 ## Description
 
-Get the status of a run
+Discard a run
 
 ## Usage
 
 ```bash
-tfct run status [options]
+tfct run discard [options]
 ```
 
 ## Options
@@ -18,8 +18,8 @@ tfct run status [options]
 
 ## Examples
 
-### Get the status of a run
+### Discard a run
 
 ```bash
-tfct run status --run-id "run-id"
+tfct run discard --run-id "run-id"
 ```

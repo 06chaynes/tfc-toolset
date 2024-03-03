@@ -2,6 +2,8 @@ pub(super) const STATUS: &str = "Get the status of a run.";
 pub(super) const SPEC: &str = "Queue up speculative plan runs";
 pub(super) const PLAN: &str = "Queue up plan and apply runs";
 pub(super) const CREATE: &str = "Create a run.";
+pub(super) const CANCEL: &str = "Cancel a run.";
+pub(super) const DISCARD: &str = "Discard a run.";
 pub(super) const RUN_ID: &str = "The id of the run.";
 pub(super) const MESSAGE: &str = "A message to include with the run";
 pub(super) const TARGET_ADDRS: &str =
@@ -28,3 +30,5 @@ pub(super) const MAX_ITERATIONS: &str = "The maximum number of times to \
     check the status of a run before giving up";
 pub(super) const STATUS_CHECK_SLEEP_SECONDS: &str = "The number of seconds to \
     wait between checking the status of a run";
+pub(super) const CANCEL_ON_TIMEOUT: &str = "Whether to cancel the run if it \
+    reaches the configured limits";

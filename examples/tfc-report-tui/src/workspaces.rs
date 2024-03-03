@@ -124,12 +124,15 @@ pub fn render<'a>(
         );
 
         let vcs_table = match workspace.attributes.vcs_repo {
-            Some(v) => Table::new(vec![Row::new(vec![
-                Cell::from(Span::raw(
-                    v.repository_http_url.unwrap_or_default(),
-                )),
-                Cell::from(Span::raw(v.branch.unwrap_or_default())),
-            ])])
+            Some(v) => Table::new(
+                vec![Row::new(vec![
+                    Cell::from(Span::raw(
+                        v.repository_http_url.unwrap_or_default(),
+                    )),
+                    Cell::from(Span::raw(v.branch.unwrap_or_default())),
+                ])],
+                [Constraint::Fill(1)],
+            )
             .header(Row::new(vec![
                 Cell::from(Span::styled(
                     "URL",
@@ -147,11 +150,14 @@ pub fn render<'a>(
                     .title("VCS")
                     .border_type(BorderType::Plain),
             )
-            .widths(&[Constraint::Percentage(70), Constraint::Percentage(20)]),
-            None => Table::new(vec![Row::new(vec![
-                Cell::from(Span::raw("No VCS Attached")),
-                Cell::from(Span::raw("")),
-            ])])
+            .widths([Constraint::Percentage(70), Constraint::Percentage(20)]),
+            None => Table::new(
+                vec![Row::new(vec![
+                    Cell::from(Span::raw("No VCS Attached")),
+                    Cell::from(Span::raw("")),
+                ])],
+                [Constraint::Fill(1)],
+            )
             .header(Row::new(vec![
                 Cell::from(Span::styled(
                     "URL",
@@ -169,13 +175,18 @@ pub fn render<'a>(
                     .title("VCS")
                     .border_type(BorderType::Plain),
             )
-            .widths(&[Constraint::Percentage(80), Constraint::Percentage(20)]),
+            .widths([Constraint::Percentage(80), Constraint::Percentage(20)]),
         };
 
-        let workspace_detail = Table::new(vec![Row::new(vec![
-            Cell::from(Span::raw(workspace.id.to_string())),
-            Cell::from(Span::raw(workspace.attributes.name.clone().unwrap())),
-        ])])
+        let workspace_detail = Table::new(
+            vec![Row::new(vec![
+                Cell::from(Span::raw(workspace.id.to_string())),
+                Cell::from(Span::raw(
+                    workspace.attributes.name.clone().unwrap(),
+                )),
+            ])],
+            [Constraint::Fill(1)],
+        )
         .header(Row::new(vec![
             Cell::from(Span::styled(
                 "ID",
@@ -193,10 +204,10 @@ pub fn render<'a>(
                 .title("Details")
                 .border_type(BorderType::Plain),
         )
-        .widths(&[Constraint::Percentage(30), Constraint::Percentage(70)]);
+        .widths([Constraint::Percentage(30), Constraint::Percentage(70)]);
         (filter, list, workspace_detail, vcs_table, tag_list)
     } else {
-        let tag_list = List::new(vec![]).block(
+        let tag_list = List::default().block(
             Block::default()
                 .borders(Borders::ALL)
                 .style(Style::default().fg(Color::White))
@@ -206,24 +217,26 @@ pub fn render<'a>(
 
         let blank_row = Row::new(vec![Cell::from(Span::raw("".to_string()))]);
 
-        let vcs_table =
-            Table::new(vec![Row::new(vec![Cell::from(Span::raw(""))])])
-                .header(blank_row.clone())
-                .block(
-                    Block::default()
-                        .borders(Borders::ALL)
-                        .style(Style::default().fg(Color::White))
-                        .title("VCS")
-                        .border_type(BorderType::Plain),
-                )
-                .widths(&[
-                    Constraint::Percentage(80),
-                    Constraint::Percentage(20),
-                ]);
+        let vcs_table = Table::new(
+            vec![Row::new(vec![Cell::from(Span::raw(""))])],
+            [Constraint::Fill(1)],
+        )
+        .header(blank_row.clone())
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .style(Style::default().fg(Color::White))
+                .title("VCS")
+                .border_type(BorderType::Plain),
+        )
+        .widths([Constraint::Percentage(80), Constraint::Percentage(20)]);
 
-        let workspace_detail = Table::new(vec![Row::new(vec![Cell::from(
-            Span::raw("No Workspace Selected".to_string()),
-        )])])
+        let workspace_detail = Table::new(
+            vec![Row::new(vec![Cell::from(Span::raw(
+                "No Workspace Selected".to_string(),
+            ))])],
+            [Constraint::Fill(1)],
+        )
         .header(blank_row)
         .block(
             Block::default()
@@ -232,7 +245,7 @@ pub fn render<'a>(
                 .title("Details")
                 .border_type(BorderType::Plain),
         )
-        .widths(&[Constraint::Percentage(30), Constraint::Percentage(70)]);
+        .widths([Constraint::Percentage(30), Constraint::Percentage(70)]);
         (filter, list, workspace_detail, vcs_table, tag_list)
     }
 }

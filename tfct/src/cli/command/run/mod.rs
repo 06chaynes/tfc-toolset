@@ -1,8 +1,12 @@
 mod about;
+pub(crate) mod cancel;
+pub(crate) mod discard;
 pub(crate) mod plan;
 pub(crate) mod spec;
 pub(crate) mod status;
 
+pub use cancel::{cancel, CancelArgs};
+pub use discard::{discard, DiscardArgs};
 pub use plan::plan;
 pub use spec::spec;
 pub use status::{status, StatusArgs};
@@ -25,6 +29,10 @@ pub(crate) enum RunCmds {
     Spec(DefaultArgs),
     #[clap(about = about::PLAN)]
     Plan(PlanArgs),
+    #[clap(about = about::CANCEL)]
+    Cancel(CancelArgs),
+    #[clap(about = about::DISCARD)]
+    Discard(DiscardArgs),
 }
 
 #[derive(clap::Args, Debug)]
@@ -67,6 +75,8 @@ pub struct DefaultArgs {
     pub queue_max_iterations: Option<usize>,
     #[arg(long, help = about::STATUS_CHECK_SLEEP_SECONDS)]
     pub queue_status_check_sleep_seconds: Option<u64>,
+    #[arg(long, help = about::CANCEL_ON_TIMEOUT)]
+    pub cancel_on_timeout: Option<bool>,
 }
 
 fn set_default_args(args: &mut Attributes, default: &DefaultArgs) {
@@ -98,6 +108,9 @@ fn override_queue_options(options: &mut QueueOptions, default: &DefaultArgs) {
         default.queue_status_check_sleep_seconds
     {
         options.status_check_sleep_seconds = status_check_sleep_seconds;
+    }
+    if let Some(cancel_on_timeout) = default.cancel_on_timeout {
+        options.cancel_on_timeout = cancel_on_timeout;
     }
 }
 

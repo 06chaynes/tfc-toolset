@@ -10,6 +10,7 @@ pub struct Settings {
     pub max_concurrent: Option<usize>,
     pub max_iterations: Option<usize>,
     pub status_check_sleep_seconds: Option<u64>,
+    pub cancel_on_timeout: Option<bool>,
 }
 
 impl Settings {
@@ -22,6 +23,7 @@ impl Settings {
                 "status_check_sleep_seconds",
                 STATUS_CHECK_SLEEP_SECONDS_DEFAULT,
             )?
+            .set_default("cancel_on_timeout", false)?
             // Start off by merging in the "default" configuration file
             .add_source(File::with_name("settings.toml").required(false))
             // Add in settings from the environment

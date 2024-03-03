@@ -1,13 +1,13 @@
-# status
+# cancel
 
 ## Description
 
-Get the status of a run
+Cancel a run
 
 ## Usage
 
 ```bash
-tfct run status [options]
+tfct run cancel [options]
 ```
 
 ## Options
@@ -18,8 +18,8 @@ tfct run status [options]
 
 ## Examples
 
-### Get the status of a run
+### Cancel a run
 
 ```bash
-tfct run status --run-id "run-id"
+tfct run cancel --run-id "run-id"
 ```

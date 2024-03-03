@@ -133,6 +133,7 @@ async fn main() -> miette::Result<()> {
     let status_check_sleep_seconds = config
         .status_check_sleep_seconds
         .unwrap_or(settings::STATUS_CHECK_SLEEP_SECONDS_DEFAULT);
+    let cancel_on_timeout = config.cancel_on_timeout.unwrap_or(false);
     let client = default_client(None).into_diagnostic()?;
     // Match on the cli subcommand
     match &cli.command {
@@ -167,6 +168,7 @@ async fn main() -> miette::Result<()> {
                     max_concurrent,
                     max_iterations,
                     status_check_sleep_seconds,
+                    cancel_on_timeout,
                 },
                 attributes,
                 client.clone(),
@@ -203,6 +205,7 @@ async fn main() -> miette::Result<()> {
                     max_concurrent,
                     max_iterations,
                     status_check_sleep_seconds,
+                    cancel_on_timeout,
                 },
                 attributes,
                 client.clone(),

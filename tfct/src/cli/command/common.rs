@@ -109,17 +109,20 @@ pub(crate) async fn parse_workspace_file(
     if let Some(workspace_entries) = workspace_file.workspaces {
         for workspace_entry in workspace_entries {
             if workspace_entry.id.is_some()
-                || workspace_entry.name.is_some()
-                    && workspace_entry.id.is_some()
+                && workspace_entry.attributes.is_some()
             {
+                let workspace = Workspace {
+                    id: workspace_entry.id.unwrap(),
+                    attributes: workspace_entry.attributes.unwrap(),
+                };
+                workspaces.push(workspace);
+            } else if workspace_entry.id.is_some() {
                 let workspace_id = &workspace_entry.id.unwrap();
                 let workspace =
                     workspace::show(workspace_id, config, client.clone())
                         .await?;
                 workspaces.push(workspace);
-            } else if workspace_entry.name.is_some()
-                && workspace_entry.id.is_none()
-            {
+            } else if workspace_entry.name.is_some() {
                 let workspace_name = &workspace_entry.name.unwrap();
                 let workspace = workspace::show_by_name(
                     workspace_name,
