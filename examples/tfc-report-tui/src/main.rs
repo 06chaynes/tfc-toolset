@@ -239,7 +239,7 @@ fn ui(f: &mut Frame, app: &mut App) {
         )
         .split(size);
 
-    let menu = menu_titles
+    let menu: Vec<Line> = menu_titles
         .iter()
         .map(|t| {
             let (first, rest) = t.split_at(1);
