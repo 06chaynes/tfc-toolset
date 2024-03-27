@@ -3188,13 +3188,12 @@ dependencies = [
 
 [[package]]
 name = "tfc-toolset"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "anyhow",
  "async-scoped",
  "async-std",
  "config 0.14.0",
- "itertools",
  "log",
  "serde",
  "serde_json",

@@ -6,11 +6,10 @@ use crate::{
     tag, variable, variable_set, Meta, BASE_URL,
 };
 use async_scoped::AsyncStdScope;
-use itertools::Itertools;
 use log::{error, info};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::fmt::Display;
+use std::{fmt::Display, vec};
 use surf::{http::Method, Client};
 use time::OffsetDateTime;
 use url::Url;
@@ -548,6 +547,7 @@ pub async fn list(
         }
     }
     let req = build_request(Method::Get, url.clone(), config, None);
+    let mut workspaces: Vec<Workspace> = vec![];
     let mut workspace_list: Workspaces = match client.send(req).await {
         Ok(mut r) => {
             if r.status().is_success() {
@@ -570,6 +570,7 @@ pub async fn list(
             return Err(ToolError::General(anyhow::anyhow!(e)));
         }
     };
+    workspaces.append(&mut workspace_list.data);
     // Need to check pagination
     if let Some(meta) = workspace_list.meta {
         let max_depth = config.pagination.max_depth.parse::<u32>()?;
@@ -654,18 +655,12 @@ pub async fn list(
                         },
                     );
                     for mut ws in workspace_pages.into_iter().flatten() {
-                        workspace_list.data.append(&mut ws);
+                        workspaces.append(&mut ws);
                     }
                 }
             }
         }
     }
-    let mut workspaces = workspace_list
-        .data
-        .iter()
-        .unique_by(|ws| ws.id.clone())
-        .cloned()
-        .collect::<Vec<Workspace>>();
     info!("Finished retrieving workspaces.");
     if filter {
         if let Some(query) = config.workspaces.query.clone() {
