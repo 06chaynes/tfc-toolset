@@ -49,4 +49,4 @@ version = "0.6.0"
 
 [dependencies.tfc-toolset-extras]
 path = "../tfc-toolset-extras"
-version = "0.2.2"
+version = "0.2.3"
