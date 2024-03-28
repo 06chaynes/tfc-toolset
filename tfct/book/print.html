@@ -1,0 +1,1034 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js oranda-dark">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>tfc-toolset</title>
+        <meta name="robots" content="noindex" />
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+        <link rel="stylesheet" href="oranda-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "oranda-dark" : "oranda-dark";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('orandamdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('orandamdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('orandamdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('oranda-dark')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="libraries/libraries.html"><strong aria-hidden="true">2.</strong> Libraries</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="libraries/tfc-toolset.html"><strong aria-hidden="true">2.1.</strong> tfc-toolset</a></li><li class="chapter-item expanded "><a href="libraries/tfc-toolset-extras.html"><strong aria-hidden="true">2.2.</strong> tfc-toolset-extras</a></li></ol></li><li class="chapter-item expanded "><a href="tools/tools.html"><strong aria-hidden="true">3.</strong> Tools</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="tools/tfct/tfct.html"><strong aria-hidden="true">3.1.</strong> tfct</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="tools/tfct/installation.html"><strong aria-hidden="true">3.1.1.</strong> Installation</a></li><li class="chapter-item expanded "><a href="tools/tfct/configuration/configuration.html"><strong aria-hidden="true">3.1.2.</strong> Configuration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="tools/tfct/configuration/filtering.html"><strong aria-hidden="true">3.1.2.1.</strong> Filtering</a></li></ol></li><li class="chapter-item expanded "><a href="tools/tfct/commands/commands.html"><strong aria-hidden="true">3.1.3.</strong> Commands</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="tools/tfct/commands/workspace/workspace.html"><strong aria-hidden="true">3.1.3.1.</strong> workspace</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="tools/tfct/commands/workspace/create.html"><strong aria-hidden="true">3.1.3.1.1.</strong> create</a></li><li class="chapter-item expanded "><a href="tools/tfct/commands/workspace/update.html"><strong aria-hidden="true">3.1.3.1.2.</strong> update</a></li><li class="chapter-item expanded "><a href="tools/tfct/commands/workspace/delete.html"><strong aria-hidden="true">3.1.3.1.3.</strong> delete</a></li><li class="chapter-item expanded "><a href="tools/tfct/commands/workspace/list.html"><strong aria-hidden="true">3.1.3.1.4.</strong> list</a></li><li class="chapter-item expanded "><a href="tools/tfct/commands/workspace/show.html"><strong aria-hidden="true">3.1.3.1.5.</strong> show</a></li></ol></li><li class="chapter-item expanded "><a href="tools/tfct/commands/variable/variable.html"><strong aria-hidden="true">3.1.3.2.</strong> variable</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="tools/tfct/commands/variable/create.html"><strong aria-hidden="true">3.1.3.2.1.</strong> create</a></li><li class="chapter-item expanded "><a href="tools/tfct/commands/variable/delete.html"><strong aria-hidden="true">3.1.3.2.2.</strong> delete</a></li><li class="chapter-item expanded "><a href="tools/tfct/commands/variable/list.html"><strong aria-hidden="true">3.1.3.2.3.</strong> list</a></li></ol></li><li class="chapter-item expanded "><a href="tools/tfct/commands/variable-set/variable-set.html"><strong aria-hidden="true">3.1.3.3.</strong> variable-set</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="tools/tfct/commands/variable-set/apply.html"><strong aria-hidden="true">3.1.3.3.1.</strong> apply</a></li><li class="chapter-item expanded "><a href="tools/tfct/commands/variable-set/remove.html"><strong aria-hidden="true">3.1.3.3.2.</strong> remove</a></li></ol></li><li class="chapter-item expanded "><a href="tools/tfct/commands/tag/tag.html"><strong aria-hidden="true">3.1.3.4.</strong> tag</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="tools/tfct/commands/tag/add.html"><strong aria-hidden="true">3.1.3.4.1.</strong> add</a></li><li class="chapter-item expanded "><a href="tools/tfct/commands/tag/remove.html"><strong aria-hidden="true">3.1.3.4.2.</strong> remove</a></li><li class="chapter-item expanded "><a href="tools/tfct/commands/tag/list.html"><strong aria-hidden="true">3.1.3.4.3.</strong> list</a></li></ol></li><li class="chapter-item expanded "><a href="tools/tfct/commands/run/run.html"><strong aria-hidden="true">3.1.3.5.</strong> run</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="tools/tfct/commands/run/status.html"><strong aria-hidden="true">3.1.3.5.1.</strong> status</a></li><li class="chapter-item expanded "><a href="tools/tfct/commands/run/spec.html"><strong aria-hidden="true">3.1.3.5.2.</strong> spec</a></li><li class="chapter-item expanded "><a href="tools/tfct/commands/run/plan.html"><strong aria-hidden="true">3.1.3.5.3.</strong> plan</a></li><li class="chapter-item expanded "><a href="tools/tfct/commands/run/cancel.html"><strong aria-hidden="true">3.1.3.5.4.</strong> cancel</a></li><li class="chapter-item expanded "><a href="tools/tfct/commands/run/discard.html"><strong aria-hidden="true">3.1.3.5.5.</strong> discard</a></li></ol></li><li class="chapter-item expanded "><a href="tools/tfct/commands/clean/clean.html"><strong aria-hidden="true">3.1.3.6.</strong> clean</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="tools/tfct/commands/clean/workspace.html"><strong aria-hidden="true">3.1.3.6.1.</strong> workspace</a></li></ol></li><li class="chapter-item expanded "><a href="tools/tfct/commands/help.html"><strong aria-hidden="true">3.1.3.7.</strong> help</a></li></ol></li></ol></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="oranda-dark">Axo Dark</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="oranda-light">Axo Light</button></li>
+
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">tfc-toolset</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
+<p>tfc-toolset is a collection of tools to help in management of your Terraform cloud organization.</p>
+<h2 id="whats-in-the-box"><a class="header" href="#whats-in-the-box">What's in the box?</a></h2>
+<ul>
+<li>
+<p>Wrath.</p>
+</li>
+<li>
+<p><code>tfc-toolset</code>: The core library containing common functions for working with the Terraform cloud API. Each tool extends upon this library to accomplish its specific purpose.</p>
+</li>
+<li>
+<p><code>tfc-toolset-extras</code>: Extends the core library with more optional functionality.</p>
+</li>
+<li>
+<p><code>tfct</code>: A command line tool for interacting with the Terraform cloud API that builds off the core library.</p>
+</li>
+<li>
+<p><code>tfc-report-tui</code>: Reading large JSON payloads can be a headache, this maybe slightly less so.</p>
+</li>
+</ul>
+<h2 id="why"><a class="header" href="#why">Why?</a></h2>
+<p>Because I like a side of automation with my automation. nom nom nom</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="libraries"><a class="header" href="#libraries">Libraries</a></h1>
+<p>The following libraries are provided this toolset:</p>
+<h2 id="tfc-toolset"><a class="header" href="#tfc-toolset"><a href="libraries/./tfc-toolset.html">tfc-toolset</a></a></h2>
+<p>The core library containing common functions for working with the Terraform cloud API. Each tool extends upon this library to accomplish its specific purpose.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="tfc-toolset-1"><a class="header" href="#tfc-toolset-1">tfc-toolset</a></h1>
+<p>Todo!</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="tfc-toolset-extras"><a class="header" href="#tfc-toolset-extras">tfc-toolset-extras</a></h1>
+<p>Todo!</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="tools"><a class="header" href="#tools">Tools</a></h1>
+<p>The following tools are provided this toolset:</p>
+<h2 id="tfct"><a class="header" href="#tfct"><a href="tools/./tfct/tfct.html">tfct</a></a></h2>
+<p>A tool to help manage a toolset that helps manage your deployments.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="tfct-1"><a class="header" href="#tfct-1">tfct</a></h1>
+<p>A tool to help manage a toolset that helps manage your deployments.</p>
+<h2 id="installation"><a class="header" href="#installation"><a href="tools/tfct/./installation.html">Installation</a></a></h2>
+<p>Details on how to install tfct.</p>
+<h2 id="configuration"><a class="header" href="#configuration"><a href="tools/tfct/./configuration/configuration.html">Configuration</a></a></h2>
+<p>Details on how to configure tfct.</p>
+<h2 id="commands"><a class="header" href="#commands"><a href="tools/tfct/./commands/commands.html">Commands</a></a></h2>
+<p>Details on each of the commands available in tfct.</p>
+<h2 id="usage"><a class="header" href="#usage">Usage</a></h2>
+<pre><code class="language-shell">tfct [OPTIONS] &lt;COMMAND&gt;
+</code></pre>
+<h2 id="global-options"><a class="header" href="#global-options">Global Options</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Short</th><th>Long</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>-h</code></td><td><code>--help</code></td><td>Prints help information.</td></tr>
+<tr><td><code>-V</code></td><td><code>--version</code></td><td>Prints version information.</td></tr>
+<tr><td></td><td><code>--org &lt;ORG&gt;</code></td><td>The name organization to use.</td></tr>
+<tr><td></td><td><code>--token &lt;TOKEN&gt;</code></td><td>The token to use for authentication.</td></tr>
+<tr><td></td><td><code>--project-id &lt;PROJECT_ID&gt;</code></td><td>The ID of the project to use.</td></tr>
+<tr><td></td><td><code>--log &lt;LOG&gt;</code></td><td>The log level to use.</td></tr>
+<tr><td></td><td><code>--output &lt;OUTPUT&gt;</code></td><td>The location where output should be written.</td></tr>
+<tr><td></td><td><code>--start-page &lt;START_PAGE&gt;</code></td><td>The page to start at when retrieving data.</td></tr>
+<tr><td></td><td><code>--page-size &lt;PAGE_SIZE&gt;</code></td><td>The number of items to retrieve per page.</td></tr>
+<tr><td></td><td><code>--max-pages &lt;MAX_PAGES&gt;</code></td><td>The maximum number of pages to retrieve.</td></tr>
+<tr><td></td><td><code>--save-output</code></td><td>Save the output of the command to a file.</td></tr>
+<tr><td></td><td><code>--pretty-output</code></td><td>Pretty print the output when saving to a file.</td></tr>
+<tr><td></td><td><code>--query-name &lt;QUERY_NAME&gt;</code></td><td>The name of the workspace to fuzzy search for.</td></tr>
+<tr><td></td><td><code>--query-wildcard-name &lt;QUERY_WILDCARD_NAME&gt;</code></td><td>The name of the workspace to wildcard search for.</td></tr>
+<tr><td></td><td><code>--query-variable &lt;QUERY_VARIABLE&gt;</code></td><td>The name of the variable to search for, formatted as key:operator:value.</td></tr>
+<tr><td></td><td><code>--query-tag &lt;QUERY_TAG&gt;</code></td><td>The name of the tag to search for, formatted as operator:name.</td></tr>
+</tbody></table>
+</div><div style="break-before: page; page-break-before: always;"></div><h1 id="installation-1"><a class="header" href="#installation-1">Installation</a></h1>
+<p>You can find the latest binaries for Linux, macOS, and Windows on the <a href="https://github.com/06chaynes/tfc-toolset/releases">releases page</a>.</p>
+<h2 id="via-homebrew"><a class="header" href="#via-homebrew">Via Homebrew</a></h2>
+<pre><code class="language-sh">brew install 06chaynes/homebrew-tfct/tfct
+</code></pre>
+<h2 id="via-cargo"><a class="header" href="#via-cargo">Via Cargo</a></h2>
+<pre><code class="language-sh">cargo install tfct
+</code></pre>
+<h2 id="via-shell-script"><a class="header" href="#via-shell-script">Via Shell Script</a></h2>
+<p>Where <code>&lt;version&gt;</code> is the version you want to install, e.g. <code>v0.1.0</code>.</p>
+<pre><code class="language-sh">curl --proto '=https' --tlsv1.2 -LsSf https://github.com/06chaynes/tfc-toolset/releases/download/tfct/&lt;version&gt;/tfct-installer.sh | sh
+</code></pre>
+<h2 id="via-powershell-script"><a class="header" href="#via-powershell-script">Via Powershell Script</a></h2>
+<p>Where <code>&lt;version&gt;</code> is the version you want to install, e.g. <code>v0.1.0</code>.</p>
+<pre><code class="language-pwsh">irm https://github.com/06chaynes/tfc-toolset/releases/download/tfct/&lt;version&gt;/tfct-installer.ps1 | iex
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="configuration-1"><a class="header" href="#configuration-1">Configuration</a></h1>
+<p><code>tfct</code> is configured using either a configuration file or via cli arguments.</p>
+<h2 id="toml-configuration-file"><a class="header" href="#toml-configuration-file">TOML configuration file</a></h2>
+<p>The configuration file is a TOML file that can contain the following properties:</p>
+<pre><code class="language-toml">token = &quot;tfc-access-token&quot; # The Terraform Cloud API token to use when making requests.
+org = &quot;org-name&quot; # The Terraform Cloud organization to use when making requests.
+project = &quot;project-id&quot; # The project to use when making requests.
+output = &quot;production.json&quot; # The location where report output should be written
+save_output = true # Whether to save the report output of commands to the `output` location.
+log = &quot;info&quot; # The log level to use when logging messages. Valid values are `trace`, `debug`, `info`, `warn`, and `error`.
+
+[workspaces.query]
+name = &quot;aws-&quot; # The name of the workspace to fuzzy search for
+wildcard_name = &quot;*-prod&quot; # The wildcard name of the workspace to search for
+
+[[workspaces.query.tags]] # The tag to search for, formatted as operator:name
+operator = &quot;NotContains&quot;
+name = &quot;team:&quot;
+
+[[workspaces.query.variables]] # The variable to search for, formatted as key:operator:value
+key = &quot;mode&quot;
+operator = &quot;Contains&quot;
+value = &quot;prod&quot;
+
+[pagination]
+start_page = &quot;1&quot; # The page to start at when retrieving data with default of `1` (first page)
+max_depth = &quot;1&quot; # The maximum number of pages to retrieve with default of `1` (first page only), 0 for all
+page_size = &quot;20&quot; # The number of items to retrieve per page with default of `20` (20 items per page)
+</code></pre>
+<h2 id="cli-arguments"><a class="header" href="#cli-arguments">CLI arguments</a></h2>
+<p><code>tfct</code> can also be configured using cli arguments. The cli arguments are the similar as the properties in the configuration file,
+but are prefixed with <code>--</code> and use <code>kebab-case</code> instead of <code>snake_case</code>.
+For example, the <code>save_output</code> property in the configuration file would be <code>--save-output</code> as a cli argument.</p>
+<pre><code class="language-bash">--org &lt;ORG&gt;
+  The name of the organization
+
+--token &lt;TOKEN&gt;
+  The token to use for authentication
+
+--project &lt;PROJECT&gt;
+  The id of the project
+
+--log &lt;LOG&gt;
+  The log level to use
+
+--output &lt;OUTPUT&gt;
+  The location where report output should be written
+
+--start-page &lt;START_PAGE&gt;
+  The page to start at when retrieving data
+
+--max-pages &lt;MAX_PAGES&gt;
+  The maximum number of pages to retrieve
+
+--page-size &lt;PAGE_SIZE&gt;
+  The number of items to retrieve per page
+
+--save-output
+  Save the output of the command to a file
+
+--pretty-output
+  Pretty print the output when saving to a file
+
+--query-name &lt;QUERY_NAME&gt;
+  The name of the workspace to fuzzy search for
+
+--query-wildcard-name &lt;QUERY_WILDCARD_NAME&gt;
+  The name of the workspace to wildcard search for
+
+--query-variable &lt;QUERY_VARIABLE&gt;
+  The name of the variable to search for, formatted as key:operator:value
+
+--query-tag &lt;QUERY_TAG&gt;
+  The name of the tag to search for, formatted as operator:name
+</code></pre>
+<h2 id="valid-operators"><a class="header" href="#valid-operators">Valid Operators</a></h2>
+<p>The valid operators to use in the toml configuration file are:</p>
+<ul>
+<li><code>Contains</code></li>
+<li><code>NotContains</code></li>
+<li><code>Equals</code></li>
+<li><code>NotEquals</code></li>
+</ul>
+<p>The valid operators to use in the cli arguments are:</p>
+<ul>
+<li><code>~=</code> for <code>Contains</code></li>
+<li><code>!~=</code> for <code>NotContains</code></li>
+<li><code>==</code> for <code>Equals</code></li>
+<li><code>!=</code> for <code>NotEquals</code></li>
+</ul>
+<p>For more information on filtering see <a href="tools/tfct/configuration/./filtering.html">Filtering</a>.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="filtering"><a class="header" href="#filtering">Filtering</a></h1>
+<h2 id="query-filters"><a class="header" href="#query-filters">Query Filters</a></h2>
+<p>Filters can be combined as needed. The current run order for filter logic is:</p>
+<ol>
+<li>Name</li>
+<li>Wildcard Name</li>
+<li>Tags</li>
+<li>Variables</li>
+</ol>
+<h3 id="variable-filters"><a class="header" href="#variable-filters">Variable Filters</a></h3>
+<p>First let's take a look at an example variable filter setup.</p>
+<pre><code class="language-toml">[query]
+name = &quot;aws-&quot;
+wildcard_name = &quot;*-prod&quot;
+
+[[query.variables]]
+key = &quot;mode&quot;
+operator = &quot;Contains&quot;
+value = &quot;prod&quot;
+
+[[query.variables]]
+key = &quot;status&quot;
+operator = &quot;NotEqual&quot;
+value = &quot;migrating&quot;
+</code></pre>
+<p>In this example we will first have an initial name filter, fuzzy searching for workspaces with a name matching <code>aws-</code>.
+We also have a wildcard name filter, looking for workspaces with a name ending with <code>-prod</code>.
+We then add two variable filters to our query.
+The first filter will require that the workspace has a variable with a key of <code>mode</code> and a value containing the string <code>prod</code>.
+The second filter will check the variable with the key of <code>status</code>, should it exist, and verify that it does not exactly equal <code>migrating</code>.
+So our resulting dataset would contain only those workspaces starting the with the name <code>aws-</code>,
+containing the string <code>prod</code> in the <code>mode</code> key, and will not have a <code>status</code> of <code>migrating</code> should the key exist.</p>
+<h3 id="tag-filters"><a class="header" href="#tag-filters">Tag Filters</a></h3>
+<p>Tag filter logic works very similar to variable filter logic and runs before the variable filter. Let's take a look at an example tag filter setup.</p>
+<pre><code class="language-toml">[query]
+
+[[query.tags]]
+operator = &quot;NotContains&quot;
+name = &quot;team:&quot;
+</code></pre>
+<p>In this example we will not set a name filter, notice how the <code>[query]</code> table is defined but empty.
+We have one tag filter set which will look at the tags for each workspace in our initial query
+(since we didn't set any additional filter parameters this would be the first page of workspaces containing up to 20 entries,
+using the default pagination settings) and will remove any workspace from the results that do not have a tag that contains <code>team:</code>.</p>
+<h3 id="operators"><a class="header" href="#operators">Operators</a></h3>
+<p>Currently the available &quot;operators&quot; are:</p>
+<ul>
+<li>Equals
+<ul>
+<li>A variable with the specified key must exist, and must exactly equal the specified value</li>
+<li>A tag must exist with a name that exactly equals the specified value</li>
+</ul>
+</li>
+<li>NotEquals
+<ul>
+<li>Should a variable with the specified key exist it must not exactly equal the specified value</li>
+<li>A tag must not exist with a name that exactly equals the specified value</li>
+</ul>
+</li>
+<li>Contains
+<ul>
+<li>A variable with the specified key must exist, and must contain the specified value</li>
+<li>A tag must exist with a name that contains the specified value</li>
+</ul>
+</li>
+<li>NotContains
+<ul>
+<li>Should a variable with the specified key exist it must not contain the specified value</li>
+<li>A tag must not exist with a name that contains the specified value</li>
+</ul>
+</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="commands-1"><a class="header" href="#commands-1">Commands</a></h1>
+<h2 id="workspace"><a class="header" href="#workspace"><a href="tools/tfct/commands/./workspace/workspace.html">workspace</a></a></h2>
+<p>Manage workspaces.</p>
+<h2 id="variable"><a class="header" href="#variable"><a href="tools/tfct/commands/./variable/variable.html">variable</a></a></h2>
+<p>Manage workspace variables.</p>
+<h2 id="variable-set"><a class="header" href="#variable-set"><a href="tools/tfct/commands/./variable-set/variable-set.html">variable-set</a></a></h2>
+<p>Manage variable sets.</p>
+<h2 id="tag"><a class="header" href="#tag"><a href="tools/tfct/commands/./tag/tag.html">tag</a></a></h2>
+<p>Manage workspace tags.</p>
+<h2 id="run"><a class="header" href="#run"><a href="tools/tfct/commands/./run/run.html">run</a></a></h2>
+<p>Manage workspace runs.</p>
+<h2 id="clean"><a class="header" href="#clean"><a href="tools/tfct/commands/./clean/clean.html">clean</a></a></h2>
+<p>Run cleanup operations.</p>
+<h2 id="help"><a class="header" href="#help"><a href="tools/tfct/commands/./help.html">help</a></a></h2>
+<p>Prints help message for a command.</p>
+<h1 id="global-options-1"><a class="header" href="#global-options-1">Global Options</a></h1>
+<div class="table-wrapper"><table><thead><tr><th>Short</th><th>Long</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>-h</code></td><td><code>--help</code></td><td>Prints help information.</td></tr>
+<tr><td><code>-V</code></td><td><code>--version</code></td><td>Prints version information.</td></tr>
+<tr><td></td><td><code>--org &lt;ORG&gt;</code></td><td>The name organization to use.</td></tr>
+<tr><td></td><td><code>--token &lt;TOKEN&gt;</code></td><td>The token to use for authentication.</td></tr>
+<tr><td></td><td><code>--project-id &lt;PROJECT_ID&gt;</code></td><td>The ID of the project to use.</td></tr>
+<tr><td></td><td><code>--log &lt;LOG&gt;</code></td><td>The log level to use.</td></tr>
+<tr><td></td><td><code>--output &lt;OUTPUT&gt;</code></td><td>The location where output should be written.</td></tr>
+<tr><td></td><td><code>--start-page &lt;START_PAGE&gt;</code></td><td>The page to start at when retrieving data.</td></tr>
+<tr><td></td><td><code>--page-size &lt;PAGE_SIZE&gt;</code></td><td>The number of items to retrieve per page.</td></tr>
+<tr><td></td><td><code>--max-pages &lt;MAX_PAGES&gt;</code></td><td>The maximum number of pages to retrieve.</td></tr>
+<tr><td></td><td><code>--save-output</code></td><td>Save the output of the command to a file.</td></tr>
+<tr><td></td><td><code>--pretty-output</code></td><td>Pretty print the output when saving to a file.</td></tr>
+<tr><td></td><td><code>--query-name &lt;QUERY_NAME&gt;</code></td><td>The name of the workspace to fuzzy search for.</td></tr>
+<tr><td></td><td><code>--query-wildcard-name &lt;QUERY_WILDCARD_NAME&gt;</code></td><td>The name of the workspace to wildcard search for.</td></tr>
+<tr><td></td><td><code>--query-variable &lt;QUERY_VARIABLE&gt;</code></td><td>The name of the variable to search for, formatted as key:operator:value.</td></tr>
+<tr><td></td><td><code>--query-tag &lt;QUERY_TAG&gt;</code></td><td>The name of the tag to search for, formatted as operator:name.</td></tr>
+</tbody></table>
+</div><div style="break-before: page; page-break-before: always;"></div><h1 id="workspace-1"><a class="header" href="#workspace-1">workspace</a></h1>
+<h2 id="description"><a class="header" href="#description">Description</a></h2>
+<p>Manage workspaces.</p>
+<h2 id="usage-1"><a class="header" href="#usage-1">Usage</a></h2>
+<pre><code class="language-bash">tfct workspace [command] [options]
+</code></pre>
+<h2 id="subcommands"><a class="header" href="#subcommands">Subcommands</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><a href="tools/tfct/commands/workspace/./create.html"><code>create</code></a></td><td>Create a workspace.</td></tr>
+<tr><td><a href="tools/tfct/commands/workspace/./update.html"><code>update</code></a></td><td>Update a workspace.</td></tr>
+<tr><td><a href="tools/tfct/commands/workspace/./delete.html"><code>delete</code></a></td><td>Delete a workspace.</td></tr>
+<tr><td><a href="tools/tfct/commands/workspace/./list.html"><code>list</code></a></td><td>List workspaces.</td></tr>
+<tr><td><a href="tools/tfct/commands/workspace/./show.html"><code>show</code></a></td><td>Show details of a workspace.</td></tr>
+<tr><td><code>help</code></td><td>Prints help information.</td></tr>
+</tbody></table>
+</div><div style="break-before: page; page-break-before: always;"></div><h1 id="create"><a class="header" href="#create">create</a></h1>
+<h2 id="description-1"><a class="header" href="#description-1">Description</a></h2>
+<p>Create a workspace.</p>
+<h2 id="usage-2"><a class="header" href="#usage-2">Usage</a></h2>
+<pre><code class="language-bash">tfct workspace create [options]
+</code></pre>
+<h2 id="options"><a class="header" href="#options">Options</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Short</th><th>Long</th><th>Description</th></tr></thead><tbody>
+<tr><td></td><td><code>--name &lt;NAME&gt;</code></td><td>The name of the workspace.</td></tr>
+<tr><td></td><td><code>--description &lt;DESC&gt;</code></td><td>A description for the workspace.</td></tr>
+<tr><td></td><td><code>--file-triggers-enabled &lt;FILE_TRIGGERS_ENABLED&gt;</code></td><td>Whether to filter runs based on the changed files in a VCS push [possible values: true, false]</td></tr>
+<tr><td></td><td><code>--trigger-prefixes &lt;TRIGGER_PREFIXES&gt;</code></td><td>A list of trigger prefixes that describe the paths Terraform Cloud monitors for changes, in addition to the working directory</td></tr>
+<tr><td></td><td><code>--vcs-branch &lt;VCS_BRANCH&gt;</code></td><td>The repository branch that Terraform will execute from</td></tr>
+<tr><td></td><td><code>--vcs-identifier &lt;VCS_IDENTIFIER&gt;</code></td><td>A reference to your VCS repository in the format :org/:repo where :org and :repo refer to the organization and repository in your VCS provider</td></tr>
+<tr><td></td><td><code>--vcs-ingress-submodules &lt;VCS_INGRESS_SUBMODULES&gt;</code></td><td>Whether to fetch submodules for a VCS repository [possible values: true, false]</td></tr>
+<tr><td></td><td><code>--vcs-oauth-token-id &lt;VCS_OAUTH_TOKEN_ID&gt;</code></td><td>The VCS Connection (OAuth Connection + Token) to use</td></tr>
+<tr><td></td><td><code>--vcs-tags-regex &lt;VCS_TAGS_REGEX&gt;</code></td><td>A regular expression used to match Git tags</td></tr>
+<tr><td></td><td><code>--terraform-version &lt;TERRAFORM_VERSION&gt;</code></td><td>The version of Terraform to use for this workspace</td></tr>
+<tr><td></td><td><code>--execution-mode &lt;EXECUTION_MODE&gt;</code></td><td>Which execution mode to use for the workspace. Valid values are remote, local, and agent</td></tr>
+<tr><td></td><td><code>--auto-apply &lt;AUTO_APPLY&gt;</code></td><td>Whether to automatically apply changes when a Terraform plan is successful [possible values: true, false]</td></tr>
+<tr><td></td><td><code>--speculative-enabled &lt;SPECULATIVE_ENABLED&gt;</code></td><td>Whether this workspace allows automatic speculative plans [possible values: true, false]</td></tr>
+<tr><td></td><td><code>--source-url &lt;SOURCE_URL&gt;</code></td><td>A URL identifying the application or client creating this workspace</td></tr>
+<tr><td></td><td><code>--source-name &lt;SOURCE_NAME&gt;</code></td><td>A friendly name for the application or client creating this workspace [default: tfc-toolset]</td></tr>
+<tr><td></td><td><code>--queue-all-runs &lt;QUEUE_ALL_RUNS&gt;</code></td><td>Whether runs should be queued immediately after workspace creation [possible values: true, false]</td></tr>
+<tr><td></td><td><code>--allow-destroy-plan &lt;ALLOW_DESTROY_PLAN&gt;</code></td><td>Whether destroy plans can be queued on this workspace [possible values: true, false]</td></tr>
+<tr><td></td><td><code>--auto-destroy-at &lt;AUTO_DESTROY_AT&gt;</code></td><td>Timestamp (in RFC3339 format) when the next scheduled destroy run will occur</td></tr>
+<tr><td></td><td><code>--assessments-enabled &lt;ASSESSMENTS_ENABLED&gt;</code></td><td>Whether or not Terraform Cloud performs health assessments for the workspace [possible values: true, false]</td></tr>
+<tr><td></td><td><code>--global-remote-state &lt;GLOBAL_REMOTE_STATE&gt;</code></td><td>Whether the workspace should allow all workspaces in the organization to access its state data during runs [possible values: true, false]</td></tr>
+<tr><td></td><td><code>--tags-regex &lt;TAGS_REGEX&gt;</code></td><td>A regular expression used to match Git tags</td></tr>
+<tr><td></td><td><code>--trigger-patterns &lt;TRIGGER_PATTERNS&gt;</code></td><td>A list of glob patterns that describe the files Terraform Cloud monitors for changes</td></tr>
+<tr><td></td><td><code>--working-directory &lt;WORKING_DIRECTORY&gt;</code></td><td>A relative path that Terraform will execute within</td></tr>
+<tr><td></td><td><code>--agent-pool-id &lt;AGENT_POOL_ID&gt;</code></td><td>The ID of the agent pool belonging to the workspace's organization</td></tr>
+</tbody></table>
+</div>
+<h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
+<h3 id="create-a-workspace"><a class="header" href="#create-a-workspace">Create a workspace</a></h3>
+<pre><code class="language-bash">tfct workspace create --name &quot;my-workspace&quot; --description &quot;My Workspace description&quot; --vcs-identifier &quot;my-org/my-repo&quot; --vcs-branch &quot;main&quot; --vcs-oauth-token-id &quot;ot-id&quot;
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="update"><a class="header" href="#update">update</a></h1>
+<h2 id="description-2"><a class="header" href="#description-2">Description</a></h2>
+<p>Update a workspace.</p>
+<h2 id="usage-3"><a class="header" href="#usage-3">Usage</a></h2>
+<pre><code class="language-bash">tfct workspace update [options]
+</code></pre>
+<h2 id="options-1"><a class="header" href="#options-1">Options</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Short</th><th>Long</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>-w</code></td><td><code>--workspace-name &lt;WORKSPACE_NAME&gt;</code></td><td>The name of the workspace to update.</td></tr>
+<tr><td><code>-i</code></td><td><code>--workspace-id &lt;WORKSPACE_ID&gt;</code></td><td>The ID of the workspace to update.</td></tr>
+<tr><td></td><td><code>--name &lt;NAME&gt;</code></td><td>The new name of the workspace.</td></tr>
+<tr><td></td><td><code>--description &lt;DESC&gt;</code></td><td>A description for the workspace.</td></tr>
+<tr><td></td><td><code>--file-triggers-enabled &lt;FILE_TRIGGERS_ENABLED&gt;</code></td><td>Whether to filter runs based on the changed files in a VCS push [possible values: true, false]</td></tr>
+<tr><td></td><td><code>--trigger-prefixes &lt;TRIGGER_PREFIXES&gt;</code></td><td>A list of trigger prefixes that describe the paths Terraform Cloud monitors for changes, in addition to the working directory</td></tr>
+<tr><td></td><td><code>--vcs-branch &lt;VCS_BRANCH&gt;</code></td><td>The repository branch that Terraform will execute from</td></tr>
+<tr><td></td><td><code>--vcs-identifier &lt;VCS_IDENTIFIER&gt;</code></td><td>A reference to your VCS repository in the format :org/:repo where :org and :repo refer to the organization and repository in your VCS provider</td></tr>
+<tr><td></td><td><code>--vcs-ingress-submodules &lt;VCS_INGRESS_SUBMODULES&gt;</code></td><td>Whether to fetch submodules for a VCS repository [possible values: true, false]</td></tr>
+<tr><td></td><td><code>--vcs-oauth-token-id &lt;VCS_OAUTH_TOKEN_ID&gt;</code></td><td>The VCS Connection (OAuth Connection + Token) to use</td></tr>
+<tr><td></td><td><code>--vcs-tags-regex &lt;VCS_TAGS_REGEX&gt;</code></td><td>A regular expression used to match Git tags</td></tr>
+<tr><td></td><td><code>--terraform-version &lt;TERRAFORM_VERSION&gt;</code></td><td>The version of Terraform to use for this workspace</td></tr>
+<tr><td></td><td><code>--execution-mode &lt;EXECUTION_MODE&gt;</code></td><td>Which execution mode to use for the workspace. Valid values are remote, local, and agent</td></tr>
+<tr><td></td><td><code>--auto-apply &lt;AUTO_APPLY&gt;</code></td><td>Whether to automatically apply changes when a Terraform plan is successful [possible values: true, false]</td></tr>
+<tr><td></td><td><code>--speculative-enabled &lt;SPECULATIVE_ENABLED&gt;</code></td><td>Whether this workspace allows automatic speculative plans [possible values: true, false]</td></tr>
+<tr><td></td><td><code>--source-url &lt;SOURCE_URL&gt;</code></td><td>A URL identifying the application or client creating this workspace</td></tr>
+<tr><td></td><td><code>--source-name &lt;SOURCE_NAME&gt;</code></td><td>A friendly name for the application or client creating this workspace [default: tfc-toolset]</td></tr>
+<tr><td></td><td><code>--queue-all-runs &lt;QUEUE_ALL_RUNS&gt;</code></td><td>Whether runs should be queued immediately after workspace creation [possible values: true, false]</td></tr>
+<tr><td></td><td><code>--allow-destroy-plan &lt;ALLOW_DESTROY_PLAN&gt;</code></td><td>Whether destroy plans can be queued on this workspace [possible values: true, false]</td></tr>
+<tr><td></td><td><code>--auto-destroy-at &lt;AUTO_DESTROY_AT&gt;</code></td><td>Timestamp (in RFC3339 format) when the next scheduled destroy run will occur</td></tr>
+<tr><td></td><td><code>--assessments-enabled &lt;ASSESSMENTS_ENABLED&gt;</code></td><td>Whether or not Terraform Cloud performs health assessments for the workspace [possible values: true, false]</td></tr>
+<tr><td></td><td><code>--global-remote-state &lt;GLOBAL_REMOTE_STATE&gt;</code></td><td>Whether the workspace should allow all workspaces in the organization to access its state data during runs [possible values: true, false]</td></tr>
+<tr><td></td><td><code>--tags-regex &lt;TAGS_REGEX&gt;</code></td><td>A regular expression used to match Git tags</td></tr>
+<tr><td></td><td><code>--trigger-patterns &lt;TRIGGER_PATTERNS&gt;</code></td><td>A list of glob patterns that describe the files Terraform Cloud monitors for changes</td></tr>
+<tr><td></td><td><code>--working-directory &lt;WORKING_DIRECTORY&gt;</code></td><td>A relative path that Terraform will execute within</td></tr>
+<tr><td></td><td><code>--agent-pool-id &lt;AGENT_POOL_ID&gt;</code></td><td>The ID of the agent pool belonging to the workspace's organization</td></tr>
+</tbody></table>
+</div>
+<h2 id="examples-1"><a class="header" href="#examples-1">Examples</a></h2>
+<h3 id="create-a-workspace-1"><a class="header" href="#create-a-workspace-1">Create a workspace</a></h3>
+<pre><code class="language-bash">tfct workspace update --workspace-name &quot;my-workspace&quot; --description &quot;My New Workspace description&quot;
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="delete"><a class="header" href="#delete">delete</a></h1>
+<h2 id="description-3"><a class="header" href="#description-3">Description</a></h2>
+<p>Delete a workspace.</p>
+<h2 id="usage-4"><a class="header" href="#usage-4">Usage</a></h2>
+<pre><code class="language-bash">tfct workspace delete [options]
+</code></pre>
+<h2 id="options-2"><a class="header" href="#options-2">Options</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Short</th><th>Long</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>-w</code></td><td><code>--workspace-name &lt;WORKSPACE_NAME&gt;</code></td><td>The name of the workspace to show.</td></tr>
+<tr><td><code>-i</code></td><td><code>--workspace-id &lt;WORKSPACE_ID&gt;</code></td><td>The id of the workspace to show.</td></tr>
+<tr><td><code>-s</code></td><td><code>--safe</code></td><td>Delete an existing workspace, but only if it is not managing resources.</td></tr>
+</tbody></table>
+</div>
+<h2 id="examples-2"><a class="header" href="#examples-2">Examples</a></h2>
+<h3 id="delete-a-workspace"><a class="header" href="#delete-a-workspace">Delete a workspace</a></h3>
+<pre><code class="language-bash">tfct workspace delete --workspace-name &quot;my-workspace&quot;
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="list"><a class="header" href="#list">list</a></h1>
+<h2 id="description-4"><a class="header" href="#description-4">Description</a></h2>
+<p>List workspaces.</p>
+<h2 id="usage-5"><a class="header" href="#usage-5">Usage</a></h2>
+<pre><code class="language-bash">tfct workspace list [options]
+</code></pre>
+<h2 id="options-3"><a class="header" href="#options-3">Options</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Short</th><th>Long</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>-f</code></td><td><code>--filter</code></td><td>Filter the list of workspaces by given criteria.</td></tr>
+</tbody></table>
+</div>
+<h2 id="examples-3"><a class="header" href="#examples-3">Examples</a></h2>
+<h3 id="list-all-workspaces"><a class="header" href="#list-all-workspaces">List all workspaces</a></h3>
+<pre><code class="language-bash">tfct workspace list
+</code></pre>
+<h3 id="get-a-list-of-workspaces-with-wildcard-search"><a class="header" href="#get-a-list-of-workspaces-with-wildcard-search">Get a list of workspaces with wildcard search</a></h3>
+<pre><code class="language-bash">tfct workspace list -f --query-wildcard-name &quot;my-*&quot;
+</code></pre>
+<h3 id="list-all-workspaces-and-save-output-to-a-file"><a class="header" href="#list-all-workspaces-and-save-output-to-a-file">List all workspaces and save output to a file</a></h3>
+<pre><code class="language-bash">tfct workspace list --save-output --output workspaces.json
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="show"><a class="header" href="#show">show</a></h1>
+<h2 id="description-5"><a class="header" href="#description-5">Description</a></h2>
+<p>Show details of a workspace.</p>
+<h2 id="usage-6"><a class="header" href="#usage-6">Usage</a></h2>
+<pre><code class="language-bash">tfct workspace show [options]
+</code></pre>
+<h2 id="options-4"><a class="header" href="#options-4">Options</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Short</th><th>Long</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>-w</code></td><td><code>--workspace-name &lt;WORKSPACE_NAME&gt;</code></td><td>The name of the workspace to show.</td></tr>
+<tr><td><code>-i</code></td><td><code>--workspace-id &lt;WORKSPACE_ID&gt;</code></td><td>The id of the workspace to show.</td></tr>
+</tbody></table>
+</div>
+<h2 id="examples-4"><a class="header" href="#examples-4">Examples</a></h2>
+<h3 id="show-a-workspace"><a class="header" href="#show-a-workspace">Show a workspace</a></h3>
+<pre><code class="language-bash">tfct workspace show --workspace-name &quot;my-workspace&quot;
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="variable-1"><a class="header" href="#variable-1">variable</a></h1>
+<h2 id="description-6"><a class="header" href="#description-6">Description</a></h2>
+<p>Manage workspace variables.</p>
+<h2 id="usage-7"><a class="header" href="#usage-7">Usage</a></h2>
+<pre><code class="language-bash">tfct variable [command] [options]
+</code></pre>
+<h2 id="global-options-2"><a class="header" href="#global-options-2">Global Options</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Short</th><th>Long</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>-w</code></td><td><code>--workspace-name &lt;WORKSPACE_NAME&gt;</code></td><td>The name of the workspace to add the tag to.</td></tr>
+<tr><td><code>-i</code></td><td><code>--workspace-id &lt;WORKSPACE_ID&gt;</code></td><td>The id of the workspace to add the tag to.</td></tr>
+<tr><td><code>-f</code></td><td><code>--workspace-file &lt;WORKSPACE_FILE&gt;</code></td><td>The file containing a list of workspace names or IDs.</td></tr>
+<tr><td><code>-a</code></td><td><code>--auto-discover-workspaces</code></td><td>Automatically discover workspaces given the specified filters.</td></tr>
+</tbody></table>
+</div>
+<h2 id="subcommands-1"><a class="header" href="#subcommands-1">Subcommands</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><a href="tools/tfct/commands/variable/./create.html"><code>create</code></a></td><td>Create variables on a workspace.</td></tr>
+<tr><td><a href="tools/tfct/commands/variable/./delete.html"><code>delete</code></a></td><td>Delete variables from a workspace.</td></tr>
+<tr><td><a href="tools/tfct/commands/variable/./list.html"><code>list</code></a></td><td>List variables for a workspace.</td></tr>
+<tr><td><code>help</code></td><td>Prints help information.</td></tr>
+</tbody></table>
+</div><div style="break-before: page; page-break-before: always;"></div><h1 id="create-1"><a class="header" href="#create-1">create</a></h1>
+<h2 id="description-7"><a class="header" href="#description-7">Description</a></h2>
+<p>Create variables on a workspace.</p>
+<h2 id="usage-8"><a class="header" href="#usage-8">Usage</a></h2>
+<pre><code class="language-bash">tfct variable create [options]
+</code></pre>
+<h2 id="options-5"><a class="header" href="#options-5">Options</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Short</th><th>Long</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>-v</code></td><td><code>--var &lt;VAR&gt;</code></td><td>The variable to create on the workspace, in the format of 'key=value:description:category:hcl:sensitive'.</td></tr>
+<tr><td></td><td><code>--var-file &lt;VAR_FILE&gt;</code></td><td>The file containing variables.</td></tr>
+</tbody></table>
+</div>
+<h2 id="examples-5"><a class="header" href="#examples-5">Examples</a></h2>
+<h3 id="create-a-variable-on-a-workspace"><a class="header" href="#create-a-variable-on-a-workspace">Create a variable on a workspace</a></h3>
+<pre><code class="language-bash">tfct variable create --workspace-name &quot;my-workspace&quot; --var &quot;SECRET_KEY=mysecretohno:ENV var for the secret:env:false:true&quot;
+</code></pre>
+<pre><code class="language-bash">tfct variable create --workspace--name &quot;my-workspace&quot; --var &quot;newthing=vale::::true&quot;
+</code></pre>
+<pre><code class="language-bash">tfct variable create --workspace-name &quot;my-workspace&quot; --var &quot;emptyvar=&quot;
+</code></pre>
+<h3 id="create-a-variable-on-a-workspace-using-a-file"><a class="header" href="#create-a-variable-on-a-workspace-using-a-file">Create a variable on a workspace using a file</a></h3>
+<pre><code class="language-json">{
+  &quot;variables&quot;: [
+    {
+      &quot;var&quot;: &quot;SECRET_KEY=mysecretohno:ENV var for the secret:env:false:true&quot;
+    },
+    {
+      &quot;var&quot;: &quot;newthing=vale::::true&quot;
+    }
+  ]
+}
+</code></pre>
+<pre><code class="language-bash">tfct variable create --workspace-id &quot;ws-id&quot; --var-file vars.json
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="delete-1"><a class="header" href="#delete-1">delete</a></h1>
+<h2 id="description-8"><a class="header" href="#description-8">Description</a></h2>
+<p>Delete variables from a workspace.</p>
+<h2 id="usage-9"><a class="header" href="#usage-9">Usage</a></h2>
+<pre><code class="language-bash">tfct variable delete [options]
+</code></pre>
+<h2 id="options-6"><a class="header" href="#options-6">Options</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Short</th><th>Long</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>-k</code></td><td><code>--var-key &lt;VAR_KEY&gt;</code></td><td>The key of the variable to delete from the workspace.</td></tr>
+<tr><td><code>-v</code></td><td><code>--var-id &lt;VAR_ID&gt;</code></td><td>The id of the variable to delete from the workspace.</td></tr>
+<tr><td></td><td><code>--var-file &lt;VAR_FILE&gt;</code></td><td>The file containing variables.</td></tr>
+</tbody></table>
+</div>
+<h2 id="examples-6"><a class="header" href="#examples-6">Examples</a></h2>
+<h3 id="delete-a-variable-from-a-workspace"><a class="header" href="#delete-a-variable-from-a-workspace">Delete a variable from a workspace</a></h3>
+<pre><code class="language-bash">tfct variable delete --workspace-name &quot;my-workspace&quot; --var-key &quot;SECRET_KEY&quot;
+</code></pre>
+<pre><code class="language-bash">tfct variable delete --workspace--name &quot;my-workspace&quot; --var-id &quot;var-id&quot;
+</code></pre>
+<h3 id="delete-a-variable-from-a-workspace-using-a-file"><a class="header" href="#delete-a-variable-from-a-workspace-using-a-file">Delete a variable from a workspace using a file</a></h3>
+<pre><code class="language-json">{
+  &quot;variables&quot;: [
+    {
+      &quot;var&quot;: &quot;SECRET_KEY=mysecretohno:ENV var for the secret:env:false:true&quot;
+    },
+    {
+      &quot;var&quot;: &quot;newthing=vale::::true&quot;
+    }
+  ]
+}
+</code></pre>
+<pre><code class="language-bash">tfct variable delete --workspace-id &quot;ws-id&quot; --var-file vars.json
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="list-1"><a class="header" href="#list-1">list</a></h1>
+<h2 id="description-9"><a class="header" href="#description-9">Description</a></h2>
+<p>List the variables for a workspace.</p>
+<h2 id="usage-10"><a class="header" href="#usage-10">Usage</a></h2>
+<pre><code class="language-bash">tfct variable list [options]
+</code></pre>
+<h2 id="examples-7"><a class="header" href="#examples-7">Examples</a></h2>
+<h3 id="list-the-variables-for-a-workspace"><a class="header" href="#list-the-variables-for-a-workspace">List the variables for a workspace</a></h3>
+<pre><code class="language-bash">tfct variable list --workspace-name &quot;my-workspace&quot;
+</code></pre>
+<h3 id="list-the-variables-for-a-workspace-and-save-output-to-a-file"><a class="header" href="#list-the-variables-for-a-workspace-and-save-output-to-a-file">List the variables for a workspace and save output to a file</a></h3>
+<pre><code class="language-bash">tfct variable list --workspace-id &quot;ws-id&quot; --save-output --output variables.json
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="variable-set-1"><a class="header" href="#variable-set-1">variable-set</a></h1>
+<h2 id="description-10"><a class="header" href="#description-10">Description</a></h2>
+<p>Manage variable sets.</p>
+<h2 id="usage-11"><a class="header" href="#usage-11">Usage</a></h2>
+<pre><code class="language-bash">tfct variable-set [command] [options]
+</code></pre>
+<h2 id="global-options-3"><a class="header" href="#global-options-3">Global Options</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Short</th><th>Long</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>-w</code></td><td><code>--workspace-name &lt;WORKSPACE_NAME&gt;</code></td><td>The name of the workspace to add the tag to.</td></tr>
+<tr><td><code>-i</code></td><td><code>--workspace-id &lt;WORKSPACE_ID&gt;</code></td><td>The id of the workspace to add the tag to.</td></tr>
+<tr><td><code>-f</code></td><td><code>--workspace-file &lt;WORKSPACE_FILE&gt;</code></td><td>The file containing a list of workspace names or IDs.</td></tr>
+<tr><td><code>-a</code></td><td><code>--auto-discover-workspaces</code></td><td>Automatically discover workspaces given the specified filters.</td></tr>
+</tbody></table>
+</div>
+<h2 id="subcommands-2"><a class="header" href="#subcommands-2">Subcommands</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><a href="tools/tfct/commands/variable-set/./apply.html"><code>apply</code></a></td><td>Apply a workspace to a variable set.</td></tr>
+<tr><td><a href="tools/tfct/commands/variable-set/./remove.html"><code>remove</code></a></td><td>Remove a workspace from a variable set.</td></tr>
+<tr><td><code>help</code></td><td>Prints help information.</td></tr>
+</tbody></table>
+</div><div style="break-before: page; page-break-before: always;"></div><h1 id="apply"><a class="header" href="#apply">apply</a></h1>
+<h2 id="description-11"><a class="header" href="#description-11">Description</a></h2>
+<p>Apply a workspace to a variable set.</p>
+<h2 id="usage-12"><a class="header" href="#usage-12">Usage</a></h2>
+<pre><code class="language-bash">tfct variable-set apply [options]
+</code></pre>
+<h2 id="options-7"><a class="header" href="#options-7">Options</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Short</th><th>Long</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>-v</code></td><td><code>--var-set-id &lt;VAR_SET_ID&gt;</code></td><td>The ID of the variable set.</td></tr>
+</tbody></table>
+</div>
+<h2 id="examples-8"><a class="header" href="#examples-8">Examples</a></h2>
+<h3 id="apply-a-workspace-to-a-variable-set"><a class="header" href="#apply-a-workspace-to-a-variable-set">Apply a workspace to a variable set</a></h3>
+<pre><code class="language-bash">tfct variable-set apply --workspace-name &quot;my-workspace&quot; -v &quot;varset-id&quot;
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="remove"><a class="header" href="#remove">remove</a></h1>
+<h2 id="description-12"><a class="header" href="#description-12">Description</a></h2>
+<p>Remove a workspace from a variable set.</p>
+<h2 id="usage-13"><a class="header" href="#usage-13">Usage</a></h2>
+<pre><code class="language-bash">tfct variable-set remove [options]
+</code></pre>
+<h2 id="options-8"><a class="header" href="#options-8">Options</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Short</th><th>Long</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>-v</code></td><td><code>--var-set-id &lt;VAR_SET_ID&gt;</code></td><td>The ID of the variable set.</td></tr>
+</tbody></table>
+</div>
+<h2 id="examples-9"><a class="header" href="#examples-9">Examples</a></h2>
+<h3 id="remove-a-workspace-to-a-variable-set"><a class="header" href="#remove-a-workspace-to-a-variable-set">Remove a workspace to a variable set</a></h3>
+<pre><code class="language-bash">tfct variable-set remove --workspace-name &quot;my-workspace&quot; -v &quot;varset-id&quot;
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="tag-1"><a class="header" href="#tag-1">tag</a></h1>
+<h2 id="description-13"><a class="header" href="#description-13">Description</a></h2>
+<p>Manage workspace tags.</p>
+<h2 id="usage-14"><a class="header" href="#usage-14">Usage</a></h2>
+<pre><code class="language-bash">tfct tag [command] [options]
+</code></pre>
+<h2 id="global-options-4"><a class="header" href="#global-options-4">Global Options</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Short</th><th>Long</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>-w</code></td><td><code>--workspace-name &lt;WORKSPACE_NAME&gt;</code></td><td>The name of the workspace to add the tag to.</td></tr>
+<tr><td><code>-i</code></td><td><code>--workspace-id &lt;WORKSPACE_ID&gt;</code></td><td>The id of the workspace to add the tag to.</td></tr>
+<tr><td><code>-f</code></td><td><code>--workspace-file &lt;WORKSPACE_FILE&gt;</code></td><td>The file containing a list of workspace names or IDs.</td></tr>
+<tr><td><code>-a</code></td><td><code>--auto-discover-workspaces</code></td><td>Automatically discover workspaces given the specified filters.</td></tr>
+</tbody></table>
+</div>
+<h2 id="subcommands-3"><a class="header" href="#subcommands-3">Subcommands</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><a href="tools/tfct/commands/tag/./add.html"><code>add</code></a></td><td>Add tags to a workspace.</td></tr>
+<tr><td><a href="tools/tfct/commands/tag/./remove.html"><code>remove</code></a></td><td>Remove tags from a workspace.</td></tr>
+<tr><td><a href="tools/tfct/commands/tag/./list.html"><code>list</code></a></td><td>List tags for a workspace.</td></tr>
+<tr><td><code>help</code></td><td>Prints help information.</td></tr>
+</tbody></table>
+</div><div style="break-before: page; page-break-before: always;"></div><h1 id="add"><a class="header" href="#add">add</a></h1>
+<h2 id="description-14"><a class="header" href="#description-14">Description</a></h2>
+<p>Add tags to a workspace.</p>
+<h2 id="usage-15"><a class="header" href="#usage-15">Usage</a></h2>
+<pre><code class="language-bash">tfct tag add [options]
+</code></pre>
+<h2 id="options-9"><a class="header" href="#options-9">Options</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Short</th><th>Long</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>-n</code></td><td><code>--name &lt;NAME&gt;</code></td><td>The name of the tag to add.</td></tr>
+<tr><td></td><td><code>--tag-file &lt;TAG_FILE&gt;</code></td><td>The file containing a list of tags to add.</td></tr>
+</tbody></table>
+</div>
+<h2 id="examples-10"><a class="header" href="#examples-10">Examples</a></h2>
+<h3 id="add-a-tag-to-a-workspace"><a class="header" href="#add-a-tag-to-a-workspace">Add a tag to a workspace</a></h3>
+<pre><code class="language-bash">tfct tag add --workspace-name &quot;my-workspace&quot; --name my-tag
+</code></pre>
+<h3 id="add-a-tag-to-a-workspace-using-a-file"><a class="header" href="#add-a-tag-to-a-workspace-using-a-file">Add a tag to a workspace using a file</a></h3>
+<pre><code class="language-json">{
+  &quot;tags&quot;: [
+    {
+      &quot;name&quot;: &quot;it:worked&quot;
+    }
+  ]
+}
+</code></pre>
+<pre><code class="language-bash">tfct tag add --workspace-id &quot;ws-id&quot; --tag-file tags.json
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="remove-1"><a class="header" href="#remove-1">remove</a></h1>
+<h2 id="description-15"><a class="header" href="#description-15">Description</a></h2>
+<p>Remove tags from a workspace.</p>
+<h2 id="usage-16"><a class="header" href="#usage-16">Usage</a></h2>
+<pre><code class="language-bash">tfct tag remove [options]
+</code></pre>
+<h2 id="options-10"><a class="header" href="#options-10">Options</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Short</th><th>Long</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>-n</code></td><td><code>--name &lt;NAME&gt;</code></td><td>The name of the tag to remove.</td></tr>
+<tr><td></td><td><code>--tag-file &lt;TAG_FILE&gt;</code></td><td>The file containing a list of tags to remove.</td></tr>
+</tbody></table>
+</div>
+<h2 id="examples-11"><a class="header" href="#examples-11">Examples</a></h2>
+<h3 id="remove-a-tag-to-a-workspace"><a class="header" href="#remove-a-tag-to-a-workspace">Remove a tag to a workspace</a></h3>
+<pre><code class="language-bash">tfct tag remove --workspace-name &quot;my-workspace&quot; --name my-tag
+</code></pre>
+<h3 id="remove-a-tag-to-a-workspace-using-a-file"><a class="header" href="#remove-a-tag-to-a-workspace-using-a-file">Remove a tag to a workspace using a file</a></h3>
+<pre><code class="language-json">{
+  &quot;tags&quot;: [
+    {
+      &quot;name&quot;: &quot;it:worked&quot;
+    }
+  ]
+}
+</code></pre>
+<pre><code class="language-bash">tfct tag remove --workspace-id &quot;ws-id&quot; --tag-file tags.json
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="list-2"><a class="header" href="#list-2">list</a></h1>
+<h2 id="description-16"><a class="header" href="#description-16">Description</a></h2>
+<p>List the tags for a workspace.</p>
+<h2 id="usage-17"><a class="header" href="#usage-17">Usage</a></h2>
+<pre><code class="language-bash">tfct tag list [options]
+</code></pre>
+<h2 id="examples-12"><a class="header" href="#examples-12">Examples</a></h2>
+<h3 id="list-the-tags-for-a-workspace"><a class="header" href="#list-the-tags-for-a-workspace">List the tags for a workspace</a></h3>
+<pre><code class="language-bash">tfct tag list --workspace-name &quot;my-workspace&quot;
+</code></pre>
+<h3 id="list-the-tags-for-a-workspace-and-save-output-to-a-file"><a class="header" href="#list-the-tags-for-a-workspace-and-save-output-to-a-file">List the tags for a workspace and save output to a file</a></h3>
+<pre><code class="language-bash">tfct tag list --workspace-name &quot;my-workspace&quot; --save-output --output tags.json
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="run-1"><a class="header" href="#run-1">run</a></h1>
+<h2 id="description-17"><a class="header" href="#description-17">Description</a></h2>
+<p>Manage runs.</p>
+<h2 id="usage-18"><a class="header" href="#usage-18">Usage</a></h2>
+<pre><code class="language-bash">tfct run [command] [options]
+</code></pre>
+<h2 id="subcommands-4"><a class="header" href="#subcommands-4">Subcommands</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><a href="tools/tfct/commands/run/./status.html"><code>status</code></a></td><td>Get the status of a run.</td></tr>
+<tr><td><a href="tools/tfct/commands/run/./spec.html"><code>spec</code></a></td><td>Queue up speculative runs.</td></tr>
+<tr><td><a href="tools/tfct/commands/run/./plan.html"><code>plan</code></a></td><td>Queue up plan and apply runs.</td></tr>
+<tr><td><a href="tools/tfct/commands/run/./cancel.html"><code>cancel</code></a></td><td>Cancel a run.</td></tr>
+<tr><td><a href="tools/tfct/commands/run/./discard.html"><code>discard</code></a></td><td>Discard a run.</td></tr>
+<tr><td><code>help</code></td><td>Prints help information.</td></tr>
+</tbody></table>
+</div><div style="break-before: page; page-break-before: always;"></div><h1 id="status"><a class="header" href="#status">status</a></h1>
+<h2 id="description-18"><a class="header" href="#description-18">Description</a></h2>
+<p>Get the status of a run</p>
+<h2 id="usage-19"><a class="header" href="#usage-19">Usage</a></h2>
+<pre><code class="language-bash">tfct run status [options]
+</code></pre>
+<h2 id="options-11"><a class="header" href="#options-11">Options</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Short</th><th>Long</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>-i</code></td><td><code>--run-id &lt;RUN_ID&gt;</code></td><td>The id of the run.</td></tr>
+</tbody></table>
+</div>
+<h2 id="examples-13"><a class="header" href="#examples-13">Examples</a></h2>
+<h3 id="get-the-status-of-a-run"><a class="header" href="#get-the-status-of-a-run">Get the status of a run</a></h3>
+<pre><code class="language-bash">tfct run status --run-id &quot;run-id&quot;
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="spec"><a class="header" href="#spec">spec</a></h1>
+<h2 id="description-19"><a class="header" href="#description-19">Description</a></h2>
+<p>Queue up speculative plan runs.</p>
+<h2 id="usage-20"><a class="header" href="#usage-20">Usage</a></h2>
+<pre><code class="language-bash">tfct run spec [options]
+</code></pre>
+<h2 id="options-12"><a class="header" href="#options-12">Options</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Short</th><th>Long</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>-w</code></td><td><code>--workspace-name &lt;WORKSPACE_NAME&gt;</code></td><td>The name of the workspace to create the run on.</td></tr>
+<tr><td><code>-i</code></td><td><code>--workspace-id &lt;WORKSPACE_ID&gt;</code></td><td>The id of the workspace to create the run on.</td></tr>
+<tr><td><code>-f</code></td><td><code>--workspace-file &lt;WORKSPACE_FILE&gt;</code></td><td>The file containing a list of workspace names or IDs.</td></tr>
+<tr><td><code>-a</code></td><td><code>--auto-discover-workspaces</code></td><td>Automatically discover workspaces given the specified filters.</td></tr>
+<tr><td><code>-q</code></td><td><code>--queue &lt;QUEUE&gt;</code></td><td>Execute runs in batches with overridable limits.</td></tr>
+<tr><td></td><td><code>--queue-max-concurrent &lt;QUEUE_MAX_CONCURRENT&gt;</code></td><td>The maximum number of runs to execute concurrently.</td></tr>
+<tr><td></td><td><code>--queue-max-iterations &lt;QUEUE_MAX_ITERATIONS&gt;</code></td><td>The maximum number of times to check the status of a run before giving up.</td></tr>
+<tr><td></td><td><code>--queue-status-check-sleep-seconds &lt;QUEUE_STATUS_CHECK_SLEEP_SECONDS&gt;</code></td><td>The number of seconds to wait between checking the status of a run.</td></tr>
+<tr><td></td><td><code>--message &lt;MESSAGE&gt;</code></td><td>A message to include with the run [default: &quot;Run created by tfc-toolset&quot;].</td></tr>
+<tr><td></td><td><code>--target-addrs &lt;TARGET_ADDRS&gt;</code></td><td>A list of resource addresses to target for the run.</td></tr>
+<tr><td></td><td><code>--replace-addrs &lt;REPLACE_ADDRS&gt;</code></td><td>A list of resource addresses to replace for the run.</td></tr>
+<tr><td></td><td><code>--terraform-version &lt;TERRAFORM_VERSION&gt;</code></td><td>The version of Terraform to use for this run, overriding the value from settings.</td></tr>
+</tbody></table>
+</div>
+<h2 id="examples-14"><a class="header" href="#examples-14">Examples</a></h2>
+<h3 id="create-a-run-on-a-workspace"><a class="header" href="#create-a-run-on-a-workspace">Create a run on a workspace</a></h3>
+<pre><code class="language-bash">tfct run spec --workspace-name &quot;my-workspace&quot;
+</code></pre>
+<h3 id="create-a-run-on-a-multiple-workspaces-with-a-max-concurrency-of-2"><a class="header" href="#create-a-run-on-a-multiple-workspaces-with-a-max-concurrency-of-2">Create a run on a multiple workspaces with a max concurrency of 2</a></h3>
+<pre><code class="language-bash">tfct run spec --workspace-file &quot;workspaces.json&quot; -q --queue-max-concurrent 2
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="plan"><a class="header" href="#plan">plan</a></h1>
+<h2 id="description-20"><a class="header" href="#description-20">Description</a></h2>
+<p>Queue up plan and apply runs.</p>
+<h2 id="usage-21"><a class="header" href="#usage-21">Usage</a></h2>
+<pre><code class="language-bash">tfct run plan [options]
+</code></pre>
+<h2 id="options-13"><a class="header" href="#options-13">Options</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Short</th><th>Long</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>-w</code></td><td><code>--workspace-name &lt;WORKSPACE_NAME&gt;</code></td><td>The name of the workspace to create the run on.</td></tr>
+<tr><td><code>-i</code></td><td><code>--workspace-id &lt;WORKSPACE_ID&gt;</code></td><td>The id of the workspace to create the run on.</td></tr>
+<tr><td><code>-f</code></td><td><code>--workspace-file &lt;WORKSPACE_FILE&gt;</code></td><td>The file containing a list of workspace names or IDs.</td></tr>
+<tr><td><code>-a</code></td><td><code>--auto-discover-workspaces</code></td><td>Automatically discover workspaces given the specified filters.</td></tr>
+<tr><td><code>-q</code></td><td><code>--queue &lt;QUEUE&gt;</code></td><td>Execute runs in batches with overridable limits.</td></tr>
+<tr><td></td><td><code>--queue-max-concurrent &lt;QUEUE_MAX_CONCURRENT&gt;</code></td><td>The maximum number of runs to execute concurrently.</td></tr>
+<tr><td></td><td><code>--queue-max-iterations &lt;QUEUE_MAX_ITERATIONS&gt;</code></td><td>The maximum number of times to check the status of a run before giving up.</td></tr>
+<tr><td></td><td><code>--queue-status-check-sleep-seconds &lt;QUEUE_STATUS_CHECK_SLEEP_SECONDS&gt;</code></td><td>The number of seconds to wait between checking the status of a run.</td></tr>
+<tr><td></td><td><code>--cancel-on-timeout &lt;CANCEL_ON_TIMEOUT&gt;</code></td><td>Whether to cancel the run if it reaches the configured limits [possible values: true, false].</td></tr>
+<tr><td></td><td><code>--message &lt;MESSAGE&gt;</code></td><td>A message to include with the run [default: &quot;Run created by tfc-toolset&quot;].</td></tr>
+<tr><td></td><td><code>--target-addrs &lt;TARGET_ADDRS&gt;</code></td><td>A list of resource addresses to target for the run.</td></tr>
+<tr><td></td><td><code>--replace-addrs &lt;REPLACE_ADDRS&gt;</code></td><td>A list of resource addresses to replace for the run.</td></tr>
+<tr><td></td><td><code>--terraform-version &lt;TERRAFORM_VERSION&gt;</code></td><td>The version of Terraform to use for this run, overriding the value from settings.</td></tr>
+<tr><td></td><td><code>--auto-apply &lt;AUTO_APPLY&gt;</code></td><td>Automatically apply the run if the plan is successful [default: false] [possible values: true, false].</td></tr>
+<tr><td></td><td><code>--allow-empty-apply &lt;ALLOW_EMPTY_APPLY&gt;</code></td><td>Apply the run even when the plan contains no changes [default: false] [possible values: true, false].</td></tr>
+<tr><td></td><td><code>--is-destroy &lt;IS_DESTROY&gt;</code></td><td>Whether this plan is a destroy plan that will destroy all provisioned resources [default: false] [possible values: true, false].</td></tr>
+<tr><td></td><td><code>--refresh-only &lt;REFRESH_ONLY&gt;</code></td><td>Whether this run should refresh the state without modifying any resources [default: false] [possible values: true, false].</td></tr>
+</tbody></table>
+</div>
+<h2 id="examples-15"><a class="header" href="#examples-15">Examples</a></h2>
+<h3 id="create-a-run-on-a-workspace-1"><a class="header" href="#create-a-run-on-a-workspace-1">Create a run on a workspace</a></h3>
+<pre><code class="language-bash">tfct run plan --workspace-name &quot;my-workspace&quot;
+</code></pre>
+<h3 id="create-a-run-on-a-multiple-workspaces-with-a-max-concurrency-of-2-1"><a class="header" href="#create-a-run-on-a-multiple-workspaces-with-a-max-concurrency-of-2-1">Create a run on a multiple workspaces with a max concurrency of 2</a></h3>
+<pre><code class="language-bash">tfct run plan --workspace-file &quot;workspaces.json&quot; -q --queue-max-concurrent 2
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="cancel"><a class="header" href="#cancel">cancel</a></h1>
+<h2 id="description-21"><a class="header" href="#description-21">Description</a></h2>
+<p>Cancel a run</p>
+<h2 id="usage-22"><a class="header" href="#usage-22">Usage</a></h2>
+<pre><code class="language-bash">tfct run cancel [options]
+</code></pre>
+<h2 id="options-14"><a class="header" href="#options-14">Options</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Short</th><th>Long</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>-i</code></td><td><code>--run-id &lt;RUN_ID&gt;</code></td><td>The id of the run.</td></tr>
+</tbody></table>
+</div>
+<h2 id="examples-16"><a class="header" href="#examples-16">Examples</a></h2>
+<h3 id="cancel-a-run"><a class="header" href="#cancel-a-run">Cancel a run</a></h3>
+<pre><code class="language-bash">tfct run cancel --run-id &quot;run-id&quot;
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="discard"><a class="header" href="#discard">discard</a></h1>
+<h2 id="description-22"><a class="header" href="#description-22">Description</a></h2>
+<p>Discard a run</p>
+<h2 id="usage-23"><a class="header" href="#usage-23">Usage</a></h2>
+<pre><code class="language-bash">tfct run discard [options]
+</code></pre>
+<h2 id="options-15"><a class="header" href="#options-15">Options</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Short</th><th>Long</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>-i</code></td><td><code>--run-id &lt;RUN_ID&gt;</code></td><td>The id of the run.</td></tr>
+</tbody></table>
+</div>
+<h2 id="examples-17"><a class="header" href="#examples-17">Examples</a></h2>
+<h3 id="discard-a-run"><a class="header" href="#discard-a-run">Discard a run</a></h3>
+<pre><code class="language-bash">tfct run discard --run-id &quot;run-id&quot;
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="clean-1"><a class="header" href="#clean-1">clean</a></h1>
+<h2 id="description-23"><a class="header" href="#description-23">Description</a></h2>
+<p>Run cleanup operations.</p>
+<h2 id="usage-24"><a class="header" href="#usage-24">Usage</a></h2>
+<pre><code class="language-bash">tfct clean [command] [options]
+</code></pre>
+<h2 id="subcommands-5"><a class="header" href="#subcommands-5">Subcommands</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><a href="tools/tfct/commands/clean/./workspace.html"><code>workspace</code></a></td><td>Run workspace clean operations.</td></tr>
+<tr><td><code>help</code></td><td>Prints help information.</td></tr>
+</tbody></table>
+</div><div style="break-before: page; page-break-before: always;"></div><h1 id="workspace-2"><a class="header" href="#workspace-2">workspace</a></h1>
+<h2 id="description-24"><a class="header" href="#description-24">Description</a></h2>
+<p>Run workspace clean operations</p>
+<h2 id="usage-25"><a class="header" href="#usage-25">Usage</a></h2>
+<pre><code class="language-bash">tfct clean workspace [options]
+</code></pre>
+<h2 id="options-16"><a class="header" href="#options-16">Options</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Short</th><th>Long</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>-w</code></td><td><code>--workspace-name &lt;WORKSPACE_NAME&gt;</code></td><td>The name of the workspace to create the run on.</td></tr>
+<tr><td><code>-i</code></td><td><code>--workspace-id &lt;WORKSPACE_ID&gt;</code></td><td>The id of the workspace to create the run on.</td></tr>
+<tr><td><code>-f</code></td><td><code>--workspace-file &lt;WORKSPACE_FILE&gt;</code></td><td>The file containing a list of workspace names or IDs.</td></tr>
+<tr><td><code>-a</code></td><td><code>--auto-discover-workspaces</code></td><td>Automatically discover workspaces given the specified filters.</td></tr>
+<tr><td><code>-d</code></td><td><code>--dry-run &lt;DRY_RUN&gt;</code></td><td>Do not perform any clean operations, only detect issues to be cleaned [default: true] [possible values: true, false].</td></tr>
+<tr><td><code>-u</code></td><td><code>--unlisted-variables &lt;UNLISTED_VARIABLES&gt;</code></td><td>Detect/Remove unlisted variables [default: true] [possible values: true, false].</td></tr>
+<tr><td><code>-m</code></td><td><code>--missing-repositories &lt;MISSING_REPOSITORIES&gt;</code></td><td>Detect missing vcs repositories [default: false] [possible values: true, false].</td></tr>
+<tr><td></td><td><code>--git-dir &lt;GIT_DIR&gt;</code></td><td>Override the location to which git repositories are cloned.</td></tr>
+<tr><td></td><td><code>--message &lt;MESSAGE&gt;</code></td><td>A message to include with the run [default: &quot;Run created by tfc-toolset&quot;].</td></tr>
+<tr><td></td><td><code>--target-addrs &lt;TARGET_ADDRS&gt;</code></td><td>A list of resource addresses to target for the run.</td></tr>
+<tr><td></td><td><code>--replace-addrs &lt;REPLACE_ADDRS&gt;</code></td><td>A list of resource addresses to replace for the run.</td></tr>
+<tr><td></td><td><code>--terraform-version &lt;TERRAFORM_VERSION&gt;</code></td><td>The version of Terraform to use for this run, overriding the value from settings.</td></tr>
+</tbody></table>
+</div>
+<h2 id="examples-18"><a class="header" href="#examples-18">Examples</a></h2>
+<h3 id="detect-issues-in-a-workspace"><a class="header" href="#detect-issues-in-a-workspace">Detect issues in a workspace</a></h3>
+<pre><code class="language-bash">tfct clean workspace --workspace-name &quot;my-workspace&quot;
+</code></pre>
+<h3 id="detect-issues-in-a-workspace-and-save-the-results-to-a-file"><a class="header" href="#detect-issues-in-a-workspace-and-save-the-results-to-a-file">Detect issues in a workspace and save the results to a file</a></h3>
+<pre><code class="language-bash">tfct clean workspace --workspace-name &quot;my-workspace&quot; --save-output --output &quot;clean-results.json&quot;
+</code></pre>
+<h3 id="detect-and-attempt-to-fix-issues-in-a-workspace"><a class="header" href="#detect-and-attempt-to-fix-issues-in-a-workspace">Detect and attempt to fix issues in a workspace</a></h3>
+<pre><code class="language-bash">tfct clean workspace --workspace-name &quot;my-workspace&quot; --dry-run false
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="help-1"><a class="header" href="#help-1">help</a></h1>
+<p>Prints help message for a command</p>
+<h2 id="usage-26"><a class="header" href="#usage-26">Usage</a></h2>
+<pre><code class="language-bash">tfct help
+</code></pre>
+<pre><code class="language-bash">tfct --help (-h)
+</code></pre>
+<pre><code class="language-bash">tfct &lt;COMMAND&gt; help
+</code></pre>
+<pre><code class="language-bash">tfct &lt;COMMAND&gt; &lt;SUBCOMMAND&gt; --help (-h)
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+        <script>
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+
+    </div>
+    </body>
+</html>
