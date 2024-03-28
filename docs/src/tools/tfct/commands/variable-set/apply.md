@@ -13,7 +13,7 @@ tfct variable-set apply [options]
 ## Options
 
 | Short | Long                        | Description                 |
-|-------|-----------------------------|-----------------------------|
+| ----- | --------------------------- | --------------------------- |
 | `-v`  | `--var-set-id <VAR_SET_ID>` | The ID of the variable set. |
 
 ## Examples

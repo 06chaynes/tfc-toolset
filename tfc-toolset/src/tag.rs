@@ -1,9 +1,13 @@
+use std::vec;
+
 use crate::{
-    build_request, error::ToolError, set_page_number, settings::Core,
+    build_request,
+    error::{surf_to_tool_error, ToolError},
+    set_page_number,
+    settings::Core,
     workspace, Meta, BASE_URL,
 };
 
-use async_scoped::AsyncStdScope;
 use log::{error, info};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -113,70 +117,39 @@ pub async fn list(
                     };
 
                     // Get the next page and merge the result
-                    let (_, tag_pages) = AsyncStdScope::scope_and_block(|s| {
-                        for n in next_page..=num_pages {
-                            let c = client.clone();
-                            let u = url.clone();
-                            let proc = || async move {
-                                info!("Retrieving tags page {}.", &n);
-                                let u = match set_page_number(n, u) {
-                                    Some(u) => u,
-                                    None => {
-                                        error!("Failed to set page number.");
-                                        return None;
-                                    }
-                                };
-                                let req = build_request(
-                                    Method::Get,
-                                    u.clone(),
-                                    config,
-                                    None,
-                                );
-                                match c.send(req).await {
-                                    Ok(mut r) => {
-                                        if r.status().is_success() {
-                                            info!(
-                                                "Successfully retrieved tags page {}!",
-                                                &n
-                                            );
-                                            let res = match r
-                                                .body_json::<Tags>()
-                                                .await
-                                            {
-                                                Ok(r) => r,
-                                                Err(e) => {
-                                                    error!("{:#?}", e);
-                                                    return None;
-                                                }
-                                            };
-                                            Some(res.data)
-                                        } else {
-                                            let e = r
-                                                .body_string()
-                                                .await
-                                                .unwrap_or(
-                                                    "Failed to parse error"
-                                                        .to_string(),
-                                                );
-                                            error!("{:#?}", e);
-                                            None
-                                        }
-                                    }
-                                    Err(e) => {
-                                        error!(
-                                                "Failed to retrieve tags page {} :(",
-                                                &n
-                                            );
-                                        error!("{:#?}", e);
-                                        None
-                                    }
+                    for n in next_page..=num_pages {
+                        let u = url.clone();
+                        info!("Retrieving tags page {}.", &n);
+                        let u = match set_page_number(n, u) {
+                            Some(u) => u,
+                            None => {
+                                error!("Failed to set page number.");
+                                return Err(ToolError::Pagination(
+                                    "Failed to set page number.".to_string(),
+                                ));
+                            }
+                        };
+                        let req =
+                            build_request(Method::Get, u.clone(), config, None);
+                        let mut response = client
+                            .send(req)
+                            .await
+                            .map_err(surf_to_tool_error)?;
+                        if response.status().is_success() {
+                            let tag_pages: Result<Tags, ToolError> = response
+                                .body_json()
+                                .await
+                                .map_err(surf_to_tool_error);
+                            match tag_pages {
+                                Ok(mut t) => {
+                                    tag_list.data.append(&mut t.data);
                                 }
-                            };
-                            s.spawn(proc());
+                                Err(e) => {
+                                    error!("{:#?}", e);
+                                    return Err(e);
+                                }
+                            }
                         }
-                    });
-                    for mut t in tag_pages.into_iter().flatten() {
-                        tag_list.data.append(&mut t);
                     }
                 }
             }

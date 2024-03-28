@@ -5,12 +5,10 @@ use crate::{
     settings::{Core, Operators, Query, Tag},
     tag, variable, variable_set, Meta, BASE_URL,
 };
-use async_scoped::AsyncStdScope;
-use itertools::Itertools;
 use log::{error, info};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::fmt::Display;
+use std::{fmt::Display, vec};
 use surf::{http::Method, Client};
 use time::OffsetDateTime;
 use url::Url;
@@ -548,6 +546,7 @@ pub async fn list(
         }
     }
     let req = build_request(Method::Get, url.clone(), config, None);
+    let mut workspaces: Vec<Workspace> = vec![];
     let mut workspace_list: Workspaces = match client.send(req).await {
         Ok(mut r) => {
             if r.status().is_success() {
@@ -570,6 +569,7 @@ pub async fn list(
             return Err(ToolError::General(anyhow::anyhow!(e)));
         }
     };
+    workspaces.append(&mut workspace_list.data);
     // Need to check pagination
     if let Some(meta) = workspace_list.meta {
         let max_depth = config.pagination.max_depth.parse::<u32>()?;
@@ -587,85 +587,46 @@ pub async fn list(
                     };
 
                     // Get the next page and merge the result
-                    let (_, workspace_pages) = AsyncStdScope::scope_and_block(
-                        |s| {
-                            for n in next_page..=num_pages {
-                                let c = client.clone();
-                                let u = url.clone();
-                                let proc = || async move {
-                                    info!("Retrieving workspaces page {}.", &n);
-                                    let u = match set_page_number(n, u) {
-                                        Some(u) => u,
-                                        None => {
-                                            error!(
-                                                "Failed to set page number."
-                                            );
-                                            return None;
-                                        }
-                                    };
-                                    let req = build_request(
-                                        Method::Get,
-                                        u.clone(),
-                                        config,
-                                        None,
-                                    );
-                                    match c.send(req).await {
-                                        Ok(mut r) => {
-                                            if r.status().is_success() {
-                                                info!(
-                                                "Successfully retrieved workspaces page {}!",
-                                                &n
-                                            );
-                                                let res = match r
-                                                    .body_json::<Workspaces>()
-                                                    .await
-                                                {
-                                                    Ok(r) => r,
-                                                    Err(e) => {
-                                                        error!("{:#?}", e);
-                                                        return None;
-                                                    }
-                                                };
-                                                Some(res.data)
-                                            } else {
-                                                let e = r
-                                                    .body_string()
-                                                    .await
-                                                    .unwrap_or(
-                                                        "Failed to parse error"
-                                                            .to_string(),
-                                                    );
-                                                error!("{:#?}", e);
-                                                None
-                                            }
-                                        }
-                                        Err(e) => {
-                                            error!(
-                                                "Failed to retrieve workspaces page {} :(",
-                                                &n
-                                            );
-                                            error!("{:#?}", e);
-                                            None
-                                        }
-                                    }
-                                };
-                                s.spawn(proc());
+                    for n in next_page..=num_pages {
+                        let u = url.clone();
+                        info!("Retrieving workspaces page {}.", &n);
+                        let u = match set_page_number(n, u) {
+                            Some(u) => u,
+                            None => {
+                                error!("Failed to set page number.");
+                                return Err(ToolError::Pagination(
+                                    "Failed to set page number.".to_string(),
+                                ));
                             }
-                        },
-                    );
-                    for mut ws in workspace_pages.into_iter().flatten() {
-                        workspace_list.data.append(&mut ws);
+                        };
+                        let req =
+                            build_request(Method::Get, u.clone(), config, None);
+                        let mut response = client
+                            .send(req)
+                            .await
+                            .map_err(surf_to_tool_error)?;
+                        if response.status().is_success() {
+                            info!(
+                                "Successfully retrieved workspaces page {}!",
+                                &n
+                            );
+                            let mut ws = response
+                                .body_json::<Workspaces>()
+                                .await
+                                .map_err(surf_to_tool_error)?;
+                            workspaces.append(&mut ws.data);
+                        } else {
+                            let e = response
+                                .body_string()
+                                .await
+                                .map_err(surf_to_tool_error)?;
+                            error!("{:#?}", e);
+                        }
                     }
                 }
             }
         }
     }
-    let mut workspaces = workspace_list
-        .data
-        .iter()
-        .unique_by(|ws| ws.id.clone())
-        .cloned()
-        .collect::<Vec<Workspace>>();
     info!("Finished retrieving workspaces.");
     if filter {
         if let Some(query) = config.workspaces.query.clone() {

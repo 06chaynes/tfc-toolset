@@ -12,10 +12,10 @@ tfct tag add [options]
 
 ## Options
 
-| Short | Long                      | Description                                                    |
-|-------|---------------------------|----------------------------------------------------------------|
-| `-n`  | `--name <NAME>`           | The name of the tag to add.                                    |
-|       | `--tag-file <TAG_FILE>`   | The file containing a list of tags to add.                     |
+| Short | Long                    | Description                                |
+| ----- | ----------------------- | ------------------------------------------ |
+| `-n`  | `--name <NAME>`         | The name of the tag to add.                |
+|       | `--tag-file <TAG_FILE>` | The file containing a list of tags to add. |
 
 ## Examples
 

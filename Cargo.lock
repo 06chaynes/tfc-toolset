@@ -3188,13 +3188,11 @@ dependencies = [
 
 [[package]]
 name = "tfc-toolset"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "anyhow",
- "async-scoped",
  "async-std",
  "config 0.14.0",
- "itertools",
  "log",
  "serde",
  "serde_json",
@@ -3206,7 +3204,7 @@ dependencies = [
 
 [[package]]
 name = "tfc-toolset-extras"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "anyhow",
  "config 0.14.0",
@@ -3267,7 +3265,7 @@ dependencies = [
 
 [[package]]
 name = "tfct"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "async-scoped",

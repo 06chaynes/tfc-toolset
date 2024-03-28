@@ -13,7 +13,7 @@ tfct run cancel [options]
 ## Options
 
 | Short | Long                | Description        |
-|-------|---------------------|--------------------|
+| ----- | ------------------- | ------------------ |
 | `-i`  | `--run-id <RUN_ID>` | The id of the run. |
 
 ## Examples

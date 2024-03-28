@@ -36,4 +36,3 @@
       - [clean](./tools/tfct/commands/clean/clean.md)
         - [workspace](./tools/tfct/commands/clean/workspace.md)
       - [help](./tools/tfct/commands/help.md)
-

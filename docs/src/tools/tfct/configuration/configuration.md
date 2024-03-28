@@ -1,6 +1,6 @@
 # Configuration
 
-`tfct` is configured using either a configuration file or via cli arguments. 
+`tfct` is configured using either a configuration file or via cli arguments.
 
 ## TOML configuration file
 
@@ -35,8 +35,8 @@ page_size = "20" # The number of items to retrieve per page with default of `20`
 
 ## CLI arguments
 
-`tfct` can also be configured using cli arguments. The cli arguments are the similar as the properties in the configuration file, 
-but are prefixed with `--` and use `kebab-case` instead of `snake_case`. 
+`tfct` can also be configured using cli arguments. The cli arguments are the similar as the properties in the configuration file,
+but are prefixed with `--` and use `kebab-case` instead of `snake_case`.
 For example, the `save_output` property in the configuration file would be `--save-output` as a cli argument.
 
 ```bash

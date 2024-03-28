@@ -5,7 +5,7 @@ use crate::{
     workspace::{Workspace, WorkspaceVariables},
     BASE_URL,
 };
-use async_scoped::AsyncStdScope;
+
 use log::{error, info};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -208,33 +208,13 @@ pub async fn list_batch(
     client: Client,
     workspaces: Vec<Workspace>,
 ) -> Result<Vec<WorkspaceVariables>, ToolError> {
+    let mut workspaces_variables: Vec<WorkspaceVariables> = vec![];
     // Get the variables for each workspace
-    let (_, workspaces_variables) = AsyncStdScope::scope_and_block(|s| {
-        for workspace in workspaces {
-            let c = client.clone();
-            let proc = || async move {
-                match list(&workspace.id, config, c).await {
-                    Ok(variables) => {
-                        info!(
-                            "Successfully retrieved variables for workspace {}",
-                            workspace.attributes.name.clone().unwrap()
-                        );
-                        Some(WorkspaceVariables { workspace, variables })
-                    }
-                    Err(e) => {
-                        error!(
-                            "Unable to retrieve variables for workspace {}",
-                            workspace.attributes.name.unwrap()
-                        );
-                        error!("{:#?}", e);
-                        None
-                    }
-                }
-            };
-            s.spawn(proc());
-        }
-    });
-    Ok(workspaces_variables.into_iter().flatten().collect())
+    for workspace in workspaces {
+        let variables = list(&workspace.id, config, client.clone()).await?;
+        workspaces_variables.push(WorkspaceVariables { workspace, variables });
+    }
+    Ok(workspaces_variables)
 }
 
 pub async fn delete(
