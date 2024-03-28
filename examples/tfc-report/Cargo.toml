@@ -21,6 +21,6 @@ serde_json = "1.0.114"
 
 [dependencies.tfc-toolset]
 path = "../../tfc-toolset"
-version = "0.5.0"
+version = "0.6.0"
 
 

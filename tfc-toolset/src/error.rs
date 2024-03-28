@@ -36,4 +36,7 @@ pub enum ToolError {
     /// Invalid query operator
     #[error("Invalid query operator: {0}. Expected one of: ==, !=, ~=, !~=")]
     InvalidQueryOperator(String),
+    /// Pagination error
+    #[error("Pagination error: {0}")]
+    Pagination(String),
 }
